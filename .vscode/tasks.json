@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "node ./esbuild.build.mjs",
+            "group": "build"
+        },
+        {
+            "label": "start watcher",
+            "type": "shell",
+            "command": "node ./esbuild.watch.mjs",
+            "group": "build"
+        }
+    ]
+}

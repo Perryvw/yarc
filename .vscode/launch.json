@@ -1,0 +1,38 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch electron app",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+            },
+            "args" : ["out/electron-app.js"],
+            "outputCapture": "std",
+            "presentation": {
+                "hidden": true,
+            }
+        },
+        {
+            "name": "Run code compilation watcher",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "args": ["esbuild.watch.mjs"],
+            "presentation": {
+                "hidden": true,
+            }
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run App in Dev mode",
+            "preLaunchTask": "build",
+            "configurations": ["Launch electron app", "Run code compilation watcher"],
+            "stopAll": true
+        }
+    ]
+}
