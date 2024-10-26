@@ -2,16 +2,15 @@ import { net } from "electron";
 import { HttpRequestData, ResponseData } from "../AppContext";
 
 export async function makeHttpRequest(request: HttpRequestData): Promise<ResponseData> {
-    const host = /(\w+\:\/\/)?(www\.)?([^\/]+)/.exec(request.url)?.[3];
+    const url = new URL(request.url);
 
     return new Promise((resolve) => {
-
         const req = net.request({
             method: request.method,
-            protocol: 'https:',
-            hostname: host,
-            port: 443,
-            path: '/'
+            protocol: url.protocol,
+            hostname: url.hostname,
+            port: Number(url.port),
+            path: url.pathname,
         });
 
         req.on('response', response => {
