@@ -3,7 +3,7 @@ import RequestHeader from "./RequestHeader";
 import RequestPanel from "./RequestPanel";
 import ResponsePanel from "./ResponsePanel";
 import { AppContext, AppContextType } from "./AppContext";
-import styled from 'styled-components';
+import styled from "styled-components";
 
 const AppRoot = styled.div`
     color-scheme: dark;
@@ -22,7 +22,6 @@ const MainContainer = styled.div`
 `;
 
 export default function App() {
-
     const initialContext: AppContextType = {
         request: {
             type: "http",
@@ -32,12 +31,12 @@ export default function App() {
         },
         response: {
             statusCode: 0,
-            body: "initial response"
+            body: "initial response",
         },
-        setRequestHeader() { },
-        setRequest() { },
-        setResponse() { }
-    }
+        setRequestHeader() {},
+        setRequest() {},
+        setResponse() {},
+    };
 
     return (
         <AppContext.Provider value={initialContext}>
@@ -51,5 +50,5 @@ export default function App() {
                 </MainContainer>
             </AppRoot>
         </AppContext.Provider>
-    )
+    );
 }

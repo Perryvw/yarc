@@ -10,10 +10,10 @@
             "windows": {
                 "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
             },
-            "args" : ["out/electron-app.js"],
+            "args": ["out/electron-app.js"],
             "outputCapture": "std",
             "presentation": {
-                "hidden": true,
+                "hidden": true
             }
         },
         {
@@ -23,7 +23,7 @@
             "cwd": "${workspaceFolder}",
             "args": ["esbuild.watch.mjs"],
             "presentation": {
-                "hidden": true,
+                "hidden": true
             }
         }
     ],
@@ -31,7 +31,10 @@
         {
             "name": "Run App in Dev mode",
             "preLaunchTask": "build",
-            "configurations": ["Launch electron app", "Run code compilation watcher"],
+            "configurations": [
+                "Launch electron app",
+                "Run code compilation watcher"
+            ],
             "stopAll": true
         }
     ]

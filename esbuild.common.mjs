@@ -1,17 +1,16 @@
 const ElectronPlugin = {
-    name: 'example',
+    name: "example",
     setup(build) {
         build.onResolve({ filter: /^electron$/ }, async () => {
-            return { path: "electron", external: true } // Do not resolve electron in UI
-        })
+            return { path: "electron", external: true }; // Do not resolve electron in UI
+        });
     },
-}
+};
 
 export const esBuildSettings = {
-    entryPoints: ['src/react-app.ts'],
+    entryPoints: ["src/react-app.ts"],
     bundle: true,
-    outdir: 'out',
+    outdir: "out",
     sourcemap: true,
-    plugins: [ElectronPlugin]
+    plugins: [ElectronPlugin],
 };
-  

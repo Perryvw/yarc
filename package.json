@@ -1,18 +1,22 @@
 {
-  "name": "yarc",
-  "version": "0.0.1",
-  "description": "",
-  "dependencies": {
-    "electron": "^33.0.2",
-    "lucide-react": "^0.453.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "styled-components": "^6.1.13"
-  },
-  "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "esbuild": "^0.24.0",
-    "typescript": "^5.6.3"
-  }
+    "name": "yarc",
+    "version": "0.0.1",
+    "description": "",
+    "scripts": {
+        "fix:prettier": "prettier --write ."
+    },
+    "dependencies": {
+        "electron": "^33.0.2",
+        "lucide-react": "^0.453.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "styled-components": "^6.1.13"
+    },
+    "devDependencies": {
+        "@types/react": "^18.3.12",
+        "@types/react-dom": "^18.3.1",
+        "esbuild": "^0.24.0",
+        "prettier": "^3.3.3",
+        "typescript": "^5.6.3"
+    }
 }

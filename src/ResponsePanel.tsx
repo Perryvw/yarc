@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { AppContext } from "./AppContext";
-import styled from 'styled-components';
+import styled from "styled-components";
 
 const ResponsePanelRoot = styled.div`
     display: flex;
@@ -10,7 +10,7 @@ const ResponsePanelRoot = styled.div`
 `;
 
 const ResponseTextarea = styled.textarea`
-    font-family: 'Consolas';
+    font-family: "Consolas";
     padding: 5px;
     border: 1px solid black;
     background: inherit;
@@ -19,7 +19,6 @@ const ResponseTextarea = styled.textarea`
 `;
 
 export default function ResponsePanel() {
-
     const context = useContext(AppContext);
 
     const [response, setResponse] = useState(context.response);
@@ -27,12 +26,10 @@ export default function ResponsePanel() {
 
     return (
         <ResponsePanelRoot>
-            Status: {response.statusCode}<br />
+            Status: {response.statusCode}
+            <br />
             Body
-            <ResponseTextarea
-                readOnly
-                value={response.body}
-            />
+            <ResponseTextarea readOnly value={response.body} />
         </ResponsePanelRoot>
-    )
+    );
 }

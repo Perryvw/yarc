@@ -1,6 +1,6 @@
 import { ChangeEvent, useContext, useState } from "react";
 import { AppContext } from "./AppContext";
-import styled from 'styled-components';
+import styled from "styled-components";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -10,11 +10,12 @@ const RequestPanelRoot = styled.div`
 `;
 
 export default function RequestPanel() {
-
     const context = useContext(AppContext);
 
     const [request, setRequest] = useState(context.request);
-    const [requestBody, setRequestBody] = useState(request.type === "http" ? request.body : "protobuf");
+    const [requestBody, setRequestBody] = useState(
+        request.type === "http" ? request.body : "protobuf",
+    );
 
     context.setRequest = (r) => {
         setRequest(r);
@@ -33,14 +34,15 @@ export default function RequestPanel() {
     return (
         <RequestPanelRoot>
             Body
-            <textarea style={{
-                width: "100%",
-                height: 300,
-                resize: "none"
-            }}
+            <textarea
+                style={{
+                    width: "100%",
+                    height: 300,
+                    resize: "none",
+                }}
                 value={requestBody}
                 onChange={onRequestBodyChanged}
             />
         </RequestPanelRoot>
-    )
+    );
 }

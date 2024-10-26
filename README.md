@@ -1,6 +1,7 @@
 # Run development setup:
 
-Install with 
+Install with
+
 ```
 npm install
 ```

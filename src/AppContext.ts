@@ -1,14 +1,14 @@
 import { createContext } from "react";
 
 export interface HttpRequestData {
-    type: "http",
+    type: "http";
     url: string;
     method: "GET" | "POST";
     body: string;
 }
 
 export interface GrpcRequestData {
-    type: "grpc",
+    type: "grpc";
     url: string;
 }
 
