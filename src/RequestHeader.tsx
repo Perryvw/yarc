@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useState } from "react";
+import { type ChangeEvent, useContext, useState } from "react";
 import { AppContext } from "./AppContext";
 import { ipcRenderer } from "electron";
 import { Send } from "lucide-react";

@@ -2,7 +2,7 @@ import Directory from "./Directory";
 import RequestHeader from "./RequestHeader";
 import RequestPanel from "./RequestPanel";
 import ResponsePanel from "./ResponsePanel";
-import { AppContext, AppContextType } from "./AppContext";
+import { AppContext, type AppContextType } from "./AppContext";
 import styled from "styled-components";
 
 const AppRoot = styled.div`

@@ -1,5 +1,5 @@
 import { useContext, useEffect } from "react";
-import { AppContext, RequestData } from "./AppContext";
+import { AppContext, type RequestData } from "./AppContext";
 import styled from "styled-components";
 
 const DirectoryRoot = styled.div`
@@ -43,8 +43,8 @@ export default function Directory() {
     return (
         <DirectoryRoot>
             Requests list
-            <button onClick={loadRequest(request1)}>Request A</button>
-            <button onClick={loadRequest(request2)}>Request B</button>
+            <button type="button" onClick={loadRequest(request1)}>Request A</button>
+            <button type="button" onClick={loadRequest(request2)}>Request B</button>
         </DirectoryRoot>
     );
 }

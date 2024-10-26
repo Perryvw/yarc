@@ -1,5 +1,5 @@
 import { net } from "electron";
-import { HttpRequestData, ResponseData } from "../AppContext";
+import type { HttpRequestData, ResponseData } from "../AppContext";
 
 export async function makeHttpRequest(
     request: HttpRequestData,
