@@ -7,6 +7,7 @@ const ResponsePanelRoot = styled.div`
     flex-direction: column;
     padding: 10px;
     gap: 10px;
+    border-left: 1px solid black;
 `;
 
 const ResponseTextarea = styled.textarea`

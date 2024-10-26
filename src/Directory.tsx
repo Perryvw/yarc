@@ -2,26 +2,59 @@ import { useContext, useEffect, useState } from "react";
 import { AppContext, type RequestData } from "./AppContext";
 import styled from "styled-components";
 import { ipcRenderer } from "electron";
+import { CirclePlus, Delete, Pencil } from "lucide-react";
 
 const DirectoryRoot = styled.div`
     display: flex;
     flex-direction: column;
-    gap: 5px;
-    width: 250;
+    width: 100%;
     height: 100%;
-    padding: 10px;
     border-right: 1px solid black;
+    min-height: 0;
+`;
+
+const RequestContainer = styled.div`
+    overflow-y: auto;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin;
+`;
+
+const Request = styled.button`
+    border: unset;
+    background: unset;
+    border-bottom: 1px solid #000;
+    text-align: left;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+
+    &:hover {
+        background-color: blue;
+    }
+`;
+
+const RequestActions = styled.div`
+    display: flex;
+    gap: 5px;
 `;
 
 const NewButton = styled.button`
-    border: 0;
-    background: blue;
-    border-radius: 5px;
-    padding: 10px 20px;
+    border: unset;
+    border-top: 1px solid #000;
+    background: unset;
+    padding: 10px;
     display: flex;
     gap: 5px;
     align-items: center;
     cursor: pointer;
+
+    &:hover {
+        background-color: blue;
+    }
 `;
 
 export default function Directory() {
@@ -73,11 +106,19 @@ export default function Directory() {
 
     return (
         <DirectoryRoot>
-            <button type="button">Import</button>
-            <button type="button">Export</button>
-            Requests list
-            {requests.map((r, i) => <button key={i.toString()} type="button" onClick={selectRequest(r)}>{r.name}</button>)}
-            <NewButton type="button" style={{backgroundColor: "blue"}} onClick={newRequest}>
+            <RequestContainer>
+                {requests.map((r, i) => (
+                    <Request key={i.toString()} type="button" onClick={selectRequest(r)}>
+                        {r.name}
+                        <RequestActions>
+                            <Pencil size={16} />
+                            <Delete size={16} />
+                        </RequestActions>
+                    </Request>
+                ))}
+            </RequestContainer>
+            <NewButton type="button" onClick={newRequest}>
+                <CirclePlus />
                 New
             </NewButton>
         </DirectoryRoot>

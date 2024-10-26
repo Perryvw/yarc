@@ -8,19 +8,13 @@ app.whenReady().then(() => {
         return await makeHttpRequest(request);
     });
 
-    ipcMain.handle(
-        "load-request-list",
-        async () => {
-            return await loadRequestList();
-        }
-    );
+    ipcMain.handle("load-request-list", async () => {
+        return await loadRequestList();
+    });
 
-    ipcMain.handle(
-        "save-request-list",
-        async (_, requests: RequestData[]) => {
-            await persistRequestList(requests);
-        }
-    )
+    ipcMain.handle("save-request-list", async (_, requests: RequestData[]) => {
+        await persistRequestList(requests);
+    });
 
     const window = new BrowserWindow({
         autoHideMenuBar: true,

@@ -15,11 +15,10 @@ export async function persistRequestList(requests: RequestData[]) {
 
 export async function loadRequestList(): Promise<RequestData[]> {
     const s = await fs.stat(storagePath);
-    if (s.isFile())
-    {
+    if (s.isFile()) {
         const loaded = await fs.readFile(storageFile);
         return JSON.parse(loaded.toString());
     }
-    
+
     return [];
 }
