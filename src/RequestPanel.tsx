@@ -1,24 +1,33 @@
-import { ChangeEvent, ChangeEventHandler, useContext, useState } from "react";
-import { AppContext } from "./App";
+import { ChangeEvent, useContext, useState } from "react";
+import { AppContext } from "./AppContext";
 
 export default function RequestPanel() {
 
     const context = useContext(AppContext);
 
-    const [requestBody, setRequestBody] = useState(context.requestBody);
+    const [request, setRequest] = useState(context.request);
+    const [requestBody, setRequestBody] = useState(request.body);
+
+    context.setRequest = (r) => {
+        setRequest(r);
+        setRequestBody(r.body);
+    };
 
     function onRequestBodyChanged(event: ChangeEvent<HTMLTextAreaElement>) {
-        context.requestBody = event.target.value;
+        context.request.body = event.target.value;
+        setRequestBody(event.target.value);
     }
 
     return (
         <div style={{
-            backgroundColor: "orange",
+            backgroundColor: "#2b2d31",
             height: "100%",
             width: "50%",
             float: "left",
             padding: 5,
-            boxSizing: "border-box"
+            boxSizing: "border-box",
+            border: "solid black",
+            borderWidth: "0 1 0 0",
         }}>
             Body<br/>
             <textarea style={{
@@ -26,7 +35,7 @@ export default function RequestPanel() {
                     height: 300,
                     resize: "none"
                 }}
-                value={context.requestBody}
+                value={requestBody}
                 onChange={onRequestBodyChanged}
             />
         </div>

@@ -1,29 +1,31 @@
 import { useContext, useState } from "react";
-import { AppContext } from "./App";
+import { AppContext } from "./AppContext";
 
 export default function ResponsePanel() {
 
     const context = useContext(AppContext);
 
-    const [responseBody, setResponseBody] = useState(context.responseBody);
+    const [response, setResponse] = useState(context.response);
+    context.setResponse = setResponse;
     
     return (
         <div style={{
-            backgroundColor: "cyan",
+            backgroundColor: "#2b2d31",
             height: "100%",
             width: "50%",
             float: "left",
             padding: 5,
             boxSizing: "border-box"
         }}>
-            Response
+            Status: {}<br />
+            Body
             <textarea style={{
                     width: "100%",
                     height: 300,
                     resize: "none",
                 }} 
                 readOnly
-                value={responseBody}
+                value={response.body}
             />
         </div>
     )

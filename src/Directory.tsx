@@ -1,27 +1,48 @@
-import { useContext } from "react";
-import { AppContext } from "./App";
+import { useContext, useEffect } from "react";
+import { AppContext, RequestData } from "./AppContext";
 
 export default function Directory() {
 
     const context = useContext(AppContext);
 
-    const loadRequest = (request: string) => () => {
-        alert(request);
+    const loadRequest = (request: RequestData) => () => {
+        context.request = request;
+
+        context.setRequestHeader(request);
+        context.setRequest(request);
     }
+
+    const request1: RequestData = {
+        url: "A",
+        method: "GET",
+        body: "A"
+    };
+    const request2: RequestData = {
+        url: "B",
+        method: "POST",
+        body: "B"
+    };
+
+    // Set default request to request 1
+    useEffect(() => {
+        loadRequest(request1)();
+    }, []);
 
     return (
         <div style={{
-            backgroundColor: "red",
+            backgroundColor: "#1e1f22",
             width: 250,
             height: "100%",
             padding: 5,
-            boxSizing: "border-box"
+            boxSizing: "border-box",
+            border: "solid black",
+            borderWidth: "0 1 0 0",
         }}>
             Requests list
             <br />
-            <button onClick={loadRequest("A")}>Request A</button>
+            <button onClick={loadRequest(request1)}>Request A</button>
             <br />
-            <button onClick={loadRequest("B")}>Request B</button>
+            <button onClick={loadRequest(request2)}>Request B</button>
         </div>
     )
 }

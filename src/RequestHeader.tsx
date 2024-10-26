@@ -1,25 +1,45 @@
 import { ChangeEvent, useContext, useRef, useState } from "react";
-import { AppContext } from "./App";
+import { AppContext } from "./AppContext";
 
 export default function RequestHeader() {
 
     const context = useContext(AppContext);
 
-    function onChange(event: ChangeEvent<HTMLInputElement>) {
-        context.url = event.target.value;
+    const [url, setUrl] = useState(context.request.url);
+    const [method, setMethod] = useState(context.request.method);
+
+    context.setRequestHeader = (r) => {
+        setUrl(r.url);
+        setMethod(r.method);
+    };
+
+    function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
+        context.request.url = event.target.value;
+        setUrl(event.target.value);
+    }
+
+    function onMethodChange(event: ChangeEvent<HTMLSelectElement>) {
+        context.request.method = event.target.value as typeof context.request.method;
+        setMethod(event.target.value as typeof context.request.method);
     }
 
     function onClick() {
-        alert("hi" + context.url);
+        alert("hi" + context.request.url);
     }
 
     return (
         <div style={{
-            backgroundColor: "green",
+            backgroundColor: "#313338",
+            border: "solid black",
+            borderWidth: "0 0 1 0",
             height: 30,
             padding: "10"
         }}>
-            <input type="text" value={context.url} placeholder="url..." onChange={onChange} style={{width: 400, height: 30}} />
+            <select style={{height: 30}} value={method} onChange={onMethodChange}>
+                <option>GET</option>
+                <option>POST</option>
+            </select>
+            <input type="text" value={url} placeholder="url..." onChange={onUrlChange} style={{width: 400, height: 30}} />
             <button onClick={onClick} style={{height: 30}} >Send</button>
         </div>
     )

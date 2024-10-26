@@ -1,23 +1,24 @@
-import { createContext, useState } from "react";
 import Directory from "./Directory";
 import RequestHeader from "./RequestHeader";
 import RequestPanel from "./RequestPanel";
 import ResponsePanel from "./ResponsePanel";
-
-const initialContext = {
-    url: "0",
-    requestBody: "0",
-    responseBody: "0"
-};
-export type AppContextType = typeof initialContext;
-export const AppContext = createContext(initialContext);
+import { AppContext, AppContextType } from "./AppContext";
 
 export default function App() {
 
-    //const [ctx] = useState<AppContextType>(initialContext);
-
-    function onClick() {
-        alert("bye");
+    const initialContext: AppContextType = {
+        request: {
+            url: "initialUrl",
+            method: "GET",
+            body: "initial request",
+        },
+        response: {
+            statusCode: 0,
+            body: "initial response"
+        },
+        setRequestHeader() {},
+        setRequest() {},
+        setResponse() {}
     }
 
     return (
