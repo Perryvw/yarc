@@ -1,5 +1,22 @@
 import { useContext, useState } from "react";
 import { AppContext } from "./AppContext";
+import styled from 'styled-components';
+
+const ResponsePanelRoot = styled.div`
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 10px;
+`;
+
+const ResponseTextarea = styled.textarea`
+    font-family: 'Consolas';
+    padding: 5px;
+    border: 1px solid black;
+    background: inherit;
+    resize: none;
+    flex-grow: 1;
+`;
 
 export default function ResponsePanel() {
 
@@ -7,26 +24,15 @@ export default function ResponsePanel() {
 
     const [response, setResponse] = useState(context.response);
     context.setResponse = setResponse;
-    
+
     return (
-        <div style={{
-            backgroundColor: "#2b2d31",
-            height: "100%",
-            width: "50%",
-            float: "left",
-            padding: 5,
-            boxSizing: "border-box"
-        }}>
+        <ResponsePanelRoot>
             Status: {response.statusCode}<br />
             Body
-            <textarea style={{
-                    width: "100%",
-                    height: 300,
-                    resize: "none",
-                }} 
+            <ResponseTextarea
                 readOnly
                 value={response.body}
             />
-        </div>
+        </ResponsePanelRoot>
     )
 }

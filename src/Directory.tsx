@@ -1,5 +1,16 @@
 import { useContext, useEffect } from "react";
 import { AppContext, RequestData } from "./AppContext";
+import styled from 'styled-components';
+
+const DirectoryRoot = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 250;
+    height: 100%;
+    padding: 10px;
+    border-right: 1px solid black;
+`;
 
 export default function Directory() {
 
@@ -31,20 +42,10 @@ export default function Directory() {
     }, []);
 
     return (
-        <div style={{
-            backgroundColor: "#1e1f22",
-            width: 250,
-            height: "100%",
-            padding: 5,
-            boxSizing: "border-box",
-            border: "solid black",
-            borderWidth: "0 1 0 0",
-        }}>
+        <DirectoryRoot>
             Requests list
-            <br />
             <button onClick={loadRequest(request1)}>Request A</button>
-            <br />
             <button onClick={loadRequest(request2)}>Request B</button>
-        </div>
+        </DirectoryRoot>
     )
 }

@@ -3,6 +3,23 @@ import RequestHeader from "./RequestHeader";
 import RequestPanel from "./RequestPanel";
 import ResponsePanel from "./ResponsePanel";
 import { AppContext, AppContextType } from "./AppContext";
+import styled from 'styled-components';
+
+const AppRoot = styled.div`
+    color-scheme: dark;
+    display: flex;
+    height: 100%;
+    background-color: #1e1f22;
+    color: #fff;
+    font: 16px/1.5 system-ui;
+`;
+
+const MainContainer = styled.div`
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: min-content 1fr;
+`;
 
 export default function App() {
 
@@ -17,24 +34,22 @@ export default function App() {
             statusCode: 0,
             body: "initial response"
         },
-        setRequestHeader() {},
-        setRequest() {},
-        setResponse() {}
+        setRequestHeader() { },
+        setRequest() { },
+        setResponse() { }
     }
 
     return (
         <AppContext.Provider value={initialContext}>
-            <div style={{ backgroundColor: "blue", height: "100%", display: "flex" }}>
+            <AppRoot>
                 <Directory />
 
-                <div style={{flexGrow: 1, display: "flex", flexDirection: "column"}}>
-                    <RequestHeader/>
-                    <div style={{flexGrow: 1}}>
-                        <RequestPanel />
-                        <ResponsePanel />
-                    </div>
-                </div>
-            </div>
+                <MainContainer>
+                    <RequestHeader />
+                    <RequestPanel />
+                    <ResponsePanel />
+                </MainContainer>
+            </AppRoot>
         </AppContext.Provider>
     )
 }
