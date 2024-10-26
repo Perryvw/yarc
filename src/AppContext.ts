@@ -2,6 +2,7 @@ import { createContext } from "react";
 
 export interface HttpRequestData {
     type: "http";
+    name: string;
     url: string;
     method: "GET" | "POST";
     body: string;
@@ -9,6 +10,7 @@ export interface HttpRequestData {
 
 export interface GrpcRequestData {
     type: "grpc";
+    name: string;
     url: string;
 }
 

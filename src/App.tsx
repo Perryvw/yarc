@@ -25,6 +25,7 @@ export default function App() {
     const initialContext: AppContextType = {
         request: {
             type: "http",
+            name: "initial",
             url: "initialUrl",
             method: "GET",
             body: "initial request",

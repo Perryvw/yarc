@@ -1,5 +1,5 @@
 import { net } from "electron";
-import type { HttpRequestData, ResponseData } from "../AppContext";
+import type { HttpRequestData, ResponseData } from "../../AppContext";
 
 export async function makeHttpRequest(request: HttpRequestData): Promise<ResponseData> {
     const url = new URL(request.url);
@@ -7,7 +7,7 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
     return new Promise((resolve) => {
         const req = net.request({
             method: request.method,
-            protocol: url.protocol,
+            protocol: url.protocol as "http:" | "https:",
             hostname: url.hostname,
             port: Number(url.port),
             path: url.pathname,
