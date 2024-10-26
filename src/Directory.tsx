@@ -43,8 +43,12 @@ export default function Directory() {
     return (
         <DirectoryRoot>
             Requests list
-            <button type="button" onClick={loadRequest(request1)}>Request A</button>
-            <button type="button" onClick={loadRequest(request2)}>Request B</button>
+            <button type="button" onClick={loadRequest(request1)}>
+                Request A
+            </button>
+            <button type="button" onClick={loadRequest(request2)}>
+                Request B
+            </button>
         </DirectoryRoot>
     );
 }

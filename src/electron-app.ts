@@ -3,12 +3,9 @@ import type { HttpRequestData, RequestData, ResponseData } from "./AppContext";
 import { makeHttpRequest } from "./Communication/http";
 
 app.whenReady().then(() => {
-    ipcMain.handle(
-        "http-request",
-        async (_, request: HttpRequestData): Promise<ResponseData> => {
-            return await makeHttpRequest(request);
-        },
-    );
+    ipcMain.handle("http-request", async (_, request: HttpRequestData): Promise<ResponseData> => {
+        return await makeHttpRequest(request);
+    });
 
     const window = new BrowserWindow({
         autoHideMenuBar: true,

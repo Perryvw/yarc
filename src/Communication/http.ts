@@ -1,9 +1,7 @@
 import { net } from "electron";
 import type { HttpRequestData, ResponseData } from "../AppContext";
 
-export async function makeHttpRequest(
-    request: HttpRequestData,
-): Promise<ResponseData> {
+export async function makeHttpRequest(request: HttpRequestData): Promise<ResponseData> {
     const url = new URL(request.url);
 
     return new Promise((resolve) => {

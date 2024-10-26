@@ -54,9 +54,7 @@ export default function RequestHeader() {
     const context = useContext(AppContext);
 
     const [url, setUrl] = useState(context.request.url);
-    const [method, setMethod] = useState(
-        context.request.type === "http" ? context.request.method : "grpc",
-    );
+    const [method, setMethod] = useState(context.request.type === "http" ? context.request.method : "grpc");
 
     context.setRequestHeader = (r) => {
         setUrl(r.url);
@@ -72,18 +70,14 @@ export default function RequestHeader() {
 
     function onMethodChange(event: ChangeEvent<HTMLSelectElement>) {
         if (context.request.type === "http") {
-            context.request.method = event.target
-                .value as typeof context.request.method;
+            context.request.method = event.target.value as typeof context.request.method;
             setMethod(event.target.value as typeof context.request.method);
         }
     }
 
     async function onClick() {
         if (context.request.type === "http") {
-            context.response = await ipcRenderer.invoke(
-                "http-request",
-                context.request,
-            );
+            context.response = await ipcRenderer.invoke("http-request", context.request);
             context.setResponse(context.response);
         } else if (context.request.type === "grpc") {
             // TODO
@@ -97,12 +91,7 @@ export default function RequestHeader() {
                     <option>GET</option>
                     <option>POST</option>
                 </RequestMethod>
-                <RequestPath
-                    type="text"
-                    value={url}
-                    placeholder="url..."
-                    onChange={onUrlChange}
-                />
+                <RequestPath type="text" value={url} placeholder="url..." onChange={onUrlChange} />
             </RequestMethodAndPath>
             <RequestButton onClick={onClick}>
                 <Send size={16} />

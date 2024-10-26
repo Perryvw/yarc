@@ -13,9 +13,7 @@ export default function RequestPanel() {
     const context = useContext(AppContext);
 
     const [request, setRequest] = useState(context.request);
-    const [requestBody, setRequestBody] = useState(
-        request.type === "http" ? request.body : "protobuf",
-    );
+    const [requestBody, setRequestBody] = useState(request.type === "http" ? request.body : "protobuf");
 
     context.setRequest = (r) => {
         setRequest(r);

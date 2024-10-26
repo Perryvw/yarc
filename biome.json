@@ -1,26 +1,30 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-	"files": {
-		"include": ["src/"],
-		"ignoreUnknown": false,
-		"ignore": []
-	},
-	"formatter": {
-		"enabled": false
-	},
-	"organizeImports": {
-		"enabled": true
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"correctness": {
-				"useExhaustiveDependencies": "off"
-			},
-			"style": {
-				"noNonNullAssertion": "info"
-			}
-		}
-	}
+    "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+    "files": {
+        "include": ["src/"],
+        "ignoreUnknown": false,
+        "ignore": []
+    },
+    "formatter": {
+        "enabled": true,
+        "indentWidth": 4,
+        "indentStyle": "space",
+        "lineWidth": 120,
+        "lineEnding": "lf"
+    },
+    "organizeImports": {
+        "enabled": true
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "correctness": {
+                "useExhaustiveDependencies": "off"
+            },
+            "style": {
+                "noNonNullAssertion": "info"
+            }
+        }
+    }
 }
