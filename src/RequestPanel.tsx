@@ -6,15 +6,21 @@ export default function RequestPanel() {
     const context = useContext(AppContext);
 
     const [request, setRequest] = useState(context.request);
-    const [requestBody, setRequestBody] = useState(request.body);
+    const [requestBody, setRequestBody] = useState(request.type === "http" ? request.body : "protobuf");
 
     context.setRequest = (r) => {
         setRequest(r);
-        setRequestBody(r.body);
+        if (r.type === "http")
+        {
+            setRequestBody(r.body);
+        }
     };
 
     function onRequestBodyChanged(event: ChangeEvent<HTMLTextAreaElement>) {
-        context.request.body = event.target.value;
+        if (context.request.type === "http")
+        {
+            context.request.body = event.target.value;
+        }
         setRequestBody(event.target.value);
     }
 

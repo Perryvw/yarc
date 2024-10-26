@@ -1,16 +1,20 @@
-import { ChangeEvent, useContext, useRef, useState } from "react";
+import { ChangeEvent, useContext, useState } from "react";
 import { AppContext } from "./AppContext";
+import { ipcRenderer } from "electron";
 
 export default function RequestHeader() {
 
     const context = useContext(AppContext);
 
     const [url, setUrl] = useState(context.request.url);
-    const [method, setMethod] = useState(context.request.method);
+    const [method, setMethod] = useState(context.request.type === "http" ? context.request.method : "grpc");
 
     context.setRequestHeader = (r) => {
         setUrl(r.url);
-        setMethod(r.method);
+        if (r.type === "http")
+        {
+            setMethod(r.method);
+        }
     };
 
     function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
@@ -19,12 +23,23 @@ export default function RequestHeader() {
     }
 
     function onMethodChange(event: ChangeEvent<HTMLSelectElement>) {
-        context.request.method = event.target.value as typeof context.request.method;
-        setMethod(event.target.value as typeof context.request.method);
+        if (context.request.type === "http")
+        {
+            context.request.method = event.target.value as typeof context.request.method;
+            setMethod(event.target.value as typeof context.request.method);
+        }
     }
 
-    function onClick() {
-        alert("hi" + context.request.url);
+    async function onClick() {
+        if (context.request.type === "http")
+        {
+            context.response = await ipcRenderer.invoke("http-request", context.request);
+            context.setResponse(context.response);
+        }
+        else if (context.request.type === "grpc")
+        {
+            // TODO
+        }
     }
 
     return (

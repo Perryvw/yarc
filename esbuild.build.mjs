@@ -1,5 +1,6 @@
 import * as esbuild from 'esbuild';
 import { exec } from 'child_process';
+import { esBuildSettings } from './esbuild.common.mjs';
 
 exec("npx tsc --outDir out src/electron-app.ts", (error, stdout) => {
   if (error) {
@@ -8,9 +9,4 @@ exec("npx tsc --outDir out src/electron-app.ts", (error, stdout) => {
   }
 });
 
-await esbuild.build({
-  entryPoints: ['src/react-app.ts'],
-  bundle: true,
-  outdir: 'out',
-  sourcemap: true,
-});
+await esbuild.build(esBuildSettings);

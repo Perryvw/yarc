@@ -13,13 +13,15 @@ export default function Directory() {
     }
 
     const request1: RequestData = {
-        url: "A",
+        type: "http",
+        url: "https://www.google.com/",
         method: "GET",
-        body: "A"
+        body: "" // google doesnt like extra data
     };
     const request2: RequestData = {
-        url: "B",
-        method: "POST",
+        type: "http",
+        url: "https://www.bing.com/",
+        method: "GET",
         body: "B"
     };
 

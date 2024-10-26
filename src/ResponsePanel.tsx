@@ -17,7 +17,7 @@ export default function ResponsePanel() {
             padding: 5,
             boxSizing: "border-box"
         }}>
-            Status: {}<br />
+            Status: {response.statusCode}<br />
             Body
             <textarea style={{
                     width: "100%",
