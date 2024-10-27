@@ -1,8 +1,10 @@
 import { useContext, useEffect, useState } from "react";
-import { AppContext, type RequestData } from "./AppContext";
+import { AppContext } from "./AppContext";
 import styled from "styled-components";
 import { ipcRenderer } from "electron";
 import { CirclePlus, Delete, Pencil } from "lucide-react";
+import { IpcCall } from "./common/ipc";
+import type { RequestData } from "./common/request-types";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -74,14 +76,19 @@ export default function Directory() {
         method: "GET",
         body: "B",
     };
+    context.requests = [request1, request2];
 
-    const [requests, setRequests] = useState<RequestData[]>([request1, request2]);
+    const [requests, setRequests] = useState<RequestData[]>(context.requests);
+    context.setRequestList = (l) => {
+        setRequests(l);
+        selectRequest(l[0]);
+    };
 
     const selectRequest = (request: RequestData) => () => {
-        context.request = request;
+        context.activeRequest = request;
 
-        context.setRequestHeader(request);
-        context.setRequest(request);
+        context.setActiveRequestHeader(request);
+        context.setActiveRequest(request);
     };
 
     function newRequest() {
@@ -92,12 +99,15 @@ export default function Directory() {
             url: "new",
             body: "new",
         };
-        setRequests([...requests, newRequest]);
+        context.requests = [...requests, newRequest];
+        setRequests(context.requests);
+        context.setDirectoryheaderList(context.requests);
+        console.log(context.requests);
     }
 
     // Set default request to request 1
     useEffect(() => {
-        ipcRenderer.invoke("load-request-list").then((requests) => {
+        ipcRenderer.invoke(IpcCall.LoadRequestList).then((requests) => {
             //alert(requests.toString());
             //setRequests(requests);
         });

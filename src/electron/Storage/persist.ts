@@ -1,7 +1,7 @@
 import { app } from "electron";
-import type { RequestData } from "../../AppContext";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import type { RequestData } from "../../common/request-types";
 
 const storagePath = app.getAppPath();
 //const storagePath = app.getPath("userData");

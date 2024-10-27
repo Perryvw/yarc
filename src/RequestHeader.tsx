@@ -3,6 +3,7 @@ import { AppContext } from "./AppContext";
 import { ipcRenderer } from "electron";
 import { Play } from "lucide-react";
 import styled from "styled-components";
+import { IpcCall } from "./common/ipc";
 
 const RequestHeaderContainer = styled.div`
     grid-column: span 2;
@@ -63,10 +64,12 @@ const RequestButton = styled.button`
 export default function RequestHeader() {
     const context = useContext(AppContext);
 
-    const [url, setUrl] = useState(context.request.url);
-    const [method, setMethod] = useState(context.request.type === "http" ? context.request.method : "grpc");
+    const [url, setUrl] = useState(context.activeRequest?.url ?? "");
+    const [method, setMethod] = useState(
+        context.activeRequest?.type === "http" ? context.activeRequest.method : "grpc",
+    );
 
-    context.setRequestHeader = (r) => {
+    context.setActiveRequestHeader = (r) => {
         setUrl(r.url);
         if (r.type === "http") {
             setMethod(r.method);
@@ -74,22 +77,24 @@ export default function RequestHeader() {
     };
 
     function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
-        context.request.url = event.target.value;
-        setUrl(event.target.value);
+        if (context.activeRequest) {
+            context.activeRequest.url = event.target.value;
+            setUrl(event.target.value);
+        }
     }
 
     function onMethodChange(event: ChangeEvent<HTMLSelectElement>) {
-        if (context.request.type === "http") {
-            context.request.method = event.target.value as typeof context.request.method;
-            setMethod(event.target.value as typeof context.request.method);
+        if (context.activeRequest && context.activeRequest.type === "http") {
+            context.activeRequest.method = event.target.value as typeof context.activeRequest.method;
+            setMethod(event.target.value as typeof context.activeRequest.method);
         }
     }
 
     async function onClick() {
-        if (context.request.type === "http") {
-            context.response = await ipcRenderer.invoke("http-request", context.request);
+        if (context.activeRequest && context.activeRequest.type === "http") {
+            context.response = await ipcRenderer.invoke(IpcCall.HttpRequest, context.activeRequest);
             context.setResponse(context.response);
-        } else if (context.request.type === "grpc") {
+        } else if (context.activeRequest && context.activeRequest.type === "grpc") {
             // TODO
         }
     }

@@ -1,19 +1,29 @@
 import { app, BrowserWindow, ipcMain } from "electron";
-import type { HttpRequestData, RequestData, ResponseData } from "../AppContext";
 import { makeHttpRequest } from "./Communication/http";
 import { loadRequestList, persistRequestList } from "./Storage/persist";
+import { IpcCall } from "../common/ipc";
+import type { HttpRequestData, RequestData, ResponseData } from "../common/request-types";
+import { exportDirectory, importDirectory } from "./Storage/import-export";
 
 app.whenReady().then(() => {
-    ipcMain.handle("http-request", async (_, request: HttpRequestData): Promise<ResponseData> => {
+    ipcMain.handle(IpcCall.HttpRequest, async (_, request: HttpRequestData): Promise<ResponseData> => {
         return await makeHttpRequest(request);
     });
 
-    ipcMain.handle("load-request-list", async () => {
+    ipcMain.handle(IpcCall.LoadRequestList, async () => {
         return await loadRequestList();
     });
 
-    ipcMain.handle("save-request-list", async (_, requests: RequestData[]) => {
+    ipcMain.handle(IpcCall.SaveRequestList, async (_, requests: RequestData[]) => {
         await persistRequestList(requests);
+    });
+
+    ipcMain.handle(IpcCall.ImportDirectory, async () => {
+        return await importDirectory();
+    });
+
+    ipcMain.handle(IpcCall.ExportDirectory, async (_, requests: RequestData[]) => {
+        await exportDirectory(requests);
     });
 
     const window = new BrowserWindow({

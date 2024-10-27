@@ -13,10 +13,12 @@ const RequestPanelRoot = styled.div`
 export default function RequestPanel() {
     const context = useContext(AppContext);
 
-    const [request, setRequest] = useState(context.request);
-    const [requestBody, setRequestBody] = useState(request.type === "http" ? request.body : "protobuf");
+    const [request, setRequest] = useState(context.activeRequest);
+    const [requestBody, setRequestBody] = useState(
+        request ? (request.type === "http" ? request.body : "protobuf") : "",
+    );
 
-    context.setRequest = (r) => {
+    context.setActiveRequest = (r) => {
         setRequest(r);
         if (r.type === "http") {
             setRequestBody(r.body);
@@ -24,10 +26,10 @@ export default function RequestPanel() {
     };
 
     function onRequestBodyChanged(event: ChangeEvent<HTMLTextAreaElement>) {
-        if (context.request.type === "http") {
-            context.request.body = event.target.value;
+        if (context.activeRequest && context.activeRequest.type === "http") {
+            context.activeRequest.body = event.target.value;
+            setRequestBody(event.target.value);
         }
-        setRequestBody(event.target.value);
     }
 
     return (

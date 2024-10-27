@@ -1,32 +1,17 @@
 import { createContext } from "react";
-
-export interface HttpRequestData {
-    type: "http";
-    name: string;
-    url: string;
-    method: "GET" | "POST";
-    body: string;
-}
-
-export interface GrpcRequestData {
-    type: "grpc";
-    name: string;
-    url: string;
-}
-
-export type RequestData = HttpRequestData | GrpcRequestData;
-
-export interface ResponseData {
-    statusCode: number;
-    body: string;
-}
+import type { RequestData, ResponseData } from "./common/request-types";
 
 export interface AppContextType {
-    request: RequestData;
+    requests: RequestData[];
+
+    activeRequest?: RequestData;
     response: ResponseData;
 
-    setRequestHeader: (request: RequestData) => void;
-    setRequest: (request: RequestData) => void;
+    setRequestList: (requests: RequestData[]) => void;
+    setDirectoryheaderList: (requests: RequestData[]) => void;
+
+    setActiveRequestHeader: (request: RequestData) => void;
+    setActiveRequest: (request: RequestData) => void;
     setResponse: (request: ResponseData) => void;
 }
 export const AppContext = createContext<AppContextType>(null!);
