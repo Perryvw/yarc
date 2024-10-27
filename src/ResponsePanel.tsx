@@ -4,12 +4,21 @@ import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
 import { html } from "@codemirror/lang-html";
 import styled from "styled-components";
+import { CircleSlash2 } from "lucide-react";
 
 const ResponsePanelRoot = styled.div`
     display: flex;
     flex-direction: column;
     border-left: 1px solid var(--color-border);
     min-height: 0;
+`;
+
+const ResponsePanelEmpty = styled.div`
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #999;
+    margin-top: 10%;
 `;
 
 const Status = styled.div`
@@ -160,7 +169,14 @@ export default function ResponsePanel() {
     }
 
     if (!response.statusCode) {
-        return <b>no response</b>;
+        return (
+            <ResponsePanelRoot>
+                <ResponsePanelEmpty>
+                    <CircleSlash2 />
+                    <i>Send a request to view the response here.</i>
+                </ResponsePanelEmpty>
+            </ResponsePanelRoot>
+        );
     }
 
     const codemirrorTheme = EditorView.theme({
@@ -204,20 +220,17 @@ export default function ResponsePanel() {
                             Pretty print
                         </label>
                     </div>
-                    {prettyPrint && (
-                        <CodeMirror
-                            readOnly
-                            theme="dark"
-                            value={response.body}
-                            basicSetup={{ foldGutter: true }}
-                            extensions={[codemirrorTheme, json(), html()]}
-                            style={{
-                                flexBasis: "100%",
-                                overflow: "hidden",
-                            }}
-                        />
-                    )}
-                    {prettyPrint || <ResponseTextarea readOnly value={response.body} />}
+                    <CodeMirror
+                        readOnly
+                        theme="dark"
+                        value={response.body}
+                        basicSetup={{ foldGutter: true }}
+                        extensions={[codemirrorTheme, json(), html()]}
+                        style={{
+                            flexBasis: "100%",
+                            overflow: "hidden",
+                        }}
+                    />
                 </ResponseBody>
             )}
 

@@ -31,16 +31,18 @@ const RequestMethodAndPath = styled.div`
 `;
 
 const RequestMethod = styled.select`
+    font: inherit;
     border: 0;
-    padding: 10px;
+    padding: 6px;
     outline: 0;
     background: unset;
 `;
 
 const RequestPath = styled.input`
+    font: inherit;
     flex-grow: 1;
     border: 0;
-    padding: 10px;
+    padding: 6px;
     outline: 0;
     background: unset;
 `;
