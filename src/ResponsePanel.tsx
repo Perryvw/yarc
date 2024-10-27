@@ -1,5 +1,8 @@
 import { useContext, useState } from "react";
 import { AppContext } from "./AppContext";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
+import { json } from "@codemirror/lang-json";
+import { html } from "@codemirror/lang-html";
 import styled from "styled-components";
 
 const ResponsePanelRoot = styled.div`
@@ -73,6 +76,7 @@ const ResponseBody = styled.div`
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 0;
 `;
 
 const ResponseHeaders = styled.div`
@@ -125,6 +129,7 @@ export default function ResponsePanel() {
     const context = useContext(AppContext);
 
     const [tab, setTab] = useState<"body" | "headers">("body");
+    const [prettyPrint, setPrettyPrint] = useState(true);
     const [response, setResponse] = useState(context.response);
     context.setResponse = setResponse;
 
@@ -158,6 +163,12 @@ export default function ResponsePanel() {
         return <b>no response</b>;
     }
 
+    const codemirrorTheme = EditorView.theme({
+        "&.cm-editor": {
+            height: "100%",
+        },
+    });
+
     return (
         <ResponsePanelRoot>
             <Status>
@@ -185,11 +196,28 @@ export default function ResponsePanel() {
                 <ResponseBody>
                     <div>
                         <label>
-                            <input type="checkbox" />
+                            <input
+                                type="checkbox"
+                                onClick={() => setPrettyPrint(!prettyPrint)}
+                                defaultChecked={prettyPrint}
+                            />
                             Pretty print
                         </label>
                     </div>
-                    <ResponseTextarea readOnly value={response.body} />
+                    {prettyPrint && (
+                        <CodeMirror
+                            readOnly
+                            theme="dark"
+                            value={response.body}
+                            basicSetup={{ foldGutter: true }}
+                            extensions={[codemirrorTheme, json(), html()]}
+                            style={{
+                                flexBasis: "100%",
+                                overflow: "hidden",
+                            }}
+                        />
+                    )}
+                    {prettyPrint || <ResponseTextarea readOnly value={response.body} />}
                 </ResponseBody>
             )}
 

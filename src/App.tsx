@@ -8,7 +8,7 @@ import styled from "styled-components";
 
 const AppRoot = styled.div`
     display: grid;
-    grid-template-columns: 250px 1fr 1fr;
+    grid-template-columns: 10% 40% 50%;
     grid-template-rows: min-content 1fr;
     height: 100%;
     width: 100%;
@@ -30,6 +30,7 @@ export default function App() {
         activeRequest: undefined,
         response: {
             statusCode: 0,
+            headers: {},
             body: "initial response",
         },
         setRequestList() {},

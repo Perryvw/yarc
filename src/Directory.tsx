@@ -71,8 +71,8 @@ export default function Directory() {
     };
     const request2: RequestData = {
         type: "http",
-        name: "Bing",
-        url: "https://www.bing.com/",
+        name: "JSON",
+        url: "https://jsonplaceholder.typicode.com/comments",
         method: "GET",
         body: "B",
     };

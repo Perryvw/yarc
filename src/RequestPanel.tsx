@@ -8,6 +8,7 @@ const RequestPanelRoot = styled.div`
     padding: 10px;
     gap: 10px;
     overflow-y: auto;
+    min-width: 250px;
 `;
 
 export default function RequestPanel() {
