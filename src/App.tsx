@@ -16,6 +16,8 @@ const AppRoot = styled.div`
     color: var(--color-text);
     font: 16px/1.5 system-ui;
 
+    --font-monospace: "Consolas", monospace;
+
     --color-text: #fff;
     --color-background: #161920;
     --color-background-contrast: #0c0c0c;
