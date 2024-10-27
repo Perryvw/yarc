@@ -5,5 +5,5 @@ export enum IpcCall {
     ExportDirectory = "export-directory",
 
     HttpRequest = "http-request",
-    GrpcRequest = "grpc-request"
+    GrpcRequest = "grpc-request",
 }

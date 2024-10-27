@@ -16,5 +16,6 @@ export type RequestData = HttpRequestData | GrpcRequestData;
 
 export interface ResponseData {
     statusCode: number;
+    headers: Record<string, string | string[]>;
     body: string;
 }
