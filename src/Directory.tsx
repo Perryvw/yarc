@@ -9,7 +9,7 @@ const DirectoryRoot = styled.div`
     flex-direction: column;
     width: 100%;
     height: 100%;
-    border-right: 1px solid black;
+    border-right: 1px solid var(--color-border);
     min-height: 0;
 `;
 
@@ -25,7 +25,7 @@ const RequestContainer = styled.div`
 const Request = styled.button`
     border: unset;
     background: unset;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid var(--color-border);
     text-align: left;
     padding: 10px;
     cursor: pointer;
@@ -44,7 +44,7 @@ const RequestActions = styled.div`
 
 const NewButton = styled.button`
     border: unset;
-    border-top: 1px solid #000;
+    border-top: 1px solid var(--color-border);
     background: unset;
     padding: 10px;
     display: flex;

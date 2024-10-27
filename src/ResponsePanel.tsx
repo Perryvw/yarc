@@ -7,13 +7,13 @@ const ResponsePanelRoot = styled.div`
     flex-direction: column;
     padding: 10px;
     gap: 10px;
-    border-left: 1px solid black;
+    border-left: 1px solid var(--color-border);
 `;
 
 const ResponseTextarea = styled.textarea`
     font-family: "Consolas";
     padding: 5px;
-    border: 1px solid black;
+    border: 0;
     background: inherit;
     resize: none;
     flex-grow: 1;

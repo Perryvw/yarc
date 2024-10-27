@@ -1,14 +1,14 @@
 import { type ChangeEvent, useContext, useState } from "react";
 import { AppContext } from "./AppContext";
 import { ipcRenderer } from "electron";
-import { Send } from "lucide-react";
+import { Play } from "lucide-react";
 import styled from "styled-components";
 
 const RequestHeaderContainer = styled.div`
     grid-column: span 2;
-    background-color: #313338;
+    background-color: var(--color-background-contrast);
     padding: 10px;
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid var(--color-border);
     display: flex;
     gap: 10px;
 `;
@@ -16,11 +16,16 @@ const RequestHeaderContainer = styled.div`
 const RequestMethodAndPath = styled.div`
     display: flex;
     flex-grow: 1;
-    background: #000;
+    background: var(--color-background);
     border-radius: 5px;
 
     &:focus-within {
-        box-shadow: 0 0 0 3px #66c0f4;
+        box-shadow: 0 0 0 3px hsl(201, 86%, 67%);
+    }
+
+    & option {
+        color: #fff;
+        background-color: #000;
     }
 `;
 
@@ -41,13 +46,18 @@ const RequestPath = styled.input`
 
 const RequestButton = styled.button`
     border: 0;
-    background: blue;
+    color: #000;
+    background: hsl(96, 46%, 57%);
     border-radius: 5px;
     padding: 10px 20px;
     display: flex;
     gap: 5px;
     align-items: center;
     cursor: pointer;
+
+    &:hover {
+        background: hsl(96, 46%, 40%);
+    }
 `;
 
 export default function RequestHeader() {
@@ -94,7 +104,7 @@ export default function RequestHeader() {
                 <RequestPath type="text" value={url} placeholder="url..." onChange={onUrlChange} />
             </RequestMethodAndPath>
             <RequestButton onClick={onClick}>
-                <Send size={16} />
+                <Play size={16} />
                 Send
             </RequestButton>
         </RequestHeaderContainer>

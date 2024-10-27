@@ -7,6 +7,7 @@ const RequestPanelRoot = styled.div`
     flex-direction: column;
     padding: 10px;
     gap: 10px;
+    overflow-y: auto;
 `;
 
 export default function RequestPanel() {

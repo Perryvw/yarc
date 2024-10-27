@@ -12,15 +12,20 @@ const AppRoot = styled.div`
     grid-template-rows: min-content 1fr;
     height: 100%;
     width: 100%;
-    background-color: #1e1f22;
-    color: #fff;
+    background-color: var(--color-background);
+    color: var(--color-text);
     font: 16px/1.5 system-ui;
+
+    --color-text: #fff;
+    --color-background: #161920;
+    --color-background-contrast: #0c0c0c;
+    --color-border: #2b2b2b;
 `;
 
 const DirectoryHeader = styled.div`
-    background-color: #313338;
-    border-right: 1px solid black;
-    border-bottom: 1px solid black;
+    background-color: var(--color-background-contrast);
+    border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
     display: flex;
     align-items: center;
     gap: 5px;
