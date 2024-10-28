@@ -173,6 +173,7 @@ export default function Directory() {
             body: "B",
         };
         context.setRequestList([request1, request2]);
+        context.setActiveRequest(request1);
 
         ipcRenderer.invoke(IpcCall.LoadRequestList).then((requests) => {
             //alert(requests.toString());

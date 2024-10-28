@@ -3,13 +3,13 @@ import type { RequestData, ResponseData } from "./common/request-types";
 
 type RequestHandler = (request: RequestData | undefined) => void;
 type RequestListHandler = (requests: RequestData[]) => void;
-type ResponseHandler = (response: ResponseData) => void;
+type ResponseHandler = (response: ResponseData | undefined) => void;
 
 export class AppContextImpl {
     activeRequest?: RequestData = undefined;
+    response?: ResponseData = undefined;
 
     requests: RequestData[] = [];
-    response: ResponseData = { body: "", headers: {}, statusCode: 0 };
 
     gridWidthDirectory = 10;
     gridWidthResponse = 50;
@@ -27,6 +27,7 @@ export class AppContextImpl {
         for (const h of Object.values(this.activeRequestListeners)) {
             h(request);
         }
+        this.setResponse(undefined);
     }
 
     public setRequestList(requests: RequestData[]) {
@@ -36,7 +37,7 @@ export class AppContextImpl {
         }
     }
 
-    public setResponse(response: ResponseData) {
+    public setResponse(response: ResponseData | undefined) {
         this.response = response;
         for (const h of Object.values(this.responseListeners)) {
             h(response);

@@ -136,6 +136,12 @@ const ResponseTextarea = styled.textarea`
     flex-grow: 1;
 `;
 
+const codemirrorTheme = EditorView.theme({
+    "&.cm-editor": {
+        height: "100%",
+    },
+});
+
 export default function ResponsePanel() {
     const context = useContext(AppContext);
 
@@ -147,14 +153,6 @@ export default function ResponsePanel() {
 
     function changeTab(tab: "body" | "headers") {
         setTab(tab);
-    }
-
-    function statusColor() {
-        if (response.statusCode >= 500) return "status-500";
-        if (response.statusCode >= 400) return "status-400";
-        if (response.statusCode >= 300) return "status-300";
-        if (response.statusCode >= 200) return "status-200";
-        return "";
     }
 
     function formatHeader(value: string | string[]) {
@@ -171,7 +169,7 @@ export default function ResponsePanel() {
         );
     }
 
-    if (!response.statusCode) {
+    if (!response) {
         return (
             <ResponsePanelRoot>
                 <ResponsePanelEmpty>
@@ -182,17 +180,11 @@ export default function ResponsePanel() {
         );
     }
 
-    const codemirrorTheme = EditorView.theme({
-        "&.cm-editor": {
-            height: "100%",
-        },
-    });
-
     return (
         <ResponsePanelRoot>
             <Status>
                 <div>
-                    Status: <StatusCode className={statusColor()}>{response.statusCode}</StatusCode>
+                    Status: <StatusCode className={statusColor(response.statusCode)}>{response.statusCode}</StatusCode>
                 </div>
                 <div>
                     Size: <b>{response.body.length}</b>
@@ -249,4 +241,12 @@ export default function ResponsePanel() {
             )}
         </ResponsePanelRoot>
     );
+}
+
+function statusColor(statusCode: number) {
+    if (statusCode >= 500) return "status-500";
+    if (statusCode >= 400) return "status-400";
+    if (statusCode >= 300) return "status-300";
+    if (statusCode >= 200) return "status-200";
+    return "";
 }
