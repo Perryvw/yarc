@@ -106,7 +106,7 @@ export default function RequestPanel() {
         return (
             <tr>
                 <td>
-                    <QueryParameterCheckbox type="checkbox" checked />
+                    <QueryParameterCheckbox type="checkbox" defaultChecked />
                 </td>
                 <td>
                     <QueryParameterKey type="text" placeholder="Key" />
