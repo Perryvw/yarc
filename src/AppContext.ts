@@ -13,5 +13,10 @@ export interface AppContextType {
     setActiveRequestHeader: (request: RequestData) => void;
     setActiveRequest: (request: RequestData) => void;
     setResponse: (request: ResponseData) => void;
+
+    gridWidthDirectory: number;
+    gridWidthResponse: number;
+    setGridWidthDirectory: (width: number) => void;
+    setGridWidthResponse: (width: number) => void;
 }
 export const AppContext = createContext<AppContextType>(null!);

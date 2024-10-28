@@ -7,12 +7,15 @@ import { AppContext } from "./AppContext";
 
 const Container = styled.div`
     background-color: var(--color-background-contrast);
-    border-right: 1px solid var(--color-border);
     border-bottom: 1px solid var(--color-border);
     display: flex;
     align-items: center;
     gap: 5px;
     padding: 10px;
+
+    & svg {
+        flex-shrink: 0;
+    }
 `;
 
 const ExportButton = styled.button`

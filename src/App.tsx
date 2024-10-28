@@ -5,10 +5,20 @@ import RequestPanel from "./RequestPanel";
 import ResponsePanel from "./ResponsePanel";
 import { AppContext, type AppContextType } from "./AppContext";
 import styled from "styled-components";
+import SplitSlider from "./SplitSlider";
+import { useContext, useState } from "react";
 
 const AppRoot = styled.div`
+    --grid-width-directory: 10%;
+    --grid-width-response: 50%;
+
     display: grid;
-    grid-template-columns: 10% 40% 50%;
+    grid-template-columns:
+        minmax(min-content, var(--grid-width-directory))
+        1px
+        minmax(min-content, var(--grid-width-response))
+        1px
+        auto;
     grid-template-rows: min-content 1fr;
     height: 100%;
     width: 100%;
@@ -24,6 +34,40 @@ const AppRoot = styled.div`
     --color-border: #2b2b2b;
 `;
 
+function AppContainer() {
+    const context = useContext(AppContext);
+
+    const [gridWidthDirectory, setGridWidthDirectory] = useState(context.gridWidthDirectory);
+    const [gridWidthResponse, setGridWidthResponse] = useState(context.gridWidthResponse);
+    context.setGridWidthDirectory = setGridWidthDirectory;
+    context.setGridWidthResponse = setGridWidthResponse;
+
+    return (
+        <AppRoot
+            style={
+                {
+                    "--grid-width-directory": `${gridWidthDirectory}%`,
+                    "--grid-width-response": `${gridWidthResponse}%`,
+                } as React.CSSProperties
+            }
+        >
+            <DirectoryHeader />
+            <SplitSlider
+                width={gridWidthDirectory}
+                setWidth={setGridWidthDirectory}
+                style={{
+                    gridRow: "span 2",
+                }}
+            />
+            <RequestHeader />
+            <Directory />
+            <RequestPanel />
+            <SplitSlider width={gridWidthResponse} setWidth={setGridWidthResponse} />
+            <ResponsePanel />
+        </AppRoot>
+    );
+}
+
 export default function App() {
     const initialContext: AppContextType = {
         requests: [],
@@ -33,22 +77,20 @@ export default function App() {
             headers: {},
             body: "initial response",
         },
+        gridWidthDirectory: 10,
+        gridWidthResponse: 50,
         setRequestList() {},
         setActiveRequestHeader() {},
         setActiveRequest() {},
         setResponse() {},
         setDirectoryheaderList() {},
+        setGridWidthDirectory() {},
+        setGridWidthResponse() {},
     };
 
     return (
         <AppContext.Provider value={initialContext}>
-            <AppRoot>
-                <DirectoryHeader />
-                <RequestHeader />
-                <Directory />
-                <RequestPanel />
-                <ResponsePanel />
-            </AppRoot>
+            <AppContainer />
         </AppContext.Provider>
     );
 }

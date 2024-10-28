@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { IpcCall } from "./common/ipc";
 
 const RequestHeaderContainer = styled.div`
-    grid-column: span 2;
+    grid-column: span 3;
     background-color: var(--color-background-contrast);
     padding: 10px;
     border-bottom: 1px solid var(--color-border);

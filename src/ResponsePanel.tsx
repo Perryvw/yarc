@@ -9,7 +9,6 @@ import { CircleSlash2 } from "lucide-react";
 const ResponsePanelRoot = styled.div`
     display: flex;
     flex-direction: column;
-    border-left: 1px solid var(--color-border);
     min-height: 0;
 `;
 
@@ -17,8 +16,11 @@ const ResponsePanelEmpty = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    text-align: center;
     color: #999;
-    margin-top: 10%;
+    padding: 10px;
+    margin-top: 100px;
 `;
 
 const Status = styled.div`

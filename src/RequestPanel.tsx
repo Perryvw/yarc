@@ -128,23 +128,25 @@ export default function RequestPanel() {
             <div>
                 <b>Query Parameters</b>
                 <QueryParameters>
-                    <tr>
-                        <td style={{ width: "32px" }}>
-                            <QueryParameterDelete type="button">
-                                <Plus size={16} />
-                            </QueryParameterDelete>
-                        </td>
-                        <td style={{ width: "50%" }} />
-                        <td style={{ width: "50%", borderLeft: "0" }} />
-                        <td style={{ width: "32px" }}>
-                            <QueryParameterDelete type="button">
-                                <Trash2 size={16} />
-                            </QueryParameterDelete>
-                        </td>
-                    </tr>
-                    {QueryParameter()}
-                    {QueryParameter()}
-                    {QueryParameter()}
+                    <tbody>
+                        <tr>
+                            <td style={{ width: "32px" }}>
+                                <QueryParameterDelete type="button">
+                                    <Plus size={16} />
+                                </QueryParameterDelete>
+                            </td>
+                            <td style={{ width: "50%" }} />
+                            <td style={{ width: "50%", borderLeft: "0" }} />
+                            <td style={{ width: "32px" }}>
+                                <QueryParameterDelete type="button">
+                                    <Trash2 size={16} />
+                                </QueryParameterDelete>
+                            </td>
+                        </tr>
+                        {QueryParameter()}
+                        {QueryParameter()}
+                        {QueryParameter()}
+                    </tbody>
                 </QueryParameters>
             </div>
             <b>Body - raw payload / structured form submit</b>
