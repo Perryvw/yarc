@@ -34,6 +34,7 @@ const RequestMethod = styled.select`
     font: inherit;
     border: 0;
     padding: 6px;
+    padding-right: 0;
     outline: 0;
     background: unset;
 `;
@@ -42,7 +43,7 @@ const RequestPath = styled.input`
     font: inherit;
     flex-grow: 1;
     border: 0;
-    padding: 6px;
+    padding: 6px 12px;
     outline: 0;
     background: unset;
 `;
@@ -104,10 +105,12 @@ export default function RequestHeader() {
     return (
         <RequestHeaderContainer>
             <RequestMethodAndPath>
-                <RequestMethod value={method} onChange={onMethodChange}>
-                    <option>GET</option>
-                    <option>POST</option>
-                </RequestMethod>
+                {context.activeRequest?.type === "http" && (
+                    <RequestMethod value={method} onChange={onMethodChange}>
+                        <option>GET</option>
+                        <option>POST</option>
+                    </RequestMethod>
+                )}
                 <RequestPath type="text" value={url} placeholder="url..." onChange={onUrlChange} />
             </RequestMethodAndPath>
             <RequestButton onClick={onClick}>
