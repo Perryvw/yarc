@@ -3,7 +3,7 @@ import DirectoryHeader from "./DirectoryHeader";
 import RequestHeader from "./RequestHeader";
 import RequestPanel from "./RequestPanel";
 import ResponsePanel from "./ResponsePanel";
-import { AppContext, type AppContextType } from "./AppContext";
+import { AppContext, AppContextImpl, type AppContextType } from "./AppContext";
 import styled from "styled-components";
 import SplitSlider from "./SplitSlider";
 import { useContext, useState } from "react";
@@ -69,27 +69,8 @@ function AppContainer() {
 }
 
 export default function App() {
-    const initialContext: AppContextType = {
-        requests: [],
-        activeRequest: undefined,
-        response: {
-            statusCode: 0,
-            headers: {},
-            body: "initial response",
-        },
-        gridWidthDirectory: 10,
-        gridWidthResponse: 50,
-        setRequestList() {},
-        setActiveRequestHeader() {},
-        setActiveRequest() {},
-        setResponse() {},
-        setDirectoryheaderList() {},
-        setGridWidthDirectory() {},
-        setGridWidthResponse() {},
-    };
-
     return (
-        <AppContext.Provider value={initialContext}>
+        <AppContext.Provider value={new AppContextImpl()}>
             <AppContainer />
         </AppContext.Provider>
     );

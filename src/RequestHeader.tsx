@@ -67,17 +67,21 @@ const RequestButton = styled.button`
 export default function RequestHeader() {
     const context = useContext(AppContext);
 
-    const [url, setUrl] = useState(context.activeRequest?.url ?? "");
-    const [method, setMethod] = useState(
-        context.activeRequest?.type === "http" ? context.activeRequest.method : "grpc",
-    );
+    const [activeRequest] = useState(context.activeRequest);
 
-    context.setActiveRequestHeader = (r) => {
-        setUrl(r.url);
-        if (r.type === "http") {
-            setMethod(r.method);
+    const [url, setUrl] = useState(activeRequest?.url ?? "");
+    const [method, setMethod] = useState(activeRequest?.type === "http" ? activeRequest.method : "grpc");
+
+    context.addActiveRequestListener(RequestHeader.name, (r) => {
+        if (r) {
+            setUrl(r.url);
+            if (r.type === "http") {
+                setMethod(r.method);
+            }
+        } else {
+            setUrl("");
         }
-    };
+    });
 
     function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
         if (context.activeRequest) {

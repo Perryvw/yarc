@@ -139,10 +139,11 @@ const ResponseTextarea = styled.textarea`
 export default function ResponsePanel() {
     const context = useContext(AppContext);
 
+    const [response, setResponse] = useState(context.response);
+    context.addResponseListener(ResponsePanel.name, setResponse);
+
     const [tab, setTab] = useState<"body" | "headers">("body");
     const [prettyPrint, setPrettyPrint] = useState(true);
-    const [response, setResponse] = useState(context.response);
-    context.setResponse = setResponse;
 
     function changeTab(tab: "body" | "headers") {
         setTab(tab);

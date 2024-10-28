@@ -38,17 +38,17 @@ export default function DirectoryHeader() {
     const context = useContext(AppContext);
 
     const [requests, setRequests] = useState(context.requests);
-    context.setDirectoryheaderList = setRequests;
+    context.addRequestListListener(DirectoryHeader.name, setRequests);
 
     async function importDirectory() {
         const result = await ipcRenderer.invoke(IpcCall.ImportDirectory);
         if (!result.cancelled) {
             context.setRequestList(result.requests);
+            context.setActiveRequest(context.requests[0]);
         }
     }
 
     async function exportDirectory() {
-        console.log(requests);
         await ipcRenderer.invoke(IpcCall.ExportDirectory, requests);
     }
 

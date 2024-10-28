@@ -127,32 +127,10 @@ const NewRequestTypePopup = styled.div`
 export default function Directory() {
     const context = useContext(AppContext);
 
-    const request1: RequestData = {
-        type: "http",
-        name: "Google",
-        url: "https://www.google.com/",
-        method: "GET",
-        body: "", // google doesnt like extra data
-    };
-    const request2: RequestData = {
-        type: "http",
-        name: "JSON",
-        url: "https://jsonplaceholder.typicode.com/comments",
-        method: "GET",
-        body: "B",
-    };
-    context.requests = [request1, request2];
-
     const [requests, setRequests] = useState<RequestData[]>(context.requests);
-    context.setRequestList = (l) => {
-        setRequests(l);
-        selectRequest(l[0]);
-    };
+    context.addRequestListListener(Directory.name, setRequests);
 
     const selectRequest = (request: RequestData) => () => {
-        context.activeRequest = request;
-
-        context.setActiveRequestHeader(request);
         context.setActiveRequest(request);
     };
 
@@ -164,9 +142,8 @@ export default function Directory() {
             url: "new",
             body: "new",
         };
-        context.requests = [...requests, newRequest];
-        setRequests(context.requests);
-        context.setDirectoryheaderList(context.requests);
+        context.setRequestList([...requests, newRequest]);
+        context.setActiveRequest(newRequest);
     }
 
     function newRequestGrpc() {
@@ -175,13 +152,28 @@ export default function Directory() {
             name: "New request",
             url: "new",
         };
-        context.requests = [...requests, newRequest];
-        setRequests(context.requests);
-        context.setDirectoryheaderList(context.requests);
+        context.setRequestList([...requests, newRequest]);
+        context.setActiveRequest(newRequest);
     }
 
     // Set default request to request 1
     useEffect(() => {
+        const request1: RequestData = {
+            type: "http",
+            name: "Google",
+            url: "https://www.google.com/",
+            method: "GET",
+            body: "", // google doesnt like extra data
+        };
+        const request2: RequestData = {
+            type: "http",
+            name: "JSON",
+            url: "https://jsonplaceholder.typicode.com/comments",
+            method: "GET",
+            body: "B",
+        };
+        context.setRequestList([request1, request2]);
+
         ipcRenderer.invoke(IpcCall.LoadRequestList).then((requests) => {
             //alert(requests.toString());
             //setRequests(requests);

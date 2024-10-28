@@ -83,17 +83,23 @@ const QueryParameterDelete = styled.button`
 export default function RequestPanel() {
     const context = useContext(AppContext);
 
-    const [request, setRequest] = useState(context.activeRequest);
+    const [activeRequest] = useState(context.activeRequest);
+
     const [requestBody, setRequestBody] = useState(
-        request ? (request.type === "http" ? request.body : "protobuf") : "",
+        activeRequest ? (activeRequest.type === "http" ? activeRequest.body : "protobuf") : "",
     );
 
-    context.setActiveRequest = (r) => {
-        setRequest(r);
-        if (r.type === "http") {
-            setRequestBody(r.body);
+    context.addActiveRequestListener(RequestPanel.name, (r) => {
+        if (r) {
+            if (r.type === "http") {
+                setRequestBody(r.body);
+            } else {
+                setRequestBody("");
+            }
+        } else {
+            setRequestBody("");
         }
-    };
+    });
 
     function onRequestBodyChanged(value: string) {
         if (context.activeRequest && context.activeRequest.type === "http") {
