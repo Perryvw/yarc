@@ -126,7 +126,7 @@ const NewRequestTypePopup = styled.div`
 export default function Directory() {
     const context = useContext(AppContext);
 
-    const [requests, setRequests] = useState<RequestData[]>(context.requests);
+    const [requests, setRequests] = useState(context.requests);
     context.addRequestListListener(Directory.name, setRequests);
 
     const selectRequest = (request: RequestData) => () => {
@@ -154,32 +154,6 @@ export default function Directory() {
         context.setRequestList([...requests, newRequest]);
         context.setActiveRequest(newRequest);
     }
-
-    // Set default request to request 1
-    useEffect(() => {
-        const request1: RequestData = {
-            type: "http",
-            name: "Google",
-            url: "https://www.google.com/",
-            method: "GET",
-            body: "", // google doesnt like extra data
-        };
-        const request2: RequestData = {
-            type: "http",
-            name: "JSON",
-            url: "https://jsonplaceholder.typicode.com/comments",
-            method: "GET",
-            body: "B",
-        };
-        context.setRequestList([request1, request2]);
-        context.setActiveRequest(request1);
-
-        ipcRenderer.invoke(IpcCall.LoadRequestList).then((requests) => {
-            //alert(requests.toString());
-            //setRequests(requests);
-        });
-        //selectRequest(request1)();
-    }, []);
 
     return (
         <DirectoryRoot>

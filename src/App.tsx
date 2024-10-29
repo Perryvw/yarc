@@ -6,7 +6,11 @@ import ResponsePanel from "./ResponsePanel";
 import { AppContext, AppContextImpl } from "./AppContext";
 import styled from "styled-components";
 import SplitSlider from "./SplitSlider";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { ipcRenderer } from "electron";
+import { IpcCall, IpcEvent } from "./common/ipc";
+import type { PersistedState } from "./common/persist-state";
+import type { RequestData } from "./common/request-types";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;
@@ -53,6 +57,38 @@ function AppContainer() {
     const [gridWidthResponse, setGridWidthResponse] = useState(context.gridWidthResponse);
     context.setGridWidthDirectory = setGridWidthDirectory;
     context.setGridWidthResponse = setGridWidthResponse;
+
+    useEffect(() => {
+        ipcRenderer.on(IpcEvent.WindowClosing, () => {
+            context.persistState();
+        });
+
+        ipcRenderer.invoke(IpcCall.LoadPersistedState).then((state: PersistedState | undefined) => {
+            if (state) {
+                context.setGridWidthDirectory(state.layout.directoryWidth);
+                context.setGridWidthResponse(state.layout.repsonseWidth);
+                context.setRequestList(state.requests);
+            } else {
+                // TODO: Remove this, but for now this is useful for debugging
+                const request1: RequestData = {
+                    type: "http",
+                    name: "Google",
+                    url: "https://www.google.com/",
+                    method: "GET",
+                    body: "", // google doesnt like extra data
+                };
+                const request2: RequestData = {
+                    type: "http",
+                    name: "JSON",
+                    url: "https://jsonplaceholder.typicode.com/comments",
+                    method: "GET",
+                    body: "B",
+                };
+                context.setRequestList([request1, request2]);
+                context.setActiveRequest(request1);
+            }
+        });
+    }, []);
 
     return (
         <AppRoot

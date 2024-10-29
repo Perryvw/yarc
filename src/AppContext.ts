@@ -1,15 +1,18 @@
 import { createContext } from "react";
-import type { RequestData, ResponseData } from "./common/request-types";
+import type { RequestData, RequestList, ResponseData } from "./common/request-types";
+import { ipcRenderer } from "electron";
+import { IpcCall } from "./common/ipc";
+import type { PersistedState } from "./common/persist-state";
 
 type RequestHandler = (request: RequestData | undefined) => void;
-type RequestListHandler = (requests: RequestData[]) => void;
+type RequestListHandler = (requests: RequestList) => void;
 type ResponseHandler = (response: ResponseData | undefined) => void;
 
 export class AppContextImpl {
     activeRequest?: RequestData = undefined;
     response?: ResponseData = undefined;
 
-    requests: RequestData[] = [];
+    requests: RequestList = [];
 
     gridWidthDirectory = 10;
     gridWidthResponse = 50;
@@ -28,9 +31,12 @@ export class AppContextImpl {
             h(request);
         }
         this.setResponse(undefined);
+
+        // TODO: Only persist when unchanged data is pending
+        this.persistState();
     }
 
-    public setRequestList(requests: RequestData[]) {
+    public setRequestList(requests: RequestList) {
         this.requests = requests;
         for (const h of Object.values(this.requestListListeners)) {
             h(requests);
@@ -58,6 +64,19 @@ export class AppContextImpl {
     public addResponseListener(key: string, handler: ResponseHandler) {
         this.responseListeners[key] = handler;
     }
+
+    public persistState(): void {
+        const state: PersistedState = {
+            requests: this.requests,
+            layout: {
+                directoryWidth: this.gridWidthDirectory,
+                repsonseWidth: this.gridWidthResponse,
+            },
+        };
+        ipcRenderer.invoke(IpcCall.PersistState, state);
+    }
+
+    public loadPersistedState(): void {}
 }
 
 export const AppContext = createContext(new AppContextImpl());

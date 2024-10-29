@@ -14,6 +14,8 @@ export interface GrpcRequestData {
 
 export type RequestData = HttpRequestData | GrpcRequestData;
 
+export type RequestList = RequestData[];
+
 export interface ResponseData {
     statusCode: number;
     headers: Record<string, string | string[]>;

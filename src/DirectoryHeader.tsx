@@ -1,9 +1,10 @@
 import { Download, PawPrint, Upload } from "lucide-react";
 import styled from "styled-components";
-import { IpcCall } from "./common/ipc";
+import { IpcCall, type IpcImportResult } from "./common/ipc";
 import { ipcRenderer } from "electron";
 import { useContext, useState } from "react";
 import { AppContext } from "./AppContext";
+import { RequestList } from "./common/request-types";
 
 const Container = styled.div`
     display: flex;
@@ -39,7 +40,7 @@ export default function DirectoryHeader() {
     context.addRequestListListener(DirectoryHeader.name, setRequests);
 
     async function importDirectory() {
-        const result = await ipcRenderer.invoke(IpcCall.ImportDirectory);
+        const result: IpcImportResult = await ipcRenderer.invoke(IpcCall.ImportDirectory);
         if (!result.cancelled) {
             context.setRequestList(result.requests);
             context.setActiveRequest(context.requests[0]);

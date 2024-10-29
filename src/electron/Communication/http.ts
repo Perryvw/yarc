@@ -14,7 +14,6 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
         });
 
         req.on("response", (response) => {
-            console.log(response.statusCode);
             let body = "";
             response.on("data", (chunk) => {
                 body += chunk;

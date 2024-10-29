@@ -1,8 +1,9 @@
 import { dialog } from "electron";
-import type { RequestData } from "../../common/request-types";
+import type { RequestList } from "../../common/request-types";
 import * as fs from "node:fs/promises";
+import type { IpcImportResult } from "../../common/ipc";
 
-export async function importDirectory() {
+export async function importDirectory(): Promise<IpcImportResult> {
     const result = await dialog.showOpenDialog({
         filters: [
             {
@@ -22,7 +23,7 @@ export async function importDirectory() {
     return { cancelled: true };
 }
 
-export async function exportDirectory(requests: RequestData[]) {
+export async function exportDirectory(requests: RequestList) {
     const result = await dialog.showSaveDialog({
         filters: [
             {
