@@ -52,7 +52,6 @@ const RequestActions = styled.div`
 
 const NewButton = styled.button`
     border: unset;
-    border-top: 1px solid var(--color-border);
     background: unset;
     padding: 10px;
     display: flex;
@@ -95,7 +94,7 @@ const NewRequestTypePopup = styled.div`
     right: anchor(right);
     bottom: anchor(top);
     margin-bottom: 10px;
-    background: #000;
+    background: var(--color-background-contrast);
     border-radius: 10px;
     border: 0;
     padding: 0;

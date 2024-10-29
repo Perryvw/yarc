@@ -2,8 +2,7 @@ import styled from "styled-components";
 import { useEffect, useRef, useState } from "react";
 
 const Container = styled.div`
-	cursor: col-resize;
-    background-color: var(--color-border);
+    cursor: col-resize;
     position: relative;
 `;
 

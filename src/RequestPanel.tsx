@@ -10,6 +10,8 @@ const RequestPanelRoot = styled.div`
     gap: 10px;
     overflow-y: auto;
     min-width: 250px;
+    padding: 20px;
+    border-right: 1px solid hsla(0, 0%, 100%, 0.075);
 `;
 
 const QueryParameters = styled.table`

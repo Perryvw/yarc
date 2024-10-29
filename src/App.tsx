@@ -16,8 +16,6 @@ const AppRoot = styled.div`
     grid-template-columns:
         minmax(min-content, var(--grid-width-directory))
         1px
-        minmax(min-content, var(--grid-width-response))
-        1px
         auto;
     grid-template-rows: min-content 1fr;
     height: 100%;
@@ -29,9 +27,23 @@ const AppRoot = styled.div`
     --font-monospace: "Consolas", monospace;
 
     --color-text: #fff;
-    --color-background: #161920;
-    --color-background-contrast: #0c0c0c;
+    --color-background: #0c0c0c;
+    --color-background-contrast: #161920;
     --color-border: #2b2b2b;
+`;
+
+const MainContent = styled.div`
+    display: grid;
+    grid-template-columns:
+        minmax(min-content, var(--grid-width-response))
+        1px
+        auto;
+
+    min-height: 0;
+    border-top-left-radius: 16px;
+    border-top: 1px solid hsla(0, 0%, 100%, 0.075);
+    border-left: 1px solid hsla(0, 0%, 100%, 0.075);
+    background-color: var(--color-background-contrast);
 `;
 
 function AppContainer() {
@@ -61,9 +73,11 @@ function AppContainer() {
             />
             <RequestHeader />
             <Directory />
-            <RequestPanel />
-            <SplitSlider width={gridWidthResponse} setWidth={setGridWidthResponse} />
-            <ResponsePanel />
+            <MainContent>
+                <RequestPanel />
+                <SplitSlider width={gridWidthResponse} setWidth={setGridWidthResponse} />
+                <ResponsePanel />
+            </MainContent>
         </AppRoot>
     );
 }

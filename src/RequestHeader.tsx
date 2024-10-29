@@ -6,10 +6,8 @@ import styled from "styled-components";
 import { IpcCall } from "./common/ipc";
 
 const RequestHeaderContainer = styled.div`
-    grid-column: span 3;
-    background-color: var(--color-background-contrast);
-    padding: 10px;
-    border-bottom: 1px solid var(--color-border);
+    padding: 15px;
+    padding-left: 0;
     display: flex;
     gap: 10px;
 `;
@@ -17,11 +15,12 @@ const RequestHeaderContainer = styled.div`
 const RequestMethodAndPath = styled.div`
     display: flex;
     flex-grow: 1;
-    background: var(--color-background);
     border-radius: 5px;
+    border: 2px solid var(--color-background-contrast);
+    border-radius: 64px;
 
     &:focus-within {
-        box-shadow: 0 0 0 3px hsl(201, 86%, 67%);
+        border-color: hsl(201, 86%, 67%);
     }
 
     & option {
@@ -34,6 +33,7 @@ const RequestMethod = styled.select`
     font: inherit;
     border: 0;
     padding: 6px;
+    padding-left: 10px;
     padding-right: 0;
     outline: 0;
     background: unset;
@@ -52,8 +52,9 @@ const RequestButton = styled.button`
     border: 0;
     color: #000;
     background: hsl(96, 46%, 57%);
-    border-radius: 5px;
-    padding: 10px 20px;
+    border-radius: 50%;
+    margin: 2px;
+    padding: 10px;
     display: flex;
     gap: 5px;
     align-items: center;
@@ -116,11 +117,10 @@ export default function RequestHeader() {
                     </RequestMethod>
                 )}
                 <RequestPath type="text" value={url} placeholder="url..." onChange={onUrlChange} />
+                <RequestButton onClick={onClick}>
+                    <Play size={16} />
+                </RequestButton>
             </RequestMethodAndPath>
-            <RequestButton onClick={onClick}>
-                <Play size={16} />
-                Send
-            </RequestButton>
         </RequestHeaderContainer>
     );
 }

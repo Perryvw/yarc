@@ -6,8 +6,6 @@ import { useContext, useState } from "react";
 import { AppContext } from "./AppContext";
 
 const Container = styled.div`
-    background-color: var(--color-background-contrast);
-    border-bottom: 1px solid var(--color-border);
     display: flex;
     align-items: center;
     gap: 5px;

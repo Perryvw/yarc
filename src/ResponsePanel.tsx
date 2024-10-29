@@ -10,6 +10,7 @@ const ResponsePanelRoot = styled.div`
     display: flex;
     flex-direction: column;
     min-height: 0;
+    min-width: 0;
 `;
 
 const ResponsePanelEmpty = styled.div`
