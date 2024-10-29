@@ -2,7 +2,7 @@ import { type ChangeEvent, useContext, useState } from "react";
 import { AppContext } from "./AppContext";
 import { ipcRenderer } from "electron";
 import { Play } from "lucide-react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { IpcCall } from "./common/ipc";
 
 const RequestHeaderContainer = styled.div`
@@ -18,10 +18,6 @@ const RequestMethodAndPath = styled.div`
     border-radius: 5px;
     border: 2px solid var(--color-background-contrast);
     border-radius: 64px;
-
-    &:focus-within {
-        border-color: hsl(201, 86%, 67%);
-    }
 
     & option {
         color: #fff;
@@ -48,10 +44,22 @@ const RequestPath = styled.input`
     background: unset;
 `;
 
+const pulseKeyframes = keyframes`
+    0% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.6);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(46, 204, 113, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(46, 204, 113, 0);
+    }
+`;
+
 const RequestButton = styled.button`
     border: 0;
     color: #000;
-    background: hsl(96, 46%, 57%);
+    background-color: hsl(96, 46%, 57%);
     border-radius: 50%;
     margin: 2px;
     padding: 10px;
@@ -59,9 +67,19 @@ const RequestButton = styled.button`
     gap: 5px;
     align-items: center;
     cursor: pointer;
+    transition:
+        background-color 0.2s ease-out,
+        transform 0.2s ease-out,
+        box-shadow 0.2s ease-out;
 
+    &.is-executing {
+        animation: ${pulseKeyframes} 1s ease-in-out infinite;
+    }
+
+    &.is-executing,
     &:hover {
-        background: hsl(96, 46%, 40%);
+        background-color: hsl(96, 46%, 40%);
+        transform: scale(1.1);
     }
 `;
 
@@ -69,6 +87,8 @@ export default function RequestHeader() {
     const context = useContext(AppContext);
 
     const [activeRequest] = useState(context.activeRequest);
+    const [isExecuting, setIsExecuting] = useState(false);
+    const [isExecutionAnimating, setIsExecutionAnimating] = useState(false);
 
     const [url, setUrl] = useState(activeRequest?.url ?? "");
     const [method, setMethod] = useState(activeRequest?.type === "http" ? activeRequest.method : "grpc");
@@ -99,11 +119,22 @@ export default function RequestHeader() {
     }
 
     async function onClick() {
+        setIsExecuting(true);
+        setIsExecutionAnimating(true);
+
         if (context.activeRequest && context.activeRequest.type === "http") {
             context.response = await ipcRenderer.invoke(IpcCall.HttpRequest, context.activeRequest);
             context.setResponse(context.response);
         } else if (context.activeRequest && context.activeRequest.type === "grpc") {
             // TODO
+        }
+
+        setIsExecuting(false);
+    }
+
+    function onButtonAnimationIteration() {
+        if (!isExecuting) {
+            setIsExecutionAnimating(false);
         }
     }
 
@@ -117,7 +148,12 @@ export default function RequestHeader() {
                     </RequestMethod>
                 )}
                 <RequestPath type="text" value={url} placeholder="url..." onChange={onUrlChange} />
-                <RequestButton onClick={onClick}>
+                <RequestButton
+                    type="button"
+                    className={isExecutionAnimating ? "is-executing" : ""}
+                    onClick={onClick}
+                    onAnimationIteration={onButtonAnimationIteration}
+                >
                     <Play size={16} />
                 </RequestButton>
             </RequestMethodAndPath>
