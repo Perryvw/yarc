@@ -21,7 +21,7 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
             });
             response.on("end", () => {
                 resolve({
-                    statusCode: response.statusCode!,
+                    statusCode: response.statusCode,
                     headers: response.headers,
                     body,
                 });

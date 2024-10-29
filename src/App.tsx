@@ -3,7 +3,7 @@ import DirectoryHeader from "./DirectoryHeader";
 import RequestHeader from "./RequestHeader";
 import RequestPanel from "./RequestPanel";
 import ResponsePanel from "./ResponsePanel";
-import { AppContext, AppContextImpl, type AppContextType } from "./AppContext";
+import { AppContext, AppContextImpl } from "./AppContext";
 import styled from "styled-components";
 import SplitSlider from "./SplitSlider";
 import { useContext, useState } from "react";
