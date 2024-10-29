@@ -18,6 +18,7 @@ export type RequestList = RequestData[];
 
 export interface ResponseData {
     statusCode: number;
+    time: number;
     headers: Record<string, string | string[]>;
     body: string;
 }

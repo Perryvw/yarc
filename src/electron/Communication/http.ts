@@ -5,6 +5,7 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
     const url = new URL(request.url);
 
     return new Promise((resolve) => {
+        const start = performance.now(); // This isn't good. If we switch to libcurl then get real timings from there.
         const req = net.request({
             method: request.method,
             protocol: url.protocol as "http:" | "https:",
@@ -22,6 +23,7 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
                 resolve({
                     statusCode: response.statusCode,
                     headers: response.headers,
+                    time: performance.now() - start,
                     body,
                 });
             });

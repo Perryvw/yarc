@@ -191,7 +191,7 @@ export default function ResponsePanel() {
                     Size: <b>{response.body.length}</b>
                 </div>
                 <div>
-                    Time: <b>0</b>
+                    Time: <b>{(response.time / 1000).toFixed(2)}s</b>
                 </div>
             </Status>
 
