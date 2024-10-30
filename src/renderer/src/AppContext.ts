@@ -9,7 +9,6 @@ type ResponseHandler = (response: ResponseData | undefined) => void;
 
 export class AppContextImpl {
     activeRequest?: RequestData = undefined;
-    response?: ResponseData = undefined;
 
     requests: RequestList = [];
 
@@ -29,7 +28,7 @@ export class AppContextImpl {
         for (const h of Object.values(this.activeRequestListeners)) {
             h(request);
         }
-        this.setResponse(undefined);
+        this.setResponse(request?.response);
 
         // TODO: Only persist when unchanged data is pending
         this.persistState();
@@ -43,9 +42,11 @@ export class AppContextImpl {
     }
 
     public setResponse(response: ResponseData | undefined) {
-        this.response = response;
-        for (const h of Object.values(this.responseListeners)) {
-            h(response);
+        if (this.activeRequest) {
+            this.activeRequest.response = response;
+            for (const h of Object.values(this.responseListeners)) {
+                h(response);
+            }
         }
     }
 
@@ -65,8 +66,9 @@ export class AppContextImpl {
     }
 
     public persistState(): void {
+        const requestsWithoutResponse = this.requests.map((r) => ({ ...r, response: undefined }));
         const state: PersistedState = {
-            requests: this.requests,
+            requests: requestsWithoutResponse,
             layout: {
                 directoryWidth: this.gridWidthDirectory,
                 repsonseWidth: this.gridWidthResponse,

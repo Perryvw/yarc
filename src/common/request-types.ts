@@ -4,12 +4,16 @@ export interface HttpRequestData {
     url: string;
     method: "GET" | "POST";
     body: string;
+
+    response?: ResponseData;
 }
 
 export interface GrpcRequestData {
     type: "grpc";
     name: string;
     url: string;
+
+    response?: ResponseData;
 }
 
 export type RequestData = HttpRequestData | GrpcRequestData;
