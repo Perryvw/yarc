@@ -5,6 +5,7 @@ import { json } from "@codemirror/lang-json";
 import { html } from "@codemirror/lang-html";
 import styled from "styled-components";
 import { CircleSlash2 } from "lucide-react";
+import { Tab, Tabs } from "./Tabs";
 
 const ResponsePanelRoot = styled.div`
     display: flex;
@@ -27,7 +28,9 @@ const ResponsePanelEmpty = styled.div`
 const Status = styled.div`
     padding: 10px;
     display: flex;
+    justify-content: space-between;
     gap: 20px;
+    border-bottom: 1px solid var(--color-border);
 `;
 
 const StatusCode = styled.b`
@@ -51,36 +54,6 @@ const StatusCode = styled.b`
 
     &.status-200 {
         background: rgb(22 163 74);
-    }
-`;
-
-const Tabs = styled.div`
-    display: flex;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-`;
-
-const Tab = styled.button`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-basis: 100%;
-    border: unset;
-    background: unset;
-    border-right: 1px solid var(--color-border);
-    cursor: pointer;
-    padding: 10px;
-
-    &:last-child {
-        border-right: unset;
-    }
-
-    &:hover {
-        background: #666;
-    }
-
-    &.active {
-        box-shadow: inset 0 -3px 0 hsl(201, 86%, 67%);
     }
 `;
 
@@ -152,10 +125,6 @@ export default function ResponsePanel() {
     const [tab, setTab] = useState<"body" | "headers">("body");
     const [prettyPrint, setPrettyPrint] = useState(true);
 
-    function changeTab(tab: "body" | "headers") {
-        setTab(tab);
-    }
-
     function formatHeader(value: string | string[]) {
         if (!Array.isArray(value)) {
             return <ResponseHeaderValue readOnly value={value} />;
@@ -196,10 +165,10 @@ export default function ResponsePanel() {
             </Status>
 
             <Tabs>
-                <Tab type="button" className={tab === "body" ? "active" : ""} onClick={() => changeTab("body")}>
+                <Tab type="button" className={tab === "body" ? "active" : ""} onClick={() => setTab("body")}>
                     Response
                 </Tab>
-                <Tab type="button" className={tab === "headers" ? "active" : ""} onClick={() => changeTab("headers")}>
+                <Tab type="button" className={tab === "headers" ? "active" : ""} onClick={() => setTab("headers")}>
                     Headers
                 </Tab>
             </Tabs>
