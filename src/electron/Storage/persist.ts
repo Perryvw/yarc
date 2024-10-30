@@ -3,15 +3,14 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { PersistedState, PersistedStateWithWindow } from "../../common/persist-state";
 
-const storagePath = app.getAppPath();
-//const storagePath = app.getPath("userData");
-
+const storagePath = app.getPath("sessionData");
 const storageFile = path.join(storagePath, "localStorage.json");
 
 export async function persistCurrentState(state: PersistedState, window: BaseWindow) {
     const stateWithWindow: PersistedStateWithWindow = {
         ...state,
         window: {
+            maximized: window.isMaximized(),
             position: window.getPosition(),
             size: window.getSize(),
         },

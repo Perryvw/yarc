@@ -10,6 +10,7 @@ export interface PersistedState {
 
 export type PersistedStateWithWindow = PersistedState & {
     window: {
+        maximized: boolean;
         position: number[];
         size: number[];
     };

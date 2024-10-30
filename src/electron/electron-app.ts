@@ -21,6 +21,9 @@ app.whenReady().then(async () => {
         width: persistedState?.window.size[0] ?? 1000,
         height: persistedState?.window.size[1],
     });
+    if (persistedState?.window.maximized) {
+        window.maximize();
+    }
 
     ipcMain.handle(IpcCall.HttpRequest, async (_, request: HttpRequestData): Promise<ResponseData> => {
         return await makeHttpRequest(request);
