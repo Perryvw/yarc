@@ -4,6 +4,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import styled from "styled-components";
 import KeyValuesPanel from "./KeyValuesPanel";
 import { Tab, Tabs } from "./Tabs";
+import classNames from "classnames";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -49,15 +50,30 @@ export default function RequestPanel() {
             <Tabs>
                 <Tab
                     type="button"
-                    className={tab === "parameters" ? "active" : ""}
+                    className={classNames({
+                        active: tab === "parameters",
+                    })}
                     onClick={() => setTab("parameters")}
                 >
                     Parameters
                 </Tab>
-                <Tab type="button" className={tab === "body" ? "active" : ""} onClick={() => setTab("body")}>
+                <Tab
+                    type="button"
+                    className={classNames({
+                        active: tab === "body",
+                        "has-dot": requestBody?.length > 0,
+                    })}
+                    onClick={() => setTab("body")}
+                >
                     Body
                 </Tab>
-                <Tab type="button" className={tab === "headers" ? "active" : ""} onClick={() => setTab("headers")}>
+                <Tab
+                    type="button"
+                    className={classNames({
+                        active: tab === "headers",
+                    })}
+                    onClick={() => setTab("headers")}
+                >
                     Headers
                 </Tab>
             </Tabs>
