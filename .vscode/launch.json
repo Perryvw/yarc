@@ -2,26 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch electron app",
+            "name": "Debug Main Process",
             "type": "node",
             "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+            "cwd": "${workspaceRoot}",
+            "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-vite",
             "windows": {
-                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+                "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron-vite.cmd"
             },
-            "args": ["out/electron/electron-app.js"],
-            "outputCapture": "std",
-            "presentation": {
-                "hidden": true
+            "runtimeArgs": ["--sourcemap"],
+            "env": {
+                "REMOTE_DEBUGGING_PORT": "9222"
             }
         },
         {
-            "name": "Run code compilation watcher",
-            "type": "node",
-            "request": "launch",
-            "cwd": "${workspaceFolder}",
-            "args": ["esbuild.watch.mjs"],
+            "name": "Debug Renderer Process",
+            "port": 9222,
+            "request": "attach",
+            "type": "chrome",
+            "webRoot": "${workspaceFolder}/src/renderer",
+            "timeout": 60000,
             "presentation": {
                 "hidden": true
             }
@@ -29,13 +29,14 @@
     ],
     "compounds": [
         {
-            "name": "Run App in Dev mode",
-            "preLaunchTask": "build",
+            "name": "Debug All",
             "configurations": [
-                "Launch electron app",
-                "Run code compilation watcher"
+                "Debug Main Process",
+                "Debug Renderer Process"
             ],
-            "stopAll": true
+            "presentation": {
+                "order": 1
+            }
         }
     ]
 }

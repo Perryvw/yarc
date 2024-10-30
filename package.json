@@ -2,14 +2,19 @@
     "name": "yarc",
     "version": "0.0.1",
     "description": "",
+    "main": "./out/main/index.js",
     "scripts": {
         "lint": "biome lint",
-        "fix:format": "biome format --write"
+        "fix:format": "biome format --write",
+        "start": "electron-vite preview",
+        "dev": "electron-vite dev",
+        "prebuild": "electron-vite build"
     },
     "dependencies": {
         "@codemirror/lang-html": "^6.4.9",
         "@codemirror/lang-json": "^6.0.1",
         "@codemirror/lang-xml": "^6.1.0",
+        "@electron-toolkit/preload": "^3.0.1",
         "@uiw/react-codemirror": "^4.23.6",
         "electron": "^33.0.2",
         "lucide-react": "^0.453.0",
@@ -22,7 +27,8 @@
         "@styled/typescript-styled-plugin": "^1.0.1",
         "@types/react": "^18.3.12",
         "@types/react-dom": "^18.3.1",
-        "esbuild": "^0.24.0",
+        "@vitejs/plugin-react": "^4.3.3",
+        "electron-vite": "^2.3.0",
         "typescript": "^5.6.3"
     }
 }

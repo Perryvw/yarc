@@ -1,8 +1,7 @@
 import { createContext } from "react";
-import type { RequestData, RequestList, ResponseData } from "./common/request-types";
-import { ipcRenderer } from "electron";
-import { IpcCall } from "./common/ipc";
-import type { PersistedState } from "./common/persist-state";
+import type { RequestData, RequestList, ResponseData } from "../../common/request-types";
+import { IpcCall } from "../../common/ipc";
+import type { PersistedState } from "../../common/persist-state";
 
 type RequestHandler = (request: RequestData | undefined) => void;
 type RequestListHandler = (requests: RequestList) => void;
@@ -73,7 +72,7 @@ export class AppContextImpl {
                 repsonseWidth: this.gridWidthResponse,
             },
         };
-        ipcRenderer.invoke(IpcCall.PersistState, state);
+        window.electron.ipcRenderer.invoke(IpcCall.PersistState, state);
     }
 
     public loadPersistedState(): void {}

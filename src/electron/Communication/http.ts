@@ -1,5 +1,5 @@
 import { net } from "electron";
-import type { HttpRequestData, ResponseData } from "../../common/request-types";
+import type { HttpRequestData, ResponseData } from "./common/request-types";
 
 export async function makeHttpRequest(request: HttpRequestData): Promise<ResponseData> {
     const url = new URL(request.url);

@@ -1,9 +1,8 @@
 import { type ChangeEvent, useContext, useState } from "react";
 import { AppContext } from "./AppContext";
-import { ipcRenderer } from "electron";
 import { Play } from "lucide-react";
 import styled, { keyframes } from "styled-components";
-import { IpcCall } from "./common/ipc";
+import { IpcCall } from "../../common/ipc";
 
 const RequestHeaderContainer = styled.div`
     padding: 15px;
@@ -123,7 +122,7 @@ export default function RequestHeader() {
         setIsExecutionAnimating(true);
 
         if (context.activeRequest && context.activeRequest.type === "http") {
-            context.response = await ipcRenderer.invoke(IpcCall.HttpRequest, context.activeRequest);
+            context.response = await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, context.activeRequest);
             context.setResponse(context.response);
         } else if (context.activeRequest && context.activeRequest.type === "grpc") {
             // TODO

@@ -1,10 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { AppContext } from "./AppContext";
 import styled from "styled-components";
-import { ipcRenderer } from "electron";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
-import { IpcCall } from "./common/ipc";
-import type { GrpcRequestData, HttpRequestData, RequestData } from "./common/request-types";
+import type { GrpcRequestData, HttpRequestData, RequestData } from "../../common/request-types";
 
 const DirectoryRoot = styled.div`
     display: flex;

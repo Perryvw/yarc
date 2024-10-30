@@ -7,10 +7,9 @@ import { AppContext, AppContextImpl } from "./AppContext";
 import styled from "styled-components";
 import SplitSlider from "./SplitSlider";
 import { useContext, useEffect, useState } from "react";
-import { ipcRenderer } from "electron";
-import { IpcCall, IpcEvent } from "./common/ipc";
-import type { PersistedState } from "./common/persist-state";
-import type { RequestData } from "./common/request-types";
+import { IpcCall, IpcEvent } from "../../common/ipc";
+import type { PersistedState } from "../../common/persist-state";
+import type { RequestData } from "../../common/request-types";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;
@@ -59,11 +58,11 @@ function AppContainer() {
     context.setGridWidthResponse = setGridWidthResponse;
 
     useEffect(() => {
-        ipcRenderer.on(IpcEvent.WindowClosing, () => {
+        window.electron.ipcRenderer.on(IpcEvent.WindowClosing, () => {
             context.persistState();
         });
 
-        ipcRenderer.invoke(IpcCall.LoadPersistedState).then((state: PersistedState | undefined) => {
+        window.electron.ipcRenderer.invoke(IpcCall.LoadPersistedState).then((state: PersistedState | undefined) => {
             if (state) {
                 context.setGridWidthDirectory(state.layout.directoryWidth);
                 context.setGridWidthResponse(state.layout.repsonseWidth);

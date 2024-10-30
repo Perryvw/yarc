@@ -1,4 +1,4 @@
-import { type ChangeEvent, useContext, useState } from "react";
+import { useContext, useState } from "react";
 import { AppContext } from "./AppContext";
 import { Plus, Trash, Trash2 } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
