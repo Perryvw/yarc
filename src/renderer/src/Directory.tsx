@@ -2,7 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import { AppContext } from "./AppContext";
 import styled from "styled-components";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
-import type { GrpcRequestData, HttpRequestData, RequestData } from "../../common/request-types";
+import type { GrpcRequestData, HttpRequestData, RequestData, RequestList } from "../../common/request-types";
+import classNames from "classnames";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -34,6 +35,10 @@ const Request = styled.button`
 
     &:hover {
         background-color: blue;
+    }
+
+    &.active {
+        background-color: hsl(96, 46%, 57%);
     }
 `;
 
@@ -127,6 +132,9 @@ export default function Directory() {
     const [requests, setRequests] = useState(context.requests);
     context.addRequestListListener(Directory.name, setRequests);
 
+    const [, setActiveRequest] = useState(context.activeRequest);
+    context.addActiveRequestListener(Directory.name, setActiveRequest);
+
     const selectRequest = (request: RequestData) => () => {
         context.setActiveRequest(request);
     };
@@ -157,7 +165,12 @@ export default function Directory() {
         <DirectoryRoot>
             <RequestContainer>
                 {requests.map((r, i) => (
-                    <Request key={i.toString()} type="button" onClick={selectRequest(r)}>
+                    <Request
+                        key={i.toString()}
+                        type="button"
+                        onClick={selectRequest(r)}
+                        className={classNames({ active: r === context.activeRequest })}
+                    >
                         {r.type === "grpc" && (
                             <RequestMethod>
                                 <ChevronsLeftRight size={16} />
@@ -165,10 +178,12 @@ export default function Directory() {
                         )}
                         {r.type === "http" && <RequestMethod>{r.method}</RequestMethod>}
                         {r.name}
-                        <RequestActions>
-                            <Pencil size={16} />
-                            <Trash size={16} />
-                        </RequestActions>
+                        {r === context.activeRequest && (
+                            <RequestActions>
+                                <Pencil size={16} />
+                                <Trash size={16} />
+                            </RequestActions>
+                        )}
                     </Request>
                 ))}
             </RequestContainer>

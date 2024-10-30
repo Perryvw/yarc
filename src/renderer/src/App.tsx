@@ -67,6 +67,7 @@ function AppContainer() {
                 context.setGridWidthDirectory(state.layout.directoryWidth);
                 context.setGridWidthResponse(state.layout.repsonseWidth);
                 context.setRequestList(state.requests);
+                context.setActiveRequest(state.requests[0]);
             } else {
                 // TODO: Remove this, but for now this is useful for debugging
                 const request1: RequestData = {
