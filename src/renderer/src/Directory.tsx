@@ -1,4 +1,5 @@
-import React, { useContext, useState } from "react";
+import type React from "react";
+import { useContext, useState } from "react";
 import { AppContext } from "./AppContext";
 import styled from "styled-components";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
@@ -21,40 +22,6 @@ const RequestContainer = styled.div`
     display: flex;
     flex-direction: column;
     scrollbar-width: thin;
-`;
-
-const Request = styled.div`
-    border: unset;
-    background: unset;
-    border: 1px solid transparent;
-    border-bottom-color: var(--color-border);
-    text-align: left;
-    padding: 10px;
-    cursor: pointer;
-    display: flex;
-    gap: 5px;
-    align-items: center;
-
-    &:hover {
-        background-color: blue;
-    }
-
-    &.active {
-        border-radius: 10px;
-        background-color: hsl(96, 46%, 37%);
-        border-color: hsla(0, 0%, 100%, 0.075);
-    }
-`;
-
-const RequestMethod = styled.span`
-    font-size: 12px;
-    min-width: 30px;
-`;
-
-const RequestActions = styled.div`
-    display: flex;
-    gap: 5px;
-    margin-left: auto;
 `;
 
 const NewButton = styled.button`
@@ -130,26 +97,6 @@ const NewRequestTypePopup = styled.div`
     }
 `;
 
-const RenameButton = styled.button`
-    border: unset;
-    background: unset;
-    padding: 0;
-    cursor: pointer;
-
-    &:hover {
-        color: blue;
-    }
-`;
-
-const DeleteButton = styled(RenameButton)`
-    background: unset;
-    padding: 0;
-
-    &:hover {
-        color: red;
-    }
-`;
-
 export default function Directory() {
     const context = useContext(AppContext);
 
@@ -158,10 +105,6 @@ export default function Directory() {
 
     const [, setActiveRequest] = useState(context.activeRequest);
     context.addActiveRequestListener(Directory.name, setActiveRequest);
-
-    const selectRequest = (request: RequestData) => () => {
-        context.setActiveRequest(request);
-    };
 
     function newRequest() {
         const newRequest: HttpRequestData = {
@@ -187,43 +130,11 @@ export default function Directory() {
         context.setActiveRequest(newRequest);
     }
 
-    const renameRequest = (request: RequestData) => (e: React.MouseEvent) => {
-        alert(`Rename ${request.name}`);
-        e.stopPropagation();
-    };
-
-    const deleteRequest = (request: RequestData) => (e: React.MouseEvent) => {
-        context.deleteRequest(request);
-        e.stopPropagation();
-    };
-
     return (
         <DirectoryRoot>
             <RequestContainer>
                 {requests.map((r, i) => (
-                    <Request
-                        key={i.toString()}
-                        onClick={selectRequest(r)}
-                        className={classNames({ active: r === context.activeRequest })}
-                    >
-                        {r.type === "grpc" && (
-                            <RequestMethod>
-                                <ChevronsLeftRight size={16} />
-                            </RequestMethod>
-                        )}
-                        {r.type === "http" && <RequestMethod>{r.method}</RequestMethod>}
-                        {r.name}
-                        {r === context.activeRequest && (
-                            <RequestActions>
-                                <RenameButton onClick={renameRequest(r)}>
-                                    <Pencil size={16} />
-                                </RenameButton>
-                                <DeleteButton onClick={deleteRequest(r)}>
-                                    <Trash size={16} />
-                                </DeleteButton>
-                            </RequestActions>
-                        )}
-                    </Request>
+                    <RequestEntry key={i.toString()} request={r} />
                 ))}
             </RequestContainer>
             <NewRequestTypePopup id="new-request-popover" popover="auto">
@@ -241,5 +152,99 @@ export default function Directory() {
                 New
             </NewButton>
         </DirectoryRoot>
+    );
+}
+
+const Request = styled.div`
+    border: unset;
+    background: unset;
+    border: 1px solid transparent;
+    border-bottom-color: var(--color-border);
+    text-align: left;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+
+    &:hover {
+        background-color: blue;
+    }
+
+    &.active {
+        border-radius: 10px;
+        background-color: hsl(96, 46%, 37%);
+        border-color: hsla(0, 0%, 100%, 0.075);
+    }
+`;
+
+const RequestMethod = styled.span`
+    font-size: 12px;
+    min-width: 30px;
+`;
+
+const RequestActions = styled.div`
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
+`;
+
+const RenameButton = styled.button`
+    border: unset;
+    background: unset;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover {
+        color: blue;
+    }
+`;
+
+const DeleteButton = styled(RenameButton)`
+    background: unset;
+    padding: 0;
+
+    &:hover {
+        color: red;
+    }
+`;
+
+function RequestEntry({ request }: { request: RequestData }) {
+    const context = useContext(AppContext);
+
+    function selectRequest() {
+        context.setActiveRequest(request);
+    }
+
+    function renameRequest(e: React.MouseEvent) {
+        alert(`Rename ${request.name}`);
+        e.stopPropagation();
+    }
+
+    const deleteRequest = (e: React.MouseEvent) => {
+        context.deleteRequest(request);
+        e.stopPropagation();
+    };
+
+    return (
+        <Request onClick={selectRequest} className={classNames({ active: request === context.activeRequest })}>
+            {request.type === "grpc" && (
+                <RequestMethod>
+                    <ChevronsLeftRight size={16} />
+                </RequestMethod>
+            )}
+            {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>}
+            {request.name}
+            {request === context.activeRequest && (
+                <RequestActions>
+                    <RenameButton onClick={renameRequest}>
+                        <Pencil size={16} />
+                    </RenameButton>
+                    <DeleteButton onClick={deleteRequest}>
+                        <Trash size={16} />
+                    </DeleteButton>
+                </RequestActions>
+            )}
+        </Request>
     );
 }
