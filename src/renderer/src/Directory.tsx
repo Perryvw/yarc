@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
 import type { GrpcRequestData, HttpRequestData, RequestData, RequestList } from "../../common/request-types";
 import classNames from "classnames";
+import DirectoryHeader from "./DirectoryHeader";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -11,6 +12,7 @@ const DirectoryRoot = styled.div`
     width: 100%;
     height: 100%;
     min-height: 0;
+    padding: 0 20px;
 `;
 
 const RequestContainer = styled.div`
@@ -25,7 +27,8 @@ const RequestContainer = styled.div`
 const Request = styled.button`
     border: unset;
     background: unset;
-    border-bottom: 1px solid var(--color-border);
+    border: 1px solid transparent;
+    border-bottom-color: var(--color-border);
     text-align: left;
     padding: 10px;
     cursor: pointer;
@@ -38,7 +41,9 @@ const Request = styled.button`
     }
 
     &.active {
-        background-color: hsl(96, 46%, 57%);
+        border-radius: 10px;
+        background-color: hsl(96, 46%, 37%);
+        border-color: hsla(0, 0%, 100%, 0.075);
     }
 `;
 
