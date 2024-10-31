@@ -4,6 +4,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import styled from "styled-components";
 import KeyValuesPanel from "./KeyValuesPanel";
 import { ChevronUp } from "lucide-react";
+import type { KeyValue } from "../../common/request-types";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -51,21 +52,25 @@ const RequestSectionHeaderName = styled.div`
 export default function RequestPanel() {
     const context = useContext(AppContext);
 
-    const [activeRequest] = useState(context.activeRequest);
+    const [activeRequest, setActiveRequest] = useState(context.activeRequest);
 
     const [requestBody, setRequestBody] = useState(
         activeRequest ? (activeRequest.type === "http" ? activeRequest.body : "protobuf") : "",
     );
 
+    const [requestParams, setRequestParamsState] = useState(
+        activeRequest ? (activeRequest.type === "http" ? activeRequest.params : []) : [],
+    );
+
     context.addActiveRequestListener(RequestPanel.name, (r) => {
-        if (r) {
-            if (r.type === "http") {
-                setRequestBody(r.body);
-            } else {
-                setRequestBody("");
-            }
+        setActiveRequest(r);
+
+        if (r?.type === "http") {
+            setRequestBody(r.body);
+            setRequestParams(r.params);
         } else {
             setRequestBody("");
+            setRequestParams([]);
         }
     });
 
@@ -76,15 +81,24 @@ export default function RequestPanel() {
         }
     }
 
+    function setRequestParams(params: KeyValue[]) {
+        if (context.activeRequest && context.activeRequest.type === "http") {
+            context.activeRequest.params = params;
+            setRequestParamsState(params);
+        }
+    }
+
     return (
         <RequestPanelRoot>
-            <RequestSection open>
-                <RequestSectionHeader>
-                    <RequestSectionHeaderName>Parameters</RequestSectionHeaderName>
-                    <ChevronUp size={20} className="chevron" />
-                </RequestSectionHeader>
-                <KeyValuesPanel />
-            </RequestSection>
+            {activeRequest?.type === "http" && (
+                <RequestSection open>
+                    <RequestSectionHeader>
+                        <RequestSectionHeaderName>Parameters</RequestSectionHeaderName>
+                        <ChevronUp size={20} className="chevron" />
+                    </RequestSectionHeader>
+                    <KeyValuesPanel params={requestParams} setParams={setRequestParams} />
+                </RequestSection>
+            )}
 
             <RequestSection open>
                 <RequestSectionHeader>
@@ -96,7 +110,7 @@ export default function RequestPanel() {
                 Type:
                 <button type="button">application/json</button>
                 <button type="button">application/x-www-form-urlencoded</button>
-                <KeyValuesPanel />
+                <KeyValuesPanel params={[]} setParams={() => {}} />
                 <CodeMirror
                     theme="dark"
                     basicSetup={{ foldGutter: true }}
@@ -109,13 +123,15 @@ export default function RequestPanel() {
                 />
             </RequestSection>
 
-            <RequestSection open>
-                <RequestSectionHeader>
-                    <RequestSectionHeaderName>Headers</RequestSectionHeaderName>
-                    <ChevronUp size={20} className="chevron" />
-                </RequestSectionHeader>
-                <KeyValuesPanel />
-            </RequestSection>
+            {activeRequest?.type === "http" && (
+                <RequestSection open>
+                    <RequestSectionHeader>
+                        <RequestSectionHeaderName>Headers</RequestSectionHeaderName>
+                        <ChevronUp size={20} className="chevron" />
+                    </RequestSectionHeader>
+                    <KeyValuesPanel params={activeRequest.headers} setParams={() => {}} />
+                </RequestSection>
+            )}
         </RequestPanelRoot>
     );
 }

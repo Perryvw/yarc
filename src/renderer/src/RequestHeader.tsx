@@ -3,6 +3,7 @@ import { AppContext } from "./AppContext";
 import { Play } from "lucide-react";
 import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
+import type { KeyValue } from "../../common/request-types";
 
 const RequestHeaderContainer = styled.div`
     padding: 15px;
@@ -90,6 +91,7 @@ export default function RequestHeader() {
     const [isExecutionAnimating, setIsExecutionAnimating] = useState(false);
 
     const [url, setUrl] = useState(activeRequest?.url ?? "");
+    const [params, setParams] = useState(activeRequest?.type === "http" ? activeRequest.params : []);
     const [method, setMethod] = useState(activeRequest?.type === "http" ? activeRequest.method : "grpc");
 
     context.addActiveRequestListener(RequestHeader.name, (r) => {
@@ -97,6 +99,7 @@ export default function RequestHeader() {
             setUrl(r.url);
             if (r.type === "http") {
                 setMethod(r.method);
+                setParams(r.params);
             }
         } else {
             setUrl("");
@@ -140,6 +143,11 @@ export default function RequestHeader() {
         }
     }
 
+    function renderParams(params: KeyValue[]) {
+        const p = new URLSearchParams(params.map((kv) => [kv.key, kv.value]));
+        return p.toString();
+    }
+
     return (
         <RequestHeaderContainer>
             <RequestMethodAndPath>
@@ -150,6 +158,7 @@ export default function RequestHeader() {
                     </RequestMethod>
                 )}
                 <RequestPath type="text" value={url} placeholder="url..." onChange={onUrlChange} />
+                {renderParams(params)}
                 <RequestButton
                     type="button"
                     className={isExecutionAnimating ? "is-executing" : ""}

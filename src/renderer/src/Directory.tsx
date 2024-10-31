@@ -149,6 +149,8 @@ export default function Directory() {
             type: "http",
             name: "New request",
             method: "GET",
+            params: [],
+            headers: [],
             url: "new",
             body: "new",
         };

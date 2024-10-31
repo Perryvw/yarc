@@ -9,7 +9,7 @@ import SplitSlider from "./SplitSlider";
 import { useContext, useEffect, useState } from "react";
 import { IpcCall, IpcEvent } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
-import type { RequestData } from "../../common/request-types";
+import type { HttpRequestData, RequestData } from "../../common/request-types";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;
@@ -70,17 +70,27 @@ function AppContainer() {
                 context.setActiveRequest(state.requests[0]);
             } else {
                 // TODO: Remove this, but for now this is useful for debugging
-                const request1: RequestData = {
+                const request1: HttpRequestData = {
                     type: "http",
                     name: "Google",
                     url: "https://www.google.com/",
+                    params: [
+                        {
+                            enabled: true,
+                            key: "test",
+                            value: "123456",
+                        },
+                    ],
+                    headers: [],
                     method: "GET",
                     body: "", // google doesnt like extra data
                 };
-                const request2: RequestData = {
+                const request2: HttpRequestData = {
                     type: "http",
                     name: "JSON",
                     url: "https://jsonplaceholder.typicode.com/comments",
+                    params: [],
+                    headers: [],
                     method: "GET",
                     body: "B",
                 };
