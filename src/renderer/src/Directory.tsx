@@ -1,5 +1,5 @@
 import type React from "react";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "./AppContext";
 import styled from "styled-components";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
@@ -106,6 +106,8 @@ export default function Directory() {
     const [, setActiveRequest] = useState(context.activeRequest);
     context.addActiveRequestListener(Directory.name, setActiveRequest);
 
+    const [renamingRequest, renameModal] = useState<RequestData | undefined>(undefined);
+
     function newRequest() {
         const newRequest: HttpRequestData = {
             type: "http",
@@ -130,11 +132,23 @@ export default function Directory() {
         context.setActiveRequest(newRequest);
     }
 
+    function renameRequest(request: RequestData) {
+        renameModal(request);
+    }
+
+    function finishRename(result: RenameResult) {
+        renameModal(undefined);
+        if (!result.cancelled && context.activeRequest) {
+            context.activeRequest.name = result.name;
+            context.persistState();
+        }
+    }
+
     return (
         <DirectoryRoot>
             <RequestContainer>
                 {requests.map((r, i) => (
-                    <RequestEntry key={i.toString()} request={r} />
+                    <RequestEntry key={i.toString()} request={r} rename={renameRequest} />
                 ))}
             </RequestContainer>
             <NewRequestTypePopup id="new-request-popover" popover="auto">
@@ -151,7 +165,52 @@ export default function Directory() {
                 <CirclePlus />
                 New
             </NewButton>
+            <RenameModal request={renamingRequest} close={finishRename} />
         </DirectoryRoot>
+    );
+}
+
+type RenameResult = { cancelled: true } | { cancelled: false; name: string };
+function RenameModal({
+    request,
+    close,
+}: {
+    request: RequestData | undefined;
+    close: (result: RenameResult) => void;
+}) {
+    const ref = useRef<HTMLDialogElement>(null);
+
+    const [newName, setNewName] = useState(request?.name ?? "");
+
+    useEffect(() => {
+        if (request !== undefined) {
+            setNewName(request.name);
+            ref.current?.showModal();
+        } else {
+            ref.current?.close();
+        }
+    }, [request]);
+
+    function cancel() {
+        close({ cancelled: true });
+    }
+    function ok() {
+        if (request === undefined) cancel();
+        close({ cancelled: false, name: newName });
+    }
+
+    return (
+        <dialog ref={ref}>
+            Rename {request?.name}:<br />
+            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} />
+            <br />
+            <button type="button" onClick={ok}>
+                Ok
+            </button>
+            <button type="button" onClick={cancel}>
+                Cancel
+            </button>
+        </dialog>
     );
 }
 
@@ -209,7 +268,7 @@ const DeleteButton = styled(RenameButton)`
     }
 `;
 
-function RequestEntry({ request }: { request: RequestData }) {
+function RequestEntry({ request, rename }: { request: RequestData; rename: (r: RequestData) => void }) {
     const context = useContext(AppContext);
 
     function selectRequest() {
@@ -217,7 +276,7 @@ function RequestEntry({ request }: { request: RequestData }) {
     }
 
     function renameRequest(e: React.MouseEvent) {
-        alert(`Rename ${request.name}`);
+        rename(request);
         e.stopPropagation();
     }
 
