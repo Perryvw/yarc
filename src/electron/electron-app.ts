@@ -30,7 +30,7 @@ app.whenReady().then(async () => {
     });
 
     ipcMain.handle(IpcCall.LoadPersistedState, async () => {
-        return await getPersistedState();
+        return persistedState;
     });
 
     ipcMain.handle(IpcCall.PersistState, async (_, state: PersistedState) => {
