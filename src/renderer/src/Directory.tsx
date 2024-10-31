@@ -1,10 +1,9 @@
-import { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import { AppContext } from "./AppContext";
 import styled from "styled-components";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
-import type { GrpcRequestData, HttpRequestData, RequestData, RequestList } from "../../common/request-types";
+import type { GrpcRequestData, HttpRequestData, RequestData } from "../../common/request-types";
 import classNames from "classnames";
-import DirectoryHeader from "./DirectoryHeader";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -24,7 +23,7 @@ const RequestContainer = styled.div`
     scrollbar-width: thin;
 `;
 
-const Request = styled.button`
+const Request = styled.div`
     border: unset;
     background: unset;
     border: 1px solid transparent;
@@ -131,6 +130,26 @@ const NewRequestTypePopup = styled.div`
     }
 `;
 
+const RenameButton = styled.button`
+    border: unset;
+    background: unset;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover {
+        color: blue;
+    }
+`;
+
+const DeleteButton = styled(RenameButton)`
+    background: unset;
+    padding: 0;
+
+    &:hover {
+        color: red;
+    }
+`;
+
 export default function Directory() {
     const context = useContext(AppContext);
 
@@ -168,13 +187,22 @@ export default function Directory() {
         context.setActiveRequest(newRequest);
     }
 
+    const renameRequest = (request: RequestData) => (e: React.MouseEvent) => {
+        alert(`Rename ${request.name}`);
+        e.stopPropagation();
+    };
+
+    const deleteRequest = (request: RequestData) => (e: React.MouseEvent) => {
+        context.deleteRequest(request);
+        e.stopPropagation();
+    };
+
     return (
         <DirectoryRoot>
             <RequestContainer>
                 {requests.map((r, i) => (
                     <Request
                         key={i.toString()}
-                        type="button"
                         onClick={selectRequest(r)}
                         className={classNames({ active: r === context.activeRequest })}
                     >
@@ -187,8 +215,12 @@ export default function Directory() {
                         {r.name}
                         {r === context.activeRequest && (
                             <RequestActions>
-                                <Pencil size={16} />
-                                <Trash size={16} />
+                                <RenameButton onClick={renameRequest(r)}>
+                                    <Pencil size={16} />
+                                </RenameButton>
+                                <DeleteButton onClick={deleteRequest(r)}>
+                                    <Trash size={16} />
+                                </DeleteButton>
                             </RequestActions>
                         )}
                     </Request>

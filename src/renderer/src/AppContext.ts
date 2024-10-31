@@ -50,6 +50,25 @@ export class AppContextImpl {
         }
     }
 
+    public deleteRequest(request: RequestData) {
+        const index = this.requests.indexOf(request);
+        if (index >= 0) {
+            // Remove request from list
+            const newRequests = [...this.requests];
+            newRequests.splice(index, 1);
+            this.setRequestList(newRequests);
+            // Persist state
+            this.persistState();
+
+            if (this.requests.length > 0) {
+                // Set active request to next event in the list
+                this.setActiveRequest(this.requests[Math.min(index, this.requests.length - 1)]);
+            } else {
+                this.setActiveRequest(undefined);
+            }
+        }
+    }
+
     private activeRequestListeners: Record<string, RequestHandler> = {};
     public addActiveRequestListener(key: string, handler: RequestHandler) {
         this.activeRequestListeners[key] = handler;
