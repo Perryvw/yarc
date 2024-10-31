@@ -2,6 +2,7 @@ import { Plus, Trash, Trash2 } from "lucide-react";
 import styled from "styled-components";
 import type { KeyValue } from "../../common/request-types";
 import { useState } from "react";
+import { commonHeaders } from "../../common/common-headers";
 
 const QueryParameters = styled.table`
     width: 100%;
@@ -72,9 +73,14 @@ const QueryParameterDelete = styled.button`
 `;
 
 export default function KeyValuesPanel({
+    name,
     params,
     setParams,
-}: { params: KeyValue[]; setParams: (params: KeyValue[]) => void }) {
+}: {
+    name: string;
+    params: KeyValue[];
+    setParams: (params: KeyValue[]) => void;
+}) {
     const [localParams, setLocalParams] = useState(params);
 
     function updateParams(updatedParams: KeyValue[]) {
@@ -139,6 +145,7 @@ export default function KeyValuesPanel({
                     <QueryParameterKey
                         type="text"
                         placeholder="Key"
+                        list={`${name}_kv_datalist`}
                         value={kv.key}
                         onChange={(ev) => onUpdateKey(index, ev.target.value)}
                     />
@@ -176,24 +183,33 @@ export default function KeyValuesPanel({
     }
 
     return (
-        <QueryParameters>
-            <tbody>
-                <tr>
-                    <td style={{ width: "32px" }}>
-                        <QueryParameterDelete type="button" onClick={createNewParam}>
-                            <Plus size={16} />
-                        </QueryParameterDelete>
-                    </td>
-                    <td style={{ width: "50%" }} />
-                    <td style={{ width: "50%", borderLeft: "0" }} />
-                    <td style={{ width: "32px" }}>
-                        <QueryParameterDelete type="button" onClick={clearParams}>
-                            <Trash2 size={16} />
-                        </QueryParameterDelete>
-                    </td>
-                </tr>
-                {getParamsToRender().map((kv, i) => QueryParameter(i, kv))}
-            </tbody>
-        </QueryParameters>
+        <>
+            <QueryParameters>
+                <tbody>
+                    <tr>
+                        <td style={{ width: "32px" }}>
+                            <QueryParameterDelete type="button" onClick={createNewParam}>
+                                <Plus size={16} />
+                            </QueryParameterDelete>
+                        </td>
+                        <td style={{ width: "50%" }} />
+                        <td style={{ width: "50%", borderLeft: "0" }} />
+                        <td style={{ width: "32px" }}>
+                            <QueryParameterDelete type="button" onClick={clearParams}>
+                                <Trash2 size={16} />
+                            </QueryParameterDelete>
+                        </td>
+                    </tr>
+                    {getParamsToRender().map((kv, i) => QueryParameter(i, kv))}
+                </tbody>
+            </QueryParameters>
+            {name === "headers" && (
+                <datalist id={`${name}_kv_datalist`}>
+                    {commonHeaders.map((header) => (
+                        <option key={header} value={header} />
+                    ))}
+                </datalist>
+            )}
+        </>
     );
 }

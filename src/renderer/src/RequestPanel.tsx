@@ -96,7 +96,7 @@ export default function RequestPanel() {
                         <RequestSectionHeaderName>Parameters</RequestSectionHeaderName>
                         <ChevronUp size={20} className="chevron" />
                     </RequestSectionHeader>
-                    <KeyValuesPanel params={requestParams} setParams={setRequestParams} />
+                    <KeyValuesPanel name="query-parameters" params={requestParams} setParams={setRequestParams} />
                 </RequestSection>
             )}
 
@@ -110,7 +110,7 @@ export default function RequestPanel() {
                 Type:
                 <button type="button">application/json</button>
                 <button type="button">application/x-www-form-urlencoded</button>
-                <KeyValuesPanel params={[]} setParams={() => {}} />
+                <KeyValuesPanel name="form-parameters" params={[]} setParams={() => {}} />
                 <CodeMirror
                     theme="dark"
                     basicSetup={{ foldGutter: true }}
@@ -129,7 +129,7 @@ export default function RequestPanel() {
                         <RequestSectionHeaderName>Headers</RequestSectionHeaderName>
                         <ChevronUp size={20} className="chevron" />
                     </RequestSectionHeader>
-                    <KeyValuesPanel params={activeRequest.headers} setParams={() => {}} />
+                    <KeyValuesPanel name="headers" params={activeRequest.headers} setParams={() => {}} />
                 </RequestSection>
             )}
         </RequestPanelRoot>
