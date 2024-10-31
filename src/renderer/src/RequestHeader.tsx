@@ -122,8 +122,11 @@ export default function RequestHeader() {
         setIsExecutionAnimating(true);
 
         if (context.activeRequest && context.activeRequest.type === "http") {
-            context.response = await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, context.activeRequest);
-            context.setResponse(context.response);
+            context.activeRequest.response = await window.electron.ipcRenderer.invoke(
+                IpcCall.HttpRequest,
+                context.activeRequest,
+            );
+            context.setResponse(context.activeRequest.response);
         } else if (context.activeRequest && context.activeRequest.type === "grpc") {
             // TODO
         }
