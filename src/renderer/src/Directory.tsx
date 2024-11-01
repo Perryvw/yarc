@@ -1,5 +1,5 @@
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
 import type { GrpcRequestData, HttpRequestData, RequestData, RequestList } from "../../common/request-types";
@@ -114,7 +114,7 @@ const Directory = observer(({ context }: { context: AppContext }) => {
             url: "new",
             body: "new",
         };
-        context.requests.push(newRequest);
+        context.addRequest(newRequest);
         context.setActiveRequestById(requests.length - 1);
     }
 
@@ -124,13 +124,16 @@ const Directory = observer(({ context }: { context: AppContext }) => {
             name: "New request",
             url: "new",
         };
-        context.requests.push(newRequest);
+        context.addRequest(newRequest);
         context.setActiveRequestById(requests.length - 1);
     }
 
-    function renameRequest(request: RequestData) {
-        renameModal(request);
-    }
+    const renameRequest = useCallback(
+        (request: RequestData) => {
+            renameModal(request);
+        },
+        [context],
+    );
 
     function finishRename(result: RenameResult) {
         renameModal(undefined);
@@ -140,9 +143,19 @@ const Directory = observer(({ context }: { context: AppContext }) => {
         }
     }
 
-    function selectRequest(request: RequestData) {
-        context.setActiveRequest(request);
-    }
+    const selectRequest = useCallback(
+        (request: RequestData) => {
+            context.setActiveRequest(request);
+        },
+        [context],
+    );
+
+    const deleteRequest = useCallback(
+        (request: RequestData) => {
+            context.deleteRequest(request);
+        },
+        [context],
+    );
 
     return (
         <DirectoryRoot>
@@ -152,8 +165,9 @@ const Directory = observer(({ context }: { context: AppContext }) => {
                         activeRequest={context.activeRequest}
                         key={i.toString()}
                         request={r}
-                        rename={() => renameRequest(r)}
-                        selectRequest={() => selectRequest(r)}
+                        renameRequest={renameRequest}
+                        selectRequest={selectRequest}
+                        deleteRequest={deleteRequest}
                     />
                 ))}
             </RequestContainer>
@@ -279,30 +293,36 @@ const RequestEntry = observer(
     ({
         activeRequest,
         request,
-        rename,
+        renameRequest,
         selectRequest,
+        deleteRequest,
     }: {
         activeRequest: RequestData | undefined;
         request: RequestData;
-        rename: () => void;
-        selectRequest: () => void;
+        renameRequest: (r: RequestData) => void;
+        selectRequest: (r: RequestData) => void;
+        deleteRequest: (r: RequestData) => void;
     }) => {
         console.log("Rendering request entry");
 
-        function renameRequest(e: React.MouseEvent) {
-            rename();
+        function renameHandler(e: React.MouseEvent) {
+            renameRequest(request);
             e.stopPropagation();
         }
 
-        const deleteRequest = (e: React.MouseEvent) => {
-            // AppContext.deleteRequest(request);
-            // e.stopPropagation();
+        const deleteHandler = (e: React.MouseEvent) => {
+            deleteRequest(request);
+            e.stopPropagation();
         };
 
         const active = request === activeRequest;
 
+        const selectHandler = useCallback(() => {
+            selectRequest(request);
+        }, [request, selectRequest]);
+
         return (
-            <Request onClick={selectRequest} className={classNames({ active })}>
+            <Request onClick={selectHandler} className={classNames({ active })}>
                 {request.type === "grpc" && (
                     <RequestMethod>
                         <ChevronsLeftRight size={16} />
@@ -312,10 +332,10 @@ const RequestEntry = observer(
                 {request.name}
                 {active && (
                     <RequestActions>
-                        <RenameButton onClick={renameRequest}>
+                        <RenameButton onClick={renameHandler}>
                             <Pencil size={16} />
                         </RenameButton>
-                        <DeleteButton onClick={deleteRequest}>
+                        <DeleteButton onClick={deleteHandler}>
                             <Trash size={16} />
                         </DeleteButton>
                     </RequestActions>

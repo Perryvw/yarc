@@ -30,22 +30,10 @@ const ImportButton = styled(ExportButton)`
     margin-left: auto;
 `;
 
-export default function DirectoryHeader() {
-    // const [requests, setRequests] = useState(context.requests);
-    // context.addRequestListListener(DirectoryHeader.name, setRequests);
-
-    async function importDirectory() {
-        // const result: IpcImportResult = await window.electron.ipcRenderer.invoke(IpcCall.ImportDirectory);
-        // if (!result.cancelled) {
-        //     context.setRequestList(result.requests);
-        //     context.setActiveRequest(0);
-        // }
-    }
-
-    async function exportDirectory() {
-        //await window.electron.ipcRenderer.invoke(IpcCall.ExportDirectory, requests);
-    }
-
+export default function DirectoryHeader({
+    importDirectory,
+    exportDirectory,
+}: { importDirectory: () => void; exportDirectory: () => void }) {
     return (
         <Container>
             <PawPrint size={16} />

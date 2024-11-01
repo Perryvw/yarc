@@ -4,14 +4,12 @@ import RequestHeader from "./RequestHeader";
 import { AppContext } from "./AppContext";
 import styled from "styled-components";
 import SplitSlider from "./SplitSlider";
-import { useEffect } from "react";
-import { IpcCall, IpcEvent } from "../../common/ipc";
-import type { PersistedState } from "../../common/persist-state";
-import type { HttpRequestData } from "../../common/request-types";
+import { useCallback, useEffect } from "react";
+import { IpcCall, IpcEvent, type IpcImportResult } from "../../common/ipc";
 import { observer } from "mobx-react-lite";
 import { RequestPanel } from "./RequestPanel";
 import { ResponsePanel } from "./ResponsePanel";
-import { runInAction } from "mobx";
+import { runInAction, toJS } from "mobx";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;
@@ -57,44 +55,41 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
             context.persistState();
         });
 
-        window.electron.ipcRenderer.invoke(IpcCall.LoadPersistedState).then((state: PersistedState | undefined) => {
-            if (state) {
-                context.gridWidthDirectory = state.layout.directoryWidth;
-                context.gridWidthResponse = state.layout.repsonseWidth;
+        context.loadPersistedState();
+        context.setActiveRequestById(0);
+    }, [context]);
 
-                context.setRequestList(state.requests);
-                context.setActiveRequestById(0);
-            } else {
-                // TODO: Remove this, but for now this is useful for debugging
-                const request1: HttpRequestData = {
-                    type: "http",
-                    name: "Google",
-                    url: "https://www.google.com/",
-                    params: [
-                        {
-                            enabled: true,
-                            key: "test",
-                            value: "123456",
-                        },
-                    ],
-                    headers: [],
-                    method: "GET",
-                    body: "", // google doesnt like extra data
-                };
-                const request2: HttpRequestData = {
-                    type: "http",
-                    name: "JSON",
-                    url: "https://jsonplaceholder.typicode.com/comments",
-                    params: [],
-                    headers: [],
-                    method: "GET",
-                    body: "B",
-                };
-                context.setRequestList([request1, request2]);
+    const setDirectoryWidth = useCallback(
+        (w: number) => {
+            runInAction(() => {
+                context.gridWidthDirectory = w;
+            });
+        },
+        [context],
+    );
+
+    const setResponseWidth = useCallback(
+        (w: number) => {
+            runInAction(() => {
+                context.gridWidthResponse = w;
+            });
+        },
+        [context],
+    );
+
+    const importDirectory = useCallback(async () => {
+        const result: IpcImportResult = await window.electron.ipcRenderer.invoke(IpcCall.ImportDirectory);
+        if (!result.cancelled) {
+            context.setRequestList(result.requests);
+            if (result.requests.length > 0) {
                 context.setActiveRequestById(0);
             }
-        });
-    }, []);
+        }
+    }, [context]);
+
+    const exportDirectory = useCallback(async () => {
+        await window.electron.ipcRenderer.invoke(IpcCall.ExportDirectory, toJS(context.requests));
+    }, [context]);
 
     return (
         <AppRoot
@@ -105,14 +100,10 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                 } as React.CSSProperties
             }
         >
-            <DirectoryHeader />
+            <DirectoryHeader importDirectory={importDirectory} exportDirectory={exportDirectory} />
             <SplitSlider
                 width={context.gridWidthDirectory}
-                setWidth={(w) => {
-                    runInAction(() => {
-                        context.gridWidthDirectory = w;
-                    });
-                }}
+                setWidth={setDirectoryWidth}
                 style={{
                     gridRow: "span 2",
                 }}
@@ -121,14 +112,7 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
             <Directory context={context} />
             <MainContent>
                 <RequestPanel activeRequest={context.activeRequest} />
-                <SplitSlider
-                    width={context.gridWidthDirectory}
-                    setWidth={(w) => {
-                        runInAction(() => {
-                            context.gridWidthResponse = w;
-                        });
-                    }}
-                />
+                <SplitSlider width={context.gridWidthDirectory} setWidth={setResponseWidth} />
                 <ResponsePanel response={context.activeRequest?.response} />
             </MainContent>
         </AppRoot>

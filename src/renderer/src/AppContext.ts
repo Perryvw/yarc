@@ -1,11 +1,7 @@
-import type { RequestData, RequestList, ResponseData } from "../../common/request-types";
+import type { HttpRequestData, RequestData, RequestList, ResponseData } from "../../common/request-types";
 import { IpcCall } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
 import { action, computed, makeObservable, observable, toJS } from "mobx";
-
-type RequestHandler = (request: RequestData | undefined) => void;
-type RequestListHandler = (requests: RequestList) => void;
-type ResponseHandler = (response: ResponseData | undefined) => void;
 
 export class AppContext {
     requests: RequestList = [];
@@ -34,6 +30,8 @@ export class AppContext {
             setRequestList: action,
             setResponse: action,
             deleteRequest: action,
+            persistState: action,
+            loadPersistedState: action,
         });
     }
 
@@ -47,61 +45,21 @@ export class AppContext {
     }
 
     public setActiveRequestById(index: number | undefined) {
-        // if (index === undefined) {
-        //     this.activeRequest = undefined;
-        //     return;
-        // }
-
-        // console.log(this.requests);
-
-        // console.log("setting active request", index, this.requests[index]);
-        // //this.selectedIndex = index;
-        // if (index === undefined) this.activeRequest = undefined;
-        // else this.activeRequest = this.requests[index];
-        // console.log("active request is", this.activeRequest);
-
         if (index === undefined) {
             this.selectedIndex = undefined;
             return;
         }
 
         this.selectedIndex = index;
-
-        // if (request === undefined) {
-        //     this.selectedIndex = undefined;
-        //     return;
-        // }
-
-        // const index = this.requests.indexOf(request);
-        // console.log("setting active request", index, request, this.requests);
-        // if (index >= 0) {
-        //     this.selectedIndex = index;
-        // } else {
-        //     this.selectedIndex = undefined;
-        // }
-        // this.activeRequest = request;
-        // for (const h of Object.values(this.activeRequestListeners)) {
-        //     h(request);
-        // }
-        // this.setResponse(request?.response);
-
-        // TODO: Only persist when unchanged data is pending
-        //this.persistState();
     }
 
     public setRequestList(requests: RequestList) {
         this.requests = requests;
-        // for (const h of Object.values(this.requestListListeners)) {
-        //     h(requests);
-        // }
     }
 
     public setResponse(response: ResponseData | undefined) {
         if (this.activeRequest) {
             this.activeRequest.response = response;
-            for (const h of Object.values(this.responseListeners)) {
-                h(response);
-            }
         }
     }
 
@@ -124,23 +82,12 @@ export class AppContext {
         }
     }
 
-    private activeRequestListeners: Record<string, RequestHandler> = {};
-    public addActiveRequestListener(key: string, handler: RequestHandler) {
-        this.activeRequestListeners[key] = handler;
-    }
-
-    private requestListListeners: Record<string, RequestListHandler> = {};
-    public addRequestListListener(key: string, handler: RequestListHandler) {
-        this.requestListListeners[key] = handler;
-    }
-
-    private responseListeners: Record<string, ResponseHandler> = {};
-    public addResponseListener(key: string, handler: ResponseHandler) {
-        this.responseListeners[key] = handler;
-    }
-
     public persistState(): void {
-        const requestsWithoutResponse = this.requests.map((r) => ({ ...r, response: undefined }));
+        const requestsWithoutResponse = this.requests.map((r) => {
+            const req = toJS(r);
+            req.response = undefined;
+            return req;
+        });
         const state: PersistedState = {
             requests: requestsWithoutResponse,
             layout: {
@@ -151,5 +98,45 @@ export class AppContext {
         window.electron.ipcRenderer.invoke(IpcCall.PersistState, toJS(state));
     }
 
-    public loadPersistedState(): void {}
+    public loadPersistedState(): void {
+        window.electron.ipcRenderer.invoke(IpcCall.LoadPersistedState).then((state: PersistedState | undefined) => {
+            if (state) {
+                this.gridWidthDirectory = state.layout.directoryWidth;
+                this.gridWidthResponse = state.layout.repsonseWidth;
+
+                this.setRequestList(state.requests);
+                if (state.requests.length > 0) {
+                    this.setActiveRequestById(0);
+                }
+            } else {
+                // TODO: Remove this, but for now this is useful for debugging
+                const request1: HttpRequestData = {
+                    type: "http",
+                    name: "Google",
+                    url: "https://www.google.com/",
+                    params: [
+                        {
+                            enabled: true,
+                            key: "test",
+                            value: "123456",
+                        },
+                    ],
+                    headers: [],
+                    method: "GET",
+                    body: "", // google doesnt like extra data
+                };
+                const request2: HttpRequestData = {
+                    type: "http",
+                    name: "JSON",
+                    url: "https://jsonplaceholder.typicode.com/comments",
+                    params: [],
+                    headers: [],
+                    method: "GET",
+                    body: "B",
+                };
+                this.setRequestList([request1, request2]);
+                this.setActiveRequestById(0);
+            }
+        });
+    }
 }
