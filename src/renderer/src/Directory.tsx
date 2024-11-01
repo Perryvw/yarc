@@ -1,10 +1,11 @@
 import type React from "react";
-import { useContext, useEffect, useRef, useState } from "react";
-import { AppContext } from "./AppContext";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
-import type { GrpcRequestData, HttpRequestData, RequestData } from "../../common/request-types";
+import type { GrpcRequestData, HttpRequestData, RequestData, RequestList } from "../../common/request-types";
 import classNames from "classnames";
+import { observer } from "mobx-react-lite";
+import type { AppContext } from "./AppContext";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -97,14 +98,9 @@ const NewRequestTypePopup = styled.div`
     }
 `;
 
-export default function Directory() {
-    const context = useContext(AppContext);
-
-    const [requests, setRequests] = useState(context.requests);
-    context.addRequestListListener(Directory.name, setRequests);
-
-    const [, setActiveRequest] = useState(context.activeRequest);
-    context.addActiveRequestListener(Directory.name, setActiveRequest);
+const Directory = observer(({ context }: { context: AppContext }) => {
+    const { requests } = context;
+    console.log("rendering directory");
 
     const [renamingRequest, renameModal] = useState<RequestData | undefined>(undefined);
 
@@ -118,8 +114,8 @@ export default function Directory() {
             url: "new",
             body: "new",
         };
-        context.setRequestList([...requests, newRequest]);
-        context.setActiveRequest(newRequest);
+        context.requests.push(newRequest);
+        context.setActiveRequestById(requests.length - 1);
     }
 
     function newRequestGrpc() {
@@ -128,8 +124,8 @@ export default function Directory() {
             name: "New request",
             url: "new",
         };
-        context.setRequestList([...requests, newRequest]);
-        context.setActiveRequest(newRequest);
+        context.requests.push(newRequest);
+        context.setActiveRequestById(requests.length - 1);
     }
 
     function renameRequest(request: RequestData) {
@@ -144,11 +140,21 @@ export default function Directory() {
         }
     }
 
+    function selectRequest(request: RequestData) {
+        context.setActiveRequest(request);
+    }
+
     return (
         <DirectoryRoot>
             <RequestContainer>
                 {requests.map((r, i) => (
-                    <RequestEntry key={i.toString()} request={r} rename={renameRequest} />
+                    <RequestEntry
+                        activeRequest={context.activeRequest}
+                        key={i.toString()}
+                        request={r}
+                        rename={() => renameRequest(r)}
+                        selectRequest={() => selectRequest(r)}
+                    />
                 ))}
             </RequestContainer>
             <NewRequestTypePopup id="new-request-popover" popover="auto">
@@ -168,7 +174,8 @@ export default function Directory() {
             <RenameModal request={renamingRequest} close={finishRename} />
         </DirectoryRoot>
     );
-}
+});
+export default Directory;
 
 type RenameResult = { cancelled: true } | { cancelled: false; name: string };
 function RenameModal({
@@ -268,42 +275,52 @@ const DeleteButton = styled(RenameButton)`
     }
 `;
 
-function RequestEntry({ request, rename }: { request: RequestData; rename: (r: RequestData) => void }) {
-    const context = useContext(AppContext);
+const RequestEntry = observer(
+    ({
+        activeRequest,
+        request,
+        rename,
+        selectRequest,
+    }: {
+        activeRequest: RequestData | undefined;
+        request: RequestData;
+        rename: () => void;
+        selectRequest: () => void;
+    }) => {
+        console.log("Rendering request entry");
 
-    function selectRequest() {
-        context.setActiveRequest(request);
-    }
+        function renameRequest(e: React.MouseEvent) {
+            rename();
+            e.stopPropagation();
+        }
 
-    function renameRequest(e: React.MouseEvent) {
-        rename(request);
-        e.stopPropagation();
-    }
+        const deleteRequest = (e: React.MouseEvent) => {
+            // AppContext.deleteRequest(request);
+            // e.stopPropagation();
+        };
 
-    const deleteRequest = (e: React.MouseEvent) => {
-        context.deleteRequest(request);
-        e.stopPropagation();
-    };
+        const active = request === activeRequest;
 
-    return (
-        <Request onClick={selectRequest} className={classNames({ active: request === context.activeRequest })}>
-            {request.type === "grpc" && (
-                <RequestMethod>
-                    <ChevronsLeftRight size={16} />
-                </RequestMethod>
-            )}
-            {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>}
-            {request.name}
-            {request === context.activeRequest && (
-                <RequestActions>
-                    <RenameButton onClick={renameRequest}>
-                        <Pencil size={16} />
-                    </RenameButton>
-                    <DeleteButton onClick={deleteRequest}>
-                        <Trash size={16} />
-                    </DeleteButton>
-                </RequestActions>
-            )}
-        </Request>
-    );
-}
+        return (
+            <Request onClick={selectRequest} className={classNames({ active })}>
+                {request.type === "grpc" && (
+                    <RequestMethod>
+                        <ChevronsLeftRight size={16} />
+                    </RequestMethod>
+                )}
+                {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>}
+                {request.name}
+                {active && (
+                    <RequestActions>
+                        <RenameButton onClick={renameRequest}>
+                            <Pencil size={16} />
+                        </RenameButton>
+                        <DeleteButton onClick={deleteRequest}>
+                            <Trash size={16} />
+                        </DeleteButton>
+                    </RequestActions>
+                )}
+            </Request>
+        );
+    },
+);

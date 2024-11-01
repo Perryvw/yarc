@@ -1,15 +1,17 @@
 import Directory from "./Directory";
 import DirectoryHeader from "./DirectoryHeader";
 import RequestHeader from "./RequestHeader";
-import RequestPanel from "./RequestPanel";
-import ResponsePanel from "./ResponsePanel";
-import { AppContext, AppContextImpl } from "./AppContext";
+import { AppContext } from "./AppContext";
 import styled from "styled-components";
 import SplitSlider from "./SplitSlider";
-import { useContext, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { IpcCall, IpcEvent } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
-import type { HttpRequestData, RequestData } from "../../common/request-types";
+import type { HttpRequestData } from "../../common/request-types";
+import { observer } from "mobx-react-lite";
+import { RequestPanel } from "./RequestPanel";
+import { ResponsePanel } from "./ResponsePanel";
+import { runInAction } from "mobx";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;
@@ -49,14 +51,7 @@ const MainContent = styled.div`
     background-color: var(--color-background-contrast);
 `;
 
-function AppContainer() {
-    const context = useContext(AppContext);
-
-    const [gridWidthDirectory, setGridWidthDirectory] = useState(context.gridWidthDirectory);
-    const [gridWidthResponse, setGridWidthResponse] = useState(context.gridWidthResponse);
-    context.setGridWidthDirectory = setGridWidthDirectory;
-    context.setGridWidthResponse = setGridWidthResponse;
-
+const AppContainer = observer(({ context }: { context: AppContext }) => {
     useEffect(() => {
         window.electron.ipcRenderer.on(IpcEvent.WindowClosing, () => {
             context.persistState();
@@ -64,10 +59,11 @@ function AppContainer() {
 
         window.electron.ipcRenderer.invoke(IpcCall.LoadPersistedState).then((state: PersistedState | undefined) => {
             if (state) {
-                context.setGridWidthDirectory(state.layout.directoryWidth);
-                context.setGridWidthResponse(state.layout.repsonseWidth);
+                context.gridWidthDirectory = state.layout.directoryWidth;
+                context.gridWidthResponse = state.layout.repsonseWidth;
+
                 context.setRequestList(state.requests);
-                context.setActiveRequest(state.requests[0]);
+                context.setActiveRequestById(0);
             } else {
                 // TODO: Remove this, but for now this is useful for debugging
                 const request1: HttpRequestData = {
@@ -95,7 +91,7 @@ function AppContainer() {
                     body: "B",
                 };
                 context.setRequestList([request1, request2]);
-                context.setActiveRequest(request1);
+                context.setActiveRequestById(0);
             }
         });
     }, []);
@@ -104,34 +100,42 @@ function AppContainer() {
         <AppRoot
             style={
                 {
-                    "--grid-width-directory": `${gridWidthDirectory}%`,
-                    "--grid-width-response": `${gridWidthResponse}%`,
+                    "--grid-width-directory": `${context.gridWidthDirectory}%`,
+                    "--grid-width-response": `${context.gridWidthResponse}%`,
                 } as React.CSSProperties
             }
         >
             <DirectoryHeader />
             <SplitSlider
-                width={gridWidthDirectory}
-                setWidth={setGridWidthDirectory}
+                width={context.gridWidthDirectory}
+                setWidth={(w) => {
+                    runInAction(() => {
+                        context.gridWidthDirectory = w;
+                    });
+                }}
                 style={{
                     gridRow: "span 2",
                 }}
             />
-            <RequestHeader />
-            <Directory />
+            <RequestHeader activeRequest={context.activeRequest} />
+            <Directory context={context} />
             <MainContent>
-                <RequestPanel />
-                <SplitSlider width={gridWidthResponse} setWidth={setGridWidthResponse} />
-                <ResponsePanel />
+                <RequestPanel activeRequest={context.activeRequest} />
+                <SplitSlider
+                    width={context.gridWidthDirectory}
+                    setWidth={(w) => {
+                        runInAction(() => {
+                            context.gridWidthResponse = w;
+                        });
+                    }}
+                />
+                <ResponsePanel response={context.activeRequest?.response} />
             </MainContent>
         </AppRoot>
     );
-}
+});
 
 export default function App() {
-    return (
-        <AppContext.Provider value={new AppContextImpl()}>
-            <AppContainer />
-        </AppContext.Provider>
-    );
+    const context = new AppContext();
+    return <AppContainer context={context} />;
 }

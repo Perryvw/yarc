@@ -1,11 +1,12 @@
-import { useContext, useState } from "react";
-import { AppContext } from "./AppContext";
+import { useState } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
 import { html } from "@codemirror/lang-html";
 import styled from "styled-components";
 import { CircleSlash2 } from "lucide-react";
 import { Tab, Tabs } from "./Tabs";
+import { observer } from "mobx-react-lite";
+import type { ResponseData } from "../../common/request-types";
 
 const ResponsePanelRoot = styled.div`
     display: flex;
@@ -116,12 +117,7 @@ const codemirrorTheme = EditorView.theme({
     },
 });
 
-export default function ResponsePanel() {
-    const context = useContext(AppContext);
-
-    const [response, setResponse] = useState(context.response);
-    context.addResponseListener(ResponsePanel.name, setResponse);
-
+export const ResponsePanel = observer(({ response }: { response: ResponseData | undefined }) => {
     const [tab, setTab] = useState<"body" | "headers">("body");
     const [prettyPrint, setPrettyPrint] = useState(true);
 
@@ -211,7 +207,7 @@ export default function ResponsePanel() {
             )}
         </ResponsePanelRoot>
     );
-}
+});
 
 function statusColor(statusCode: number) {
     if (statusCode >= 500) return "status-500";

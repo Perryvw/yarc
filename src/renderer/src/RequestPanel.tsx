@@ -1,10 +1,11 @@
-import { useContext, useState } from "react";
-import { AppContext } from "./AppContext";
+import { useState } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import styled from "styled-components";
 import KeyValuesPanel from "./KeyValuesPanel";
 import { ChevronUp } from "lucide-react";
-import type { KeyValue } from "../../common/request-types";
+import type { KeyValue, RequestData } from "../../common/request-types";
+import type { AppContext } from "./AppContext";
+import { observer } from "mobx-react-lite";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -49,41 +50,22 @@ const RequestSectionHeaderName = styled.div`
     }
 `;
 
-export default function RequestPanel() {
-    const context = useContext(AppContext);
-
-    const [activeRequest, setActiveRequest] = useState(context.activeRequest);
-
-    const [requestBody, setRequestBody] = useState(
-        activeRequest ? (activeRequest.type === "http" ? activeRequest.body : "protobuf") : "",
-    );
+export const RequestPanel = observer(({ activeRequest }: { activeRequest: RequestData | undefined }) => {
+    const requestBody = activeRequest ? (activeRequest.type === "http" ? activeRequest.body : "protobuf") : "";
 
     const [requestParams, setRequestParamsState] = useState(
         activeRequest ? (activeRequest.type === "http" ? activeRequest.params : []) : [],
     );
 
-    context.addActiveRequestListener(RequestPanel.name, (r) => {
-        setActiveRequest(r);
-
-        if (r?.type === "http") {
-            setRequestBody(r.body);
-            setRequestParams(r.params);
-        } else {
-            setRequestBody("");
-            setRequestParams([]);
-        }
-    });
-
     function onRequestBodyChanged(value: string) {
-        if (context.activeRequest && context.activeRequest.type === "http") {
-            context.activeRequest.body = value;
-            setRequestBody(value);
+        if (activeRequest && activeRequest.type === "http") {
+            activeRequest.body = value;
         }
     }
 
     function setRequestParams(params: KeyValue[]) {
-        if (context.activeRequest && context.activeRequest.type === "http") {
-            context.activeRequest.params = params;
+        if (activeRequest && activeRequest.type === "http") {
+            activeRequest.params = params;
             setRequestParamsState(params);
         }
     }
@@ -134,4 +116,4 @@ export default function RequestPanel() {
             )}
         </RequestPanelRoot>
     );
-}
+});

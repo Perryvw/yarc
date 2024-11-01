@@ -1,8 +1,7 @@
 import { Download, PawPrint, Upload } from "lucide-react";
 import styled from "styled-components";
 import { IpcCall, type IpcImportResult } from "../../common/ipc";
-import { useContext, useState } from "react";
-import { AppContext } from "./AppContext";
+import { useState } from "react";
 
 const Container = styled.div`
     display: flex;
@@ -32,21 +31,19 @@ const ImportButton = styled(ExportButton)`
 `;
 
 export default function DirectoryHeader() {
-    const context = useContext(AppContext);
-
-    const [requests, setRequests] = useState(context.requests);
-    context.addRequestListListener(DirectoryHeader.name, setRequests);
+    // const [requests, setRequests] = useState(context.requests);
+    // context.addRequestListListener(DirectoryHeader.name, setRequests);
 
     async function importDirectory() {
-        const result: IpcImportResult = await window.electron.ipcRenderer.invoke(IpcCall.ImportDirectory);
-        if (!result.cancelled) {
-            context.setRequestList(result.requests);
-            context.setActiveRequest(context.requests[0]);
-        }
+        // const result: IpcImportResult = await window.electron.ipcRenderer.invoke(IpcCall.ImportDirectory);
+        // if (!result.cancelled) {
+        //     context.setRequestList(result.requests);
+        //     context.setActiveRequest(0);
+        // }
     }
 
     async function exportDirectory() {
-        await window.electron.ipcRenderer.invoke(IpcCall.ExportDirectory, requests);
+        //await window.electron.ipcRenderer.invoke(IpcCall.ExportDirectory, requests);
     }
 
     return (

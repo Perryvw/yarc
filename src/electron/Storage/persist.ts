@@ -91,8 +91,8 @@ function fixPersistedData(
     return {
         requests: incoming.requests?.map(fixRequest).filter((r) => r !== undefined) ?? [],
         layout: {
-            directoryWidth: incoming.layout?.directoryWidth ?? 150,
-            repsonseWidth: incoming.layout?.repsonseWidth ?? 200,
+            directoryWidth: incoming.layout?.directoryWidth ?? 10,
+            repsonseWidth: incoming.layout?.repsonseWidth ?? 50,
         },
         window: {
             maximized: incoming.window?.maximized ?? false,

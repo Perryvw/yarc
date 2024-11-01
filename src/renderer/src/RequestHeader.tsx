@@ -1,9 +1,10 @@
-import { type ChangeEvent, useContext, useState } from "react";
-import { AppContext } from "./AppContext";
+import { type ChangeEvent, useState } from "react";
 import { Play } from "lucide-react";
 import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
-import type { KeyValue } from "../../common/request-types";
+import type { KeyValue, RequestData } from "../../common/request-types";
+import { observer } from "mobx-react-lite";
+import { runInAction, toJS } from "mobx";
 
 const RequestHeaderContainer = styled.div`
     padding: 15px;
@@ -83,40 +84,23 @@ const RequestButton = styled.button`
     }
 `;
 
-export default function RequestHeader() {
-    const context = useContext(AppContext);
-
-    const [activeRequest] = useState(context.activeRequest);
+const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData | undefined }) => {
     const [isExecuting, setIsExecuting] = useState(false);
     const [isExecutionAnimating, setIsExecutionAnimating] = useState(false);
 
-    const [url, setUrl] = useState(activeRequest?.url ?? "");
     const [params, setParams] = useState(activeRequest?.type === "http" ? activeRequest.params : []);
     const [method, setMethod] = useState(activeRequest?.type === "http" ? activeRequest.method : "grpc");
 
-    context.addActiveRequestListener(RequestHeader.name, (r) => {
-        if (r) {
-            setUrl(r.url);
-            if (r.type === "http") {
-                setMethod(r.method);
-                setParams(r.params);
-            }
-        } else {
-            setUrl("");
-        }
-    });
-
     function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
-        if (context.activeRequest) {
-            context.activeRequest.url = event.target.value;
-            setUrl(event.target.value);
+        if (activeRequest) {
+            activeRequest.url = event.target.value;
         }
     }
 
     function onMethodChange(event: ChangeEvent<HTMLSelectElement>) {
-        if (context.activeRequest && context.activeRequest.type === "http") {
-            context.activeRequest.method = event.target.value as typeof context.activeRequest.method;
-            setMethod(event.target.value as typeof context.activeRequest.method);
+        if (activeRequest && activeRequest.type === "http") {
+            activeRequest.method = event.target.value as typeof activeRequest.method;
+            setMethod(event.target.value as typeof activeRequest.method);
         }
     }
 
@@ -124,13 +108,12 @@ export default function RequestHeader() {
         setIsExecuting(true);
         setIsExecutionAnimating(true);
 
-        if (context.activeRequest && context.activeRequest.type === "http") {
-            context.activeRequest.response = await window.electron.ipcRenderer.invoke(
-                IpcCall.HttpRequest,
-                context.activeRequest,
-            );
-            context.setResponse(context.activeRequest.response);
-        } else if (context.activeRequest && context.activeRequest.type === "grpc") {
+        if (activeRequest && activeRequest.type === "http") {
+            const response = await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, toJS(activeRequest));
+            runInAction(() => {
+                activeRequest.response = response;
+            });
+        } else if (activeRequest && activeRequest.type === "grpc") {
             // TODO
         }
 
@@ -151,13 +134,13 @@ export default function RequestHeader() {
     return (
         <RequestHeaderContainer>
             <RequestMethodAndPath>
-                {context.activeRequest?.type === "http" && (
+                {activeRequest?.type === "http" && (
                     <RequestMethod value={method} onChange={onMethodChange}>
                         <option>GET</option>
                         <option>POST</option>
                     </RequestMethod>
                 )}
-                <RequestPath type="text" value={url} placeholder="url..." onChange={onUrlChange} />
+                <RequestPath type="text" value={activeRequest?.url ?? ""} placeholder="url..." onChange={onUrlChange} />
                 {renderParams(params)}
                 <RequestButton
                     type="button"
@@ -170,4 +153,5 @@ export default function RequestHeader() {
             </RequestMethodAndPath>
         </RequestHeaderContainer>
     );
-}
+});
+export default RequestHeader;
