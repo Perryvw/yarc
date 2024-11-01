@@ -81,59 +81,52 @@ export default function KeyValuesPanel({
     params: KeyValue[];
     setParams: (params: KeyValue[]) => void;
 }) {
-    const [localParams, setLocalParams] = useState(params);
-
-    function updateParams(updatedParams: KeyValue[]) {
-        setLocalParams(updatedParams);
-        setParams(updatedParams);
-    }
-
     function onToggleEnabled(index: number, enabled: boolean) {
-        const updatedParams = localParams.map((param, i) => (i === index ? { ...param, enabled } : param));
-        updateParams(updatedParams);
+        const updatedParams = params.map((param, i) => (i === index ? { ...param, enabled } : param));
+        setParams(updatedParams);
     }
 
     function onUpdateKey(index: number, key: string) {
         // If we're updating the virtual empty row, create a new parameter
-        if (index === localParams.length) {
-            const updatedParams = [...localParams, { enabled: true, key, value: "" }];
-            updateParams(updatedParams);
+        if (index === params.length) {
+            const updatedParams = [...params, { enabled: true, key, value: "" }];
+            setParams(updatedParams);
         } else {
-            const updatedParams = localParams.map((param, i) => (i === index ? { ...param, key } : param));
-            updateParams(updatedParams);
+            const updatedParams = params.map((param, i) => (i === index ? { ...param, key } : param));
+            setParams(updatedParams);
         }
     }
 
     function onUpdateValue(index: number, value: string) {
         // If we're updating the virtual empty row, create a new parameter
-        if (index === localParams.length) {
-            const updatedParams = [...localParams, { enabled: true, key: "", value }];
-            updateParams(updatedParams);
+        if (index === params.length) {
+            const updatedParams = [...params, { enabled: true, key: "", value }];
+            setParams(updatedParams);
         } else {
-            const updatedParams = localParams.map((param, i) => (i === index ? { ...param, value } : param));
-            updateParams(updatedParams);
+            const updatedParams = params.map((param, i) => (i === index ? { ...param, value } : param));
+            setParams(updatedParams);
         }
     }
 
     function onDeleteParam(index: number) {
-        const updatedParams = localParams.filter((_, i) => i !== index);
-        updateParams(updatedParams);
+        const updatedParams = params.filter((_, i) => i !== index);
+        setParams(updatedParams);
     }
 
     function createNewParam() {
-        const updatedParams = [...localParams, { enabled: true, key: "", value: "" }];
-        updateParams(updatedParams);
+        const updatedParams = [...params, { enabled: true, key: "", value: "" }];
+        setParams(updatedParams);
     }
 
     function clearParams() {
-        updateParams([]);
+        setParams([]);
     }
 
     function QueryParameter(index: number, kv: KeyValue) {
         return (
             <tr key={index}>
                 <td>
-                    {index < localParams.length && (
+                    {index < params.length && (
                         <QueryParameterCheckbox
                             type="checkbox"
                             checked={kv.enabled}
@@ -158,7 +151,7 @@ export default function KeyValuesPanel({
                     />
                 </td>
                 <td>
-                    {index < localParams.length && (
+                    {index < params.length && (
                         <QueryParameterDelete type="button" onClick={() => onDeleteParam(index)}>
                             <Trash size={16} />
                         </QueryParameterDelete>
@@ -169,7 +162,7 @@ export default function KeyValuesPanel({
     }
 
     function getParamsToRender() {
-        const allParams = [...localParams];
+        const allParams = [...params];
 
         if (
             allParams.length === 0 ||
