@@ -10,6 +10,7 @@ import { observer } from "mobx-react-lite";
 import { RequestPanel } from "./RequestPanel";
 import { ResponsePanel } from "./ResponsePanel";
 import { runInAction, toJS } from "mobx";
+import { GrpcRequestPanel } from "./GrpcRequestPanel";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;
@@ -111,7 +112,11 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
             <RequestHeader activeRequest={context.activeRequest} />
             <Directory context={context} />
             <MainContent>
-                <RequestPanel activeRequest={context.activeRequest} />
+                {context.activeRequest?.type === "grpc" ? (
+                    <GrpcRequestPanel activeRequest={context.activeRequest} />
+                ) : (
+                    <RequestPanel activeRequest={context.activeRequest} />
+                )}
                 <SplitSlider width={context.gridWidthDirectory} setWidth={setResponseWidth} />
                 <ResponsePanel response={context.activeRequest?.response} />
             </MainContent>

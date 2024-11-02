@@ -1,4 +1,3 @@
-import { useState } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import styled from "styled-components";
 import { KeyValuesPanel } from "./KeyValuesPanel";
