@@ -1,11 +1,11 @@
 import { useState } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import styled from "styled-components";
-import KeyValuesPanel from "./KeyValuesPanel";
+import { KeyValuesPanel } from "./KeyValuesPanel";
 import { ChevronUp } from "lucide-react";
 import type { KeyValue, RequestData } from "../../common/request-types";
-import type { AppContext } from "./AppContext";
 import { observer } from "mobx-react-lite";
+import { runInAction } from "mobx";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -53,20 +53,19 @@ const RequestSectionHeaderName = styled.div`
 export const RequestPanel = observer(({ activeRequest }: { activeRequest: RequestData | undefined }) => {
     const requestBody = activeRequest ? (activeRequest.type === "http" ? activeRequest.body : "protobuf") : "";
 
-    const [requestParams, setRequestParamsState] = useState(
-        activeRequest ? (activeRequest.type === "http" ? activeRequest.params : []) : [],
-    );
-
     function onRequestBodyChanged(value: string) {
         if (activeRequest && activeRequest.type === "http") {
-            activeRequest.body = value;
+            runInAction(() => {
+                activeRequest.body = value;
+            });
         }
     }
 
     function setRequestParams(params: KeyValue[]) {
         if (activeRequest && activeRequest.type === "http") {
-            activeRequest.params = params;
-            setRequestParamsState(params);
+            runInAction(() => {
+                activeRequest.params = params;
+            });
         }
     }
 
@@ -78,7 +77,11 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: Reques
                         <RequestSectionHeaderName>Parameters</RequestSectionHeaderName>
                         <ChevronUp size={20} className="chevron" />
                     </RequestSectionHeader>
-                    <KeyValuesPanel name="query-parameters" params={requestParams} setParams={setRequestParams} />
+                    <KeyValuesPanel
+                        name="query-parameters"
+                        params={activeRequest.params}
+                        setParams={setRequestParams}
+                    />
                 </RequestSection>
             )}
 

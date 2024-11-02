@@ -3,6 +3,7 @@ import styled from "styled-components";
 import type { KeyValue } from "../../common/request-types";
 import { useState } from "react";
 import { commonHeaders } from "../../common/common-headers";
+import { observer } from "mobx-react-lite";
 
 const QueryParameters = styled.table`
     width: 100%;
@@ -72,137 +73,139 @@ const QueryParameterDelete = styled.button`
     margin-top: 10px;
 `;
 
-export default function KeyValuesPanel({
-    name,
-    params,
-    setParams,
-}: {
-    name: string;
-    params: KeyValue[];
-    setParams: (params: KeyValue[]) => void;
-}) {
-    function onToggleEnabled(index: number, enabled: boolean) {
-        const updatedParams = params.map((param, i) => (i === index ? { ...param, enabled } : param));
-        setParams(updatedParams);
-    }
-
-    function onUpdateKey(index: number, key: string) {
-        // If we're updating the virtual empty row, create a new parameter
-        if (index === params.length) {
-            const updatedParams = [...params, { enabled: true, key, value: "" }];
-            setParams(updatedParams);
-        } else {
-            const updatedParams = params.map((param, i) => (i === index ? { ...param, key } : param));
+export const KeyValuesPanel = observer(
+    ({
+        name,
+        params,
+        setParams,
+    }: {
+        name: string;
+        params: KeyValue[];
+        setParams: (params: KeyValue[]) => void;
+    }) => {
+        function onToggleEnabled(index: number, enabled: boolean) {
+            const updatedParams = params.map((param, i) => (i === index ? { ...param, enabled } : param));
             setParams(updatedParams);
         }
-    }
 
-    function onUpdateValue(index: number, value: string) {
-        // If we're updating the virtual empty row, create a new parameter
-        if (index === params.length) {
-            const updatedParams = [...params, { enabled: true, key: "", value }];
-            setParams(updatedParams);
-        } else {
-            const updatedParams = params.map((param, i) => (i === index ? { ...param, value } : param));
+        function onUpdateKey(index: number, key: string) {
+            // If we're updating the virtual empty row, create a new parameter
+            if (index === params.length) {
+                const updatedParams = [...params, { enabled: true, key, value: "" }];
+                setParams(updatedParams);
+            } else {
+                const updatedParams = params.map((param, i) => (i === index ? { ...param, key } : param));
+                setParams(updatedParams);
+            }
+        }
+
+        function onUpdateValue(index: number, value: string) {
+            // If we're updating the virtual empty row, create a new parameter
+            if (index === params.length) {
+                const updatedParams = [...params, { enabled: true, key: "", value }];
+                setParams(updatedParams);
+            } else {
+                const updatedParams = params.map((param, i) => (i === index ? { ...param, value } : param));
+                setParams(updatedParams);
+            }
+        }
+
+        function onDeleteParam(index: number) {
+            const updatedParams = params.filter((_, i) => i !== index);
             setParams(updatedParams);
         }
-    }
 
-    function onDeleteParam(index: number) {
-        const updatedParams = params.filter((_, i) => i !== index);
-        setParams(updatedParams);
-    }
+        function createNewParam() {
+            const updatedParams = [...params, { enabled: true, key: "", value: "" }];
+            setParams(updatedParams);
+        }
 
-    function createNewParam() {
-        const updatedParams = [...params, { enabled: true, key: "", value: "" }];
-        setParams(updatedParams);
-    }
+        function clearParams() {
+            setParams([]);
+        }
 
-    function clearParams() {
-        setParams([]);
-    }
-
-    function QueryParameter(index: number, kv: KeyValue) {
-        return (
-            <tr key={index}>
-                <td>
-                    {index < params.length && (
-                        <QueryParameterCheckbox
-                            type="checkbox"
-                            checked={kv.enabled}
-                            onChange={(ev) => onToggleEnabled(index, ev.target.checked)}
+        function QueryParameter(index: number, kv: KeyValue) {
+            return (
+                <tr key={index}>
+                    <td>
+                        {index < params.length && (
+                            <QueryParameterCheckbox
+                                type="checkbox"
+                                checked={kv.enabled}
+                                onChange={(ev) => onToggleEnabled(index, ev.target.checked)}
+                            />
+                        )}
+                    </td>
+                    <td>
+                        <QueryParameterKey
+                            type="text"
+                            placeholder="Key"
+                            list={`${name}_kv_datalist`}
+                            value={kv.key}
+                            onChange={(ev) => onUpdateKey(index, ev.target.value)}
                         />
-                    )}
-                </td>
-                <td>
-                    <QueryParameterKey
-                        type="text"
-                        placeholder="Key"
-                        list={`${name}_kv_datalist`}
-                        value={kv.key}
-                        onChange={(ev) => onUpdateKey(index, ev.target.value)}
-                    />
-                </td>
-                <td>
-                    <QueryParameterValue
-                        placeholder="Value"
-                        value={kv.value}
-                        onChange={(ev) => onUpdateValue(index, ev.target.value)}
-                    />
-                </td>
-                <td>
-                    {index < params.length && (
-                        <QueryParameterDelete type="button" onClick={() => onDeleteParam(index)}>
-                            <Trash size={16} />
-                        </QueryParameterDelete>
-                    )}
-                </td>
-            </tr>
-        );
-    }
-
-    function getParamsToRender() {
-        const allParams = [...params];
-
-        if (
-            allParams.length === 0 ||
-            allParams[allParams.length - 1].key !== "" ||
-            allParams[allParams.length - 1].value !== ""
-        ) {
-            allParams.push({ enabled: true, key: "", value: "" });
+                    </td>
+                    <td>
+                        <QueryParameterValue
+                            placeholder="Value"
+                            value={kv.value}
+                            onChange={(ev) => onUpdateValue(index, ev.target.value)}
+                        />
+                    </td>
+                    <td>
+                        {index < params.length && (
+                            <QueryParameterDelete type="button" onClick={() => onDeleteParam(index)}>
+                                <Trash size={16} />
+                            </QueryParameterDelete>
+                        )}
+                    </td>
+                </tr>
+            );
         }
 
-        return allParams;
-    }
+        function getParamsToRender() {
+            const allParams = [...params];
 
-    return (
-        <>
-            <QueryParameters>
-                <tbody>
-                    <tr>
-                        <td style={{ width: "32px" }}>
-                            <QueryParameterDelete type="button" onClick={createNewParam}>
-                                <Plus size={16} />
-                            </QueryParameterDelete>
-                        </td>
-                        <td style={{ width: "50%" }} />
-                        <td style={{ width: "50%", borderLeft: "0" }} />
-                        <td style={{ width: "32px" }}>
-                            <QueryParameterDelete type="button" onClick={clearParams}>
-                                <Trash2 size={16} />
-                            </QueryParameterDelete>
-                        </td>
-                    </tr>
-                    {getParamsToRender().map((kv, i) => QueryParameter(i, kv))}
-                </tbody>
-            </QueryParameters>
-            {name === "headers" && (
-                <datalist id={`${name}_kv_datalist`}>
-                    {commonHeaders.map((header) => (
-                        <option key={header} value={header} />
-                    ))}
-                </datalist>
-            )}
-        </>
-    );
-}
+            if (
+                allParams.length === 0 ||
+                allParams[allParams.length - 1].key !== "" ||
+                allParams[allParams.length - 1].value !== ""
+            ) {
+                allParams.push({ enabled: true, key: "", value: "" });
+            }
+
+            return allParams;
+        }
+
+        return (
+            <>
+                <QueryParameters>
+                    <tbody>
+                        <tr>
+                            <td style={{ width: "32px" }}>
+                                <QueryParameterDelete type="button" onClick={createNewParam}>
+                                    <Plus size={16} />
+                                </QueryParameterDelete>
+                            </td>
+                            <td style={{ width: "50%" }} />
+                            <td style={{ width: "50%", borderLeft: "0" }} />
+                            <td style={{ width: "32px" }}>
+                                <QueryParameterDelete type="button" onClick={clearParams}>
+                                    <Trash2 size={16} />
+                                </QueryParameterDelete>
+                            </td>
+                        </tr>
+                        {getParamsToRender().map((kv, i) => QueryParameter(i, kv))}
+                    </tbody>
+                </QueryParameters>
+                {name === "headers" && (
+                    <datalist id={`${name}_kv_datalist`}>
+                        {commonHeaders.map((header) => (
+                            <option key={header} value={header} />
+                        ))}
+                    </datalist>
+                )}
+            </>
+        );
+    },
+);

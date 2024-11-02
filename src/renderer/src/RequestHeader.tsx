@@ -88,19 +88,19 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
     const [isExecuting, setIsExecuting] = useState(false);
     const [isExecutionAnimating, setIsExecutionAnimating] = useState(false);
 
-    const [params, setParams] = useState(activeRequest?.type === "http" ? activeRequest.params : []);
-    const [method, setMethod] = useState(activeRequest?.type === "http" ? activeRequest.method : "grpc");
-
     function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
         if (activeRequest) {
-            activeRequest.url = event.target.value;
+            runInAction(() => {
+                activeRequest.url = event.target.value;
+            });
         }
     }
 
     function onMethodChange(event: ChangeEvent<HTMLSelectElement>) {
         if (activeRequest && activeRequest.type === "http") {
-            activeRequest.method = event.target.value as typeof activeRequest.method;
-            setMethod(event.target.value as typeof activeRequest.method);
+            runInAction(() => {
+                activeRequest.method = event.target.value as typeof activeRequest.method;
+            });
         }
     }
 
@@ -127,7 +127,7 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
     }
 
     function renderParams(params: KeyValue[]) {
-        const p = new URLSearchParams(params.map((kv) => [kv.key, kv.value]));
+        const p = new URLSearchParams(params.filter((p) => p.enabled).map((kv) => [kv.key, kv.value]));
         return p.toString();
     }
 
@@ -135,13 +135,13 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
         <RequestHeaderContainer>
             <RequestMethodAndPath>
                 {activeRequest?.type === "http" && (
-                    <RequestMethod value={method} onChange={onMethodChange}>
+                    <RequestMethod value={activeRequest.method} onChange={onMethodChange}>
                         <option>GET</option>
                         <option>POST</option>
                     </RequestMethod>
                 )}
                 <RequestPath type="text" value={activeRequest?.url ?? ""} placeholder="url..." onChange={onUrlChange} />
-                {renderParams(params)}
+                {activeRequest?.type === "http" && renderParams(activeRequest.params)}
                 <RequestButton
                     type="button"
                     className={isExecutionAnimating ? "is-executing" : ""}

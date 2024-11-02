@@ -26,7 +26,7 @@ export default function SplitSlider({
     setWidth,
 }: { style?: React.CSSProperties; width: number; setWidth: (width: number) => void }) {
     const [isDragging, setIsDragging] = useState<boolean>(false);
-    const startPosition = useRef({ x: 0, width: 0 });
+    const startPosition = useRef({ x: 0, width });
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
