@@ -1,4 +1,4 @@
-import Directory from "./Directory";
+import { Directory } from "./Directory";
 import DirectoryHeader from "./DirectoryHeader";
 import RequestHeader from "./RequestHeader";
 import { AppContext } from "./AppContext";

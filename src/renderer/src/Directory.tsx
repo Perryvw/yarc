@@ -1,11 +1,13 @@
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
 import type { GrpcRequestData, HttpRequestData, RequestData, RequestList } from "../../common/request-types";
 import classNames from "classnames";
 import { observer } from "mobx-react-lite";
 import type { AppContext } from "./AppContext";
+import { RenameModal, type RenameResult } from "./modals/rename";
+import { runInAction } from "mobx";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -98,7 +100,7 @@ const NewRequestTypePopup = styled.div`
     }
 `;
 
-const Directory = observer(({ context }: { context: AppContext }) => {
+export const Directory = observer(({ context }: { context: AppContext }) => {
     const { requests } = context;
     console.log("rendering directory");
 
@@ -137,10 +139,12 @@ const Directory = observer(({ context }: { context: AppContext }) => {
 
     function finishRename(result: RenameResult) {
         renameModal(undefined);
-        if (!result.cancelled && context.activeRequest) {
-            context.activeRequest.name = result.name;
-            context.persistState();
-        }
+        runInAction(() => {
+            if (!result.cancelled && context.activeRequest) {
+                context.activeRequest.name = result.name;
+                context.persistState();
+            }
+        });
     }
 
     const selectRequest = useCallback(
@@ -189,51 +193,6 @@ const Directory = observer(({ context }: { context: AppContext }) => {
         </DirectoryRoot>
     );
 });
-export default Directory;
-
-type RenameResult = { cancelled: true } | { cancelled: false; name: string };
-function RenameModal({
-    request,
-    close,
-}: {
-    request: RequestData | undefined;
-    close: (result: RenameResult) => void;
-}) {
-    const ref = useRef<HTMLDialogElement>(null);
-
-    const [newName, setNewName] = useState(request?.name ?? "");
-
-    useEffect(() => {
-        if (request !== undefined) {
-            setNewName(request.name);
-            ref.current?.showModal();
-        } else {
-            ref.current?.close();
-        }
-    }, [request]);
-
-    function cancel() {
-        close({ cancelled: true });
-    }
-    function ok() {
-        if (request === undefined) cancel();
-        close({ cancelled: false, name: newName });
-    }
-
-    return (
-        <dialog ref={ref}>
-            Rename {request?.name}:<br />
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <br />
-            <button type="button" onClick={ok}>
-                Ok
-            </button>
-            <button type="button" onClick={cancel}>
-                Cancel
-            </button>
-        </dialog>
-    );
-}
 
 const Request = styled.div`
     border: unset;
