@@ -91,7 +91,25 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
     function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
         if (activeRequest) {
             runInAction(() => {
-                activeRequest.url = event.target.value;
+                if (activeRequest.type === "http") {
+                    const url = new URL(event.target.value);
+
+                    const newParams = [] as KeyValue[];
+
+                    for (const [key, value] of url.searchParams) {
+                        newParams.push({
+                            enabled: true,
+                            key,
+                            value,
+                        });
+                    }
+
+                    url.search = "";
+                    activeRequest.url = url.toString();
+                    activeRequest.params = newParams;
+                } else {
+                    activeRequest.url = event.target.value;
+                }
             });
         }
     }
@@ -126,9 +144,24 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
         }
     }
 
-    function renderParams(params: KeyValue[]) {
-        const p = new URLSearchParams(params.filter((p) => p.enabled).map((kv) => [kv.key, kv.value]));
-        return p.toString();
+    function getFullUrl() {
+        if (!activeRequest) {
+            return "";
+        }
+
+        let url = activeRequest.url;
+
+        if (activeRequest.type !== "http") {
+            return url;
+        }
+
+        const p = new URLSearchParams(activeRequest.params.filter((p) => p.enabled).map((kv) => [kv.key, kv.value]));
+
+        if (p.size > 0) {
+            url += `?${p}`;
+        }
+
+        return url;
     }
 
     return (
@@ -140,8 +173,7 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
                         <option>POST</option>
                     </RequestMethod>
                 )}
-                <RequestPath type="text" value={activeRequest?.url ?? ""} placeholder="url..." onChange={onUrlChange} />
-                {activeRequest?.type === "http" && renderParams(activeRequest.params)}
+                <RequestPath type="text" value={getFullUrl()} placeholder="url..." onChange={onUrlChange} />
                 <RequestButton
                     type="button"
                     className={isExecutionAnimating ? "is-executing" : ""}
