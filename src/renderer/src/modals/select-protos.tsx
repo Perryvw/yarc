@@ -1,5 +1,10 @@
-import { useEffect, useRef } from "react";
+import { observer } from "mobx-react-lite";
+import { useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
+import type { ProtoRoot } from "../../../common/grpc";
+import { type BrowseProtoResult, IpcCall } from "../../../common/ipc";
+import type { ProtoConfig } from "../AppContext";
+import { RefreshCcw, Trash } from "lucide-react";
 
 const SelectProtosDialog = styled.dialog`
     width: 95%;
@@ -10,7 +15,7 @@ const ProtoRootsContainer = styled.div`
     display: flex;
     flex-direction: column;
     height: calc(100% - 30px);
-    width: 300px;
+    width: 350px;
 `;
 
 const ProtoRootsList = styled.div`
@@ -19,35 +24,115 @@ const ProtoRootsList = styled.div`
 `;
 
 const AddRootButton = styled.button`
+    cursor: pointer;
 `;
 
-export function SelectProtosModal({
-    open,
-    close,
-}: {
-    open: boolean;
-    close: () => void;
-}) {
-    const ref = useRef<HTMLDialogElement>(null);
+const ProtoEntry = styled.div`
+    padding: 5px 10px;
+    border-style: solid;
+    border-width: 0px 0px 1px 0px;
+    border-color: grey;
 
-    useEffect(() => {
-        if (open) {
-            ref.current?.showModal();
-        } else {
-            ref.current?.close();
-        }
-    }, [open]);
+    &:hover {
+        background-color: blue;
+    }
+`;
 
-    return (
-        <SelectProtosDialog ref={ref}>
-            <ProtoRootsContainer>
-                Proto roots
-                <ProtoRootsList />
-                <AddRootButton type="button">Add root...</AddRootButton>
-            </ProtoRootsContainer>
-            <button type="button" onClick={close}>
-                Close
-            </button>
-        </SelectProtosDialog>
-    );
-}
+const Actions = styled.div`
+    display: flex;
+    gap: 5px;
+    margin-left: auto;
+`;
+
+const RefreshButton = styled.button`
+    border: unset;
+    background: unset;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover {
+        color: green;
+    }
+`;
+
+const DeleteButton = styled(RefreshButton)`
+    background: unset;
+    padding: 0;
+
+    &:hover {
+        color: red;
+    }
+`;
+
+export const SelectProtosModal = observer(
+    ({
+        open,
+        close,
+        protoConfig,
+    }: {
+        open: boolean;
+        close: () => void;
+        protoConfig: ProtoConfig;
+    }) => {
+        const ref = useRef<HTMLDialogElement>(null);
+
+        useEffect(() => {
+            if (open) {
+                ref.current?.showModal();
+            } else {
+                ref.current?.close();
+            }
+        }, [open]);
+
+        const addRoot = useCallback(async () => {
+            const result: BrowseProtoResult = await window.electron.ipcRenderer.invoke(IpcCall.BrowseProtoDirectory);
+            if (!result.cancelled) {
+                protoConfig.addProtoRoot(result.protoRoot);
+            }
+        }, [protoConfig]);
+
+        const deleteRoot = useCallback(
+            async (root: ProtoRoot) => {
+                protoConfig.deleteProtoRoot(root);
+            },
+            [protoConfig],
+        );
+
+        return (
+            <SelectProtosDialog ref={ref}>
+                <ProtoRootsContainer>
+                    Proto roots
+                    <ProtoRootsList>
+                        {protoConfig.roots.map((root, i) => (
+                            <ProtoRootEntry key={i.toString()} root={root} deleteRequest={deleteRoot} />
+                        ))}
+                    </ProtoRootsList>
+                    <AddRootButton type="button" onClick={addRoot}>
+                        Add root...
+                    </AddRootButton>
+                </ProtoRootsContainer>
+                <button type="button" onClick={close}>
+                    Close
+                </button>
+            </SelectProtosDialog>
+        );
+    },
+);
+
+const ProtoRootEntry = observer(
+    ({ root, deleteRequest }: { root: ProtoRoot; deleteRequest: (root: ProtoRoot) => void }) => {
+        return (
+            <ProtoEntry>
+                {root.rootPath}
+                <Actions>
+                    <RefreshButton>
+                        <RefreshCcw size={16} />
+                    </RefreshButton>
+                    <DeleteButton onClick={() => deleteRequest(root)}>
+                        <Trash size={16} />
+                    </DeleteButton>
+                </Actions>
+            </ProtoEntry>
+        );
+    },
+);

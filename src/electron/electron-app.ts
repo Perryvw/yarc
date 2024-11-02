@@ -1,11 +1,12 @@
-import { app, BrowserWindow, ipcMain, ipcRenderer } from "electron";
-import { makeHttpRequest } from "./Communication/http";
-import { getPersistedState, persistCurrentState } from "./Storage/persist";
-import { IpcCall, IpcEvent } from "../common/ipc";
-import type { HttpRequestData, RequestList, ResponseData } from "../common/request-types";
-import { exportDirectory, importDirectory } from "./Storage/import-export";
-import type { PersistedState } from "../common/persist-state";
 import { join } from "node:path";
+import { BrowserWindow, app, ipcMain } from "electron";
+import { type BrowseProtoResult, IpcCall, IpcEvent } from "../common/ipc";
+import type { PersistedState } from "../common/persist-state";
+import type { HttpRequestData, RequestList, ResponseData } from "../common/request-types";
+import { makeHttpRequest } from "./Communication/http";
+import { exportDirectory, importDirectory } from "./Storage/import-export";
+import { getPersistedState, persistCurrentState } from "./Storage/persist";
+import { browseProtoRoot } from "./Communication/grpc";
 
 app.whenReady().then(async () => {
     const persistedState = await getPersistedState();
@@ -48,6 +49,10 @@ app.whenReady().then(async () => {
 
     ipcMain.handle(IpcCall.ExportDirectory, async (_, requests: RequestList) => {
         await exportDirectory(requests);
+    });
+
+    ipcMain.handle(IpcCall.BrowseProtoDirectory, async (): Promise<BrowseProtoResult> => {
+        return browseProtoRoot();
     });
 
     let closing = false; // We need to prevent first close to give renderer the chance to persist state

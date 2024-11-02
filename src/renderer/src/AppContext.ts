@@ -1,18 +1,19 @@
-import type { HttpRequestData, RequestData, RequestList, ResponseData } from "../../common/request-types";
-import { IpcCall } from "../../common/ipc";
-import type { PersistedState } from "../../common/persist-state";
 import {
-    action,
-    computed,
     type IActionFactory,
     type IComputedFactory,
     type IObservableFactory,
+    action,
+    computed,
     isObservable,
     makeObservable,
     observable,
     runInAction,
     toJS,
 } from "mobx";
+import type { ProtoRoot } from "../../common/grpc";
+import { IpcCall } from "../../common/ipc";
+import type { PersistedState } from "../../common/persist-state";
+import type { HttpRequestData, RequestData, RequestList, ResponseData } from "../../common/request-types";
 
 export class AppContext {
     requests: RequestList = [];
@@ -27,15 +28,21 @@ export class AppContext {
     gridWidthDirectory = 10;
     gridWidthResponse = 50;
 
+    protoConfig: ProtoConfig;
+
     constructor() {
         this.requests = [];
+        this.protoConfig = new ProtoConfig();
 
         makeObservable(this, {
             requests: observable,
             selectedIndex: observable,
-            activeRequest: computed,
             gridWidthDirectory: observable,
             gridWidthResponse: observable,
+            protoConfig: observable,
+
+            activeRequest: computed,
+
             setActiveRequest: action,
             setActiveRequestById: action,
             addRequest: action,
@@ -152,6 +159,31 @@ export class AppContext {
                 }
             }),
         );
+    }
+}
+
+export class ProtoConfig {
+    roots: ProtoRoot[] = [];
+
+    constructor() {
+        makeObservable(this, {
+            roots: observable,
+
+            addProtoRoot: action,
+            deleteProtoRoot: action,
+        } satisfies ObservableDefinition<ProtoConfig>);
+    }
+
+    addProtoRoot(protoRoot: ProtoRoot) {
+        this.roots.push(protoRoot);
+    }
+
+    deleteProtoRoot(protoRoot: ProtoRoot) {
+        const index = this.roots.indexOf(protoRoot);
+        console.log("deleting", index);
+        if (index >= 0) {
+            this.roots.splice(index, 1);
+        }
     }
 }
 

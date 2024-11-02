@@ -1,3 +1,4 @@
+import type { ProtoRoot } from "./grpc";
 import type { RequestList } from "./request-types";
 
 export enum IpcCall {
@@ -5,6 +6,7 @@ export enum IpcCall {
     LoadPersistedState = "load-persisted-state",
     ImportDirectory = "import-directory",
     ExportDirectory = "export-directory",
+    BrowseProtoDirectory = "browse-proto-directory",
 
     HttpRequest = "http-request",
     GrpcRequest = "grpc-request",
@@ -15,3 +17,4 @@ export enum IpcEvent {
 }
 
 export type IpcImportResult = { cancelled: true } | { cancelled: false; requests: RequestList };
+export type BrowseProtoResult = { cancelled: true } | { cancelled: false; protoRoot: ProtoRoot };
