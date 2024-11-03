@@ -42,6 +42,10 @@ type DeepPartial<T> = T extends object
       }
     : T;
 
+function notUndefined<T>(v: T | undefined) {
+    return v !== undefined;
+}
+
 // Try to form whatever kind of data we read from disk into the required data format the app is expecting
 function fixPersistedData(
     incoming: DeepPartial<PersistedStateWithWindow> | undefined,
@@ -76,8 +80,8 @@ function fixPersistedData(
             url: ri.url ?? "",
             method: ri.method ?? "GET",
             body: ri.body ?? "",
-            headers: ri.headers?.map(fixKeyValue).filter((kv) => kv !== undefined) ?? [],
-            params: ri.params?.map(fixKeyValue).filter((kv) => kv !== undefined) ?? [],
+            headers: ri.headers?.map(fixKeyValue).filter(notUndefined) ?? [],
+            params: ri.params?.map(fixKeyValue).filter(notUndefined) ?? [],
         };
     }
 
@@ -91,7 +95,8 @@ function fixPersistedData(
     }
 
     return {
-        requests: incoming.requests?.map(fixRequest).filter((r) => r !== undefined) ?? [],
+        requests: incoming.requests?.map(fixRequest).filter(notUndefined) ?? [],
+        protoRoots: incoming.protoRoots?.filter(notUndefined) ?? [],
         layout: {
             directoryWidth: incoming.layout?.directoryWidth ?? 10,
             repsonseWidth: incoming.layout?.repsonseWidth ?? 50,

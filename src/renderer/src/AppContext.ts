@@ -32,7 +32,7 @@ export class AppContext {
 
     constructor() {
         this.requests = [];
-        this.protoConfig = new ProtoConfig();
+        this.protoConfig = new ProtoConfig(this);
 
         makeObservable(this, {
             requests: observable,
@@ -144,6 +144,7 @@ export class AppContext {
         });
         const state: PersistedState = {
             requests: requestsWithoutResponse,
+            protoRoots: this.protoConfig.roots.map((r) => r.rootPath),
             layout: {
                 directoryWidth: this.gridWidthDirectory,
                 repsonseWidth: this.gridWidthResponse,
@@ -162,6 +163,13 @@ export class AppContext {
                     this.setRequestList(state.requests);
                     if (state.requests.length > 0) {
                         this.setActiveRequestById(0);
+                    }
+
+                    this.protoConfig.roots = observable<ProtoRoot>([]);
+                    for (const protoRoot of state.protoRoots) {
+                        const root = this.protoConfig.addProtoRoot({ rootPath: protoRoot, protoFiles: [] });
+                        // Only the root path is persisted, discover proto files from the root on disk
+                        this.protoConfig.refreshProtoRoot(root);
                     }
                 } else {
                     // TODO: Remove this, but for now this is useful for debugging
@@ -202,25 +210,36 @@ export class AppContext {
 export class ProtoConfig {
     roots: ProtoRoot[] = [];
 
-    constructor() {
+    constructor(private context: AppContext) {
         makeObservable(this, {
             roots: observable,
 
             addProtoRoot: action,
             deleteProtoRoot: action,
+            refreshProtoRoot: action,
         } satisfies ObservableDefinition<ProtoConfig>);
     }
 
     addProtoRoot(protoRoot: ProtoRoot) {
         this.roots.push(protoRoot);
+        this.context.persistState();
+        return this.roots[this.roots.length - 1];
     }
 
     deleteProtoRoot(protoRoot: ProtoRoot) {
         const index = this.roots.indexOf(protoRoot);
-        console.log("deleting", index);
         if (index >= 0) {
             this.roots.splice(index, 1);
         }
+        this.context.persistState();
+    }
+
+    async refreshProtoRoot(protoRoot: ProtoRoot) {
+        const refreshedRoot: ProtoRoot = await window.electron.ipcRenderer.invoke(
+            IpcCall.RefreshProtoDirectory,
+            protoRoot.rootPath,
+        );
+        protoRoot.protoFiles = refreshedRoot.protoFiles;
     }
 }
 

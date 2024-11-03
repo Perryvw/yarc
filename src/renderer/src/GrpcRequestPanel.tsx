@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import type { GrpcRequestData } from "../../common/request-types";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { SelectProtosModal } from "./modals/select-protos";
 import type { ProtoConfig } from "./AppContext";
 
@@ -18,16 +18,17 @@ export const GrpcRequestPanel = observer(
     ({ activeRequest, protoConfig }: { activeRequest: GrpcRequestData; protoConfig: ProtoConfig }) => {
         const [protoModalOpen, setProtoModalOpen] = useState(false);
 
+        const openProtoModal = useCallback(() => setProtoModalOpen(true), []);
+        const closeProtoModal = useCallback(() => {
+            setProtoModalOpen(false);
+        }, [protoConfig]);
+
         return (
             <RequestPanelRoot>
-                <button type="button" onClick={() => setProtoModalOpen(true)}>
+                <button type="button" onClick={openProtoModal}>
                     Select protos
                 </button>
-                <SelectProtosModal
-                    open={protoModalOpen}
-                    close={() => setProtoModalOpen(false)}
-                    protoConfig={protoConfig}
-                />
+                <SelectProtosModal open={protoModalOpen} close={closeProtoModal} protoConfig={protoConfig} />
             </RequestPanelRoot>
         );
     },

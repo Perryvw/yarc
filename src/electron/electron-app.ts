@@ -1,12 +1,13 @@
 import { join } from "node:path";
 import { BrowserWindow, app, ipcMain } from "electron";
+import type { ProtoRoot } from "../common/grpc";
 import { type BrowseProtoResult, IpcCall, IpcEvent } from "../common/ipc";
 import type { PersistedState } from "../common/persist-state";
 import type { HttpRequestData, RequestList, ResponseData } from "../common/request-types";
+import { browseProtoRoot, findProtoFiles } from "./Communication/grpc";
 import { makeHttpRequest } from "./Communication/http";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
-import { browseProtoRoot } from "./Communication/grpc";
 
 app.whenReady().then(async () => {
     const persistedState = await getPersistedState();
@@ -52,7 +53,14 @@ app.whenReady().then(async () => {
     });
 
     ipcMain.handle(IpcCall.BrowseProtoDirectory, async (): Promise<BrowseProtoResult> => {
-        return browseProtoRoot();
+        return await browseProtoRoot();
+    });
+
+    ipcMain.handle(IpcCall.RefreshProtoDirectory, async (_, directory: string): Promise<ProtoRoot> => {
+        return {
+            rootPath: directory,
+            protoFiles: await findProtoFiles(directory),
+        };
     });
 
     let closing = false; // We need to prevent first close to give renderer the chance to persist state

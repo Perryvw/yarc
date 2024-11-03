@@ -14,8 +14,16 @@ const SelectProtosDialog = styled.dialog`
 const ProtoRootsContainer = styled.div`
     display: flex;
     flex-direction: column;
-    height: calc(100% - 30px);
+    height: 100%;
     width: 350px;
+`;
+
+const ProtoTreeContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 350px;
+    flex-grow: 1;
 `;
 
 const ProtoRootsList = styled.div`
@@ -64,6 +72,28 @@ const DeleteButton = styled(RefreshButton)`
     }
 `;
 
+const ProtoTree = styled.div`
+    border: solid 1px white;
+    flex-grow: 1;
+    overflow: scroll;
+`;
+
+const ProtoTreeEntry = styled.div`
+`;
+
+const ProtoTreeEntryHeader = styled.div`
+    padding: 10px;
+    background-color: darkred;
+`;
+
+const ProtoTreeEntryFile = styled.div`
+    white-space: nowrap;
+    padding: 3px 10px 3px 30px;
+    border-style: solid;
+    border-color: grey;
+    border-width: 0px 0px 1px 0px;
+`;
+
 export const SelectProtosModal = observer(
     ({
         open,
@@ -100,17 +130,36 @@ export const SelectProtosModal = observer(
 
         return (
             <SelectProtosDialog ref={ref}>
-                <ProtoRootsContainer>
-                    Proto roots
-                    <ProtoRootsList>
-                        {protoConfig.roots.map((root, i) => (
-                            <ProtoRootEntry key={i.toString()} root={root} deleteRequest={deleteRoot} />
-                        ))}
-                    </ProtoRootsList>
-                    <AddRootButton type="button" onClick={addRoot}>
-                        Add root...
-                    </AddRootButton>
-                </ProtoRootsContainer>
+                <div style={{ display: "flex", height: "calc(100% - 30px)" }}>
+                    <ProtoRootsContainer>
+                        Proto roots
+                        <ProtoRootsList>
+                            {protoConfig.roots.map((root, i) => (
+                                <ProtoRootEntry key={i.toString()} root={root} deleteRequest={deleteRoot} />
+                            ))}
+                        </ProtoRootsList>
+                        <AddRootButton type="button" onClick={addRoot}>
+                            Add root...
+                        </AddRootButton>
+                    </ProtoRootsContainer>
+                    <ProtoTreeContainer>
+                        Detected proto files
+                        <ProtoTree>
+                            {protoConfig.roots.map((root, i) => (
+                                <ProtoTreeEntry key={i.toString()}>
+                                    <ProtoTreeEntryHeader>{root.rootPath}</ProtoTreeEntryHeader>
+                                    {root.protoFiles.length === 0 ? (
+                                        <ProtoTreeEntryFile>No proto files found</ProtoTreeEntryFile>
+                                    ) : (
+                                        root.protoFiles.map((f, j) => (
+                                            <ProtoTreeEntryFile key={j.toString()}>{f}</ProtoTreeEntryFile>
+                                        ))
+                                    )}
+                                </ProtoTreeEntry>
+                            ))}
+                        </ProtoTree>
+                    </ProtoTreeContainer>
+                </div>
                 <button type="button" onClick={close}>
                     Close
                 </button>
