@@ -101,6 +101,19 @@ export class AppContext {
         }
     }
 
+    public duplicateRequest(request: RequestData) {
+        const index = this.requests.indexOf(request);
+        if (index >= 0) {
+            // Remove request from list
+            const newRequests = [...this.requests];
+            const newRequest = { ...request, name: `${request.name} - Duplicate` };
+            newRequests.splice(index, 0, newRequest);
+            this.setRequestList(newRequests);
+            // Persist state
+            this.persistState();
+        }
+    }
+
     public persistState(): void {
         const requestsWithoutResponse = this.requests.map((r) => {
             const req = toJS(r);

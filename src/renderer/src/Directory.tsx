@@ -1,8 +1,8 @@
 import type React from "react";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { ChevronsLeftRight, CirclePlus, Globe, Pencil, Trash } from "lucide-react";
-import type { GrpcRequestData, HttpRequestData, RequestData, RequestList } from "../../common/request-types";
+import { ChevronsLeftRight, CirclePlus, Copy, Globe, SquarePen, Trash } from "lucide-react";
+import type { GrpcRequestData, HttpRequestData, RequestData } from "../../common/request-types";
 import classNames from "classnames";
 import { observer } from "mobx-react-lite";
 import type { AppContext } from "./AppContext";
@@ -173,6 +173,13 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
         [context],
     );
 
+    const duplicateRequest = useCallback(
+        (request: RequestData) => {
+            context.duplicateRequest(request);
+        },
+        [context],
+    );
+
     return (
         <DirectoryRoot>
             <RequestContainer>
@@ -184,6 +191,7 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
                         renameRequest={renameRequest}
                         selectRequest={selectRequest}
                         deleteRequest={deleteRequest}
+                        duplicateRequest={duplicateRequest}
                     />
                 ))}
             </RequestContainer>
@@ -252,6 +260,8 @@ const RenameButton = styled.button`
     }
 `;
 
+const DuplicateButton = RenameButton;
+
 const DeleteButton = styled(RenameButton)`
     background: unset;
     padding: 0;
@@ -268,24 +278,31 @@ const RequestEntry = observer(
         renameRequest,
         selectRequest,
         deleteRequest,
+        duplicateRequest,
     }: {
         activeRequest: RequestData | undefined;
         request: RequestData;
         renameRequest: (r: RequestData) => void;
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestData) => void;
+        duplicateRequest: (r: RequestData) => void;
     }) => {
         console.log("Rendering request entry");
+
+        function duplicateHandler(e: React.MouseEvent) {
+            duplicateRequest(request);
+            e.stopPropagation();
+        }
 
         function renameHandler(e: React.MouseEvent) {
             renameRequest(request);
             e.stopPropagation();
         }
 
-        const deleteHandler = (e: React.MouseEvent) => {
+        function deleteHandler(e: React.MouseEvent) {
             deleteRequest(request);
             e.stopPropagation();
-        };
+        }
 
         const active = request === activeRequest;
 
@@ -304,8 +321,11 @@ const RequestEntry = observer(
                 <RequestName>{request.name}</RequestName>
                 {active && (
                     <RequestActions>
+                        <DuplicateButton onClick={duplicateHandler}>
+                            <Copy size={16} />
+                        </DuplicateButton>
                         <RenameButton onClick={renameHandler}>
-                            <Pencil size={16} />
+                            <SquarePen size={16} />
                         </RenameButton>
                         <DeleteButton onClick={deleteHandler}>
                             <Trash size={16} />
