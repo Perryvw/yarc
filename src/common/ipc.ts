@@ -8,6 +8,7 @@ export enum IpcCall {
     ExportDirectory = "export-directory",
     BrowseProtoDirectory = "browse-proto-directory",
     RefreshProtoDirectory = "refresh-proto-directory",
+    ReadProtoContent = "read-proto-content",
 
     HttpRequest = "http-request",
     GrpcRequest = "grpc-request",

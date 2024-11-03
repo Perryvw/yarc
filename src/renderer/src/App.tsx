@@ -113,7 +113,11 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
             <Directory context={context} />
             <MainContent>
                 {context.activeRequest?.type === "grpc" ? (
-                    <GrpcRequestPanel activeRequest={context.activeRequest} protoConfig={context.protoConfig} />
+                    <GrpcRequestPanel
+                        activeRequest={context.activeRequest}
+                        protoConfig={context.protoConfig}
+                        persist={() => context.persistState()}
+                    />
                 ) : (
                     <RequestPanel activeRequest={context.activeRequest} />
                 )}

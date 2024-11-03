@@ -1,7 +1,8 @@
-import { dialog } from "electron";
-import type { BrowseProtoResult } from "../../common/ipc";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { dialog } from "electron";
+import type { ProtoContent } from "../../common/grpc";
+import type { BrowseProtoResult } from "../../common/ipc";
 
 export async function browseProtoRoot(): Promise<BrowseProtoResult> {
     const result = await dialog.showOpenDialog({
@@ -37,4 +38,19 @@ export async function findProtoFiles(protoRoot: string): Promise<string[]> {
     await findInDir(protoRoot);
 
     return result;
+}
+
+export async function parseProtoFile(protoPath: string, protoRootDir: string): Promise<ProtoContent> {
+    return {
+        services: [
+            {
+                name: "ServiceA",
+                method: ["foo", "bar"],
+            },
+            {
+                name: "ServiceB",
+                method: ["baz", "buzz"],
+            },
+        ],
+    };
 }

@@ -1,10 +1,10 @@
 import { join } from "node:path";
 import { BrowserWindow, app, ipcMain } from "electron";
-import type { ProtoRoot } from "../common/grpc";
+import type { ProtoContent, ProtoRoot } from "../common/grpc";
 import { type BrowseProtoResult, IpcCall, IpcEvent } from "../common/ipc";
 import type { PersistedState } from "../common/persist-state";
 import type { HttpRequestData, RequestList, ResponseData } from "../common/request-types";
-import { browseProtoRoot, findProtoFiles } from "./Communication/grpc";
+import { browseProtoRoot, findProtoFiles, parseProtoFile } from "./Communication/grpc";
 import { makeHttpRequest } from "./Communication/http";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
@@ -62,6 +62,13 @@ app.whenReady().then(async () => {
             protoFiles: await findProtoFiles(directory),
         };
     });
+
+    ipcMain.handle(
+        IpcCall.ReadProtoContent,
+        async (_, protoPath: string, protoRootDir: string): Promise<ProtoContent> => {
+            return await parseProtoFile(protoPath, protoRootDir);
+        },
+    );
 
     let closing = false; // We need to prevent first close to give renderer the chance to persist state
     window.on("close", (e) => {

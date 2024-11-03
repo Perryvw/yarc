@@ -91,6 +91,15 @@ function fixPersistedData(
             id: Math.random().toString(), // TODO: Fix
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
+
+            protoFile: {
+                protoPath: ri.protoFile?.protoPath ?? "",
+                rootDir: ri.protoFile?.rootDir ?? "",
+            },
+            rpc: {
+                service: ri.rpc?.service ?? "",
+                method: ri.rpc?.method ?? "",
+            },
         };
     }
 

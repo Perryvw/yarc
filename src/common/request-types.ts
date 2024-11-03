@@ -23,6 +23,9 @@ export interface GrpcRequestData {
     name: string;
     url: string;
 
+    protoFile?: { protoPath: string; rootDir: string };
+    rpc?: { service: string; method: string };
+
     response?: ResponseData;
 }
 
