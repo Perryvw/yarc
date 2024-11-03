@@ -15,7 +15,6 @@ const DirectoryRoot = styled.div`
     width: 100%;
     height: 100%;
     min-height: 0;
-    padding: 0 20px;
 `;
 
 const RequestContainer = styled.div`
@@ -217,24 +216,28 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
 const Request = styled.div`
     border: unset;
     background: unset;
-    border: 1px solid transparent;
-    border-bottom-color: var(--color-border);
     text-align: left;
-    padding: 10px;
+    padding: 6px 10px;
     cursor: pointer;
     display: flex;
     gap: 5px;
     align-items: center;
+    margin: 0 10px;
+    margin-bottom: 5px;
+    position: relative;
+    border-radius: 10px;
     overflow: hidden;
+    position: relative;
+    border: 1px solid transparent;
 
     &:hover {
-        background-color: blue;
+        border-color: var(--color-border);
+        background-color: var(--color-background-contrast);
     }
 
     &.active {
-        border-radius: 10px;
         background-color: hsl(96, 46%, 37%);
-        border-color: hsla(0, 0%, 100%, 0.075);
+        border-color: hsl(96, 46%, 37%);
     }
 `;
 
