@@ -185,7 +185,13 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
         [context],
     );
 
-    const sensors = useSensors(useSensor(PointerSensor));
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+    );
 
     const handleDragEnd = useCallback(
         (event: DragEndEvent) => {
