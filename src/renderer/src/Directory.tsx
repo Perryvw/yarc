@@ -205,14 +205,14 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
     );
 
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            modifiers={[restrictToVerticalAxis]}
-            onDragEnd={handleDragEnd}
-        >
-            <SortableContext items={requests} strategy={verticalListSortingStrategy}>
-                <DirectoryRoot>
+        <DirectoryRoot>
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                modifiers={[restrictToVerticalAxis]}
+                onDragEnd={handleDragEnd}
+            >
+                <SortableContext items={requests} strategy={verticalListSortingStrategy}>
                     <RequestContainer>
                         {requests.map((r, i) => (
                             <RequestEntry
@@ -226,24 +226,24 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
                             />
                         ))}
                     </RequestContainer>
-                    <NewRequestTypePopup id="new-request-popover" popover="auto">
-                        <NewRequestType onClick={newRequestGrpc}>
-                            <ChevronsLeftRight />
-                            <span>gRPC</span>
-                        </NewRequestType>
-                        <NewRequestType onClick={newRequest}>
-                            <Globe />
-                            <span>HTTP</span>
-                        </NewRequestType>
-                    </NewRequestTypePopup>
-                    <NewButton type="button" popovertarget="new-request-popover">
-                        <CirclePlus />
-                        New
-                    </NewButton>
-                    <RenameModal request={renamingRequest} close={finishRename} />
-                </DirectoryRoot>
-            </SortableContext>
-        </DndContext>
+                </SortableContext>
+            </DndContext>
+            <NewRequestTypePopup id="new-request-popover" popover="auto">
+                <NewRequestType onClick={newRequestGrpc}>
+                    <ChevronsLeftRight />
+                    <span>gRPC</span>
+                </NewRequestType>
+                <NewRequestType onClick={newRequest}>
+                    <Globe />
+                    <span>HTTP</span>
+                </NewRequestType>
+            </NewRequestTypePopup>
+            <NewButton type="button" popovertarget="new-request-popover">
+                <CirclePlus />
+                New
+            </NewButton>
+            <RenameModal request={renamingRequest} close={finishRename} />
+        </DirectoryRoot>
     );
 });
 
@@ -277,6 +277,7 @@ const Request = styled.div`
 `;
 
 const RequestMethod = styled.span`
+    display: flex;
     font-size: 12px;
     min-width: 30px;
 `;
