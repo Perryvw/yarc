@@ -107,14 +107,6 @@ const NewRequestTypePopup = styled.div`
     }
 `;
 
-const RequestName = styled.span`
-    flex-grow: 1;
-    overflow: hidden;
-    position: relative;
-    white-space: nowrap;
-    mask-image: linear-gradient(270deg, #0000, #000 20px);
-`;
-
 export const Directory = observer(({ context }: { context: AppContext }) => {
     const { requests } = context;
     console.log("rendering directory");
@@ -247,16 +239,32 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
     );
 });
 
+const RequestName = styled.span`
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+    white-space: nowrap;
+    mask-image: linear-gradient(270deg, #0000, #000 20px);
+    transition: color .2s;
+`;
+
+const RequestUrl = styled(RequestName)`
+    font-size: 12px;
+    line-height: 1;
+    color: #999;
+    height: 20px;
+`;
+
 const Request = styled.div`
     border: unset;
     background: unset;
     text-align: left;
-    padding: 6px 10px;
+    padding: 6px 14px;
     cursor: pointer;
     display: flex;
+    flex-direction: column;
     gap: 5px;
-    align-items: center;
-    margin: 0 10px;
+    margin: 0 6px;
     margin-bottom: 5px;
     position: relative;
     border-radius: 10px;
@@ -264,28 +272,51 @@ const Request = styled.div`
     position: relative;
     border: 1px solid transparent;
     flex-shrink: 0;
+    position: relative;
 
+    &.active,
     &:hover {
         border-color: var(--color-border);
         background-color: var(--color-background-contrast);
     }
 
-    &.active {
-        background-color: hsl(96, 46%, 37%);
-        border-color: hsl(96, 46%, 37%);
+    &.active ${RequestName} {
+        color: hsl(96, 46%, 57%);
     }
+
+    &:before {
+        position: absolute;
+        content: "";
+        width: 3px;
+        height: 60%;
+        background-color: hsl(96, 46%, 57%);
+        left: 0;
+        top: 20%;
+        border-radius: 12px;
+        opacity: 0;
+        transition: opacity .2s;
+    }
+
+    &.active:before {
+        opacity: 1;
+    }
+`;
+
+const RequestFirstLine = styled.div`
+    display: flex;
+    align-items: center;
 `;
 
 const RequestMethod = styled.span`
     display: flex;
-    font-size: 12px;
+    font-size: 11px;
     min-width: 30px;
 `;
 
 const RequestActions = styled.div`
     display: flex;
-    gap: 5px;
-    margin-left: auto;
+    gap: 15px;
+    height: 20px;
 `;
 
 const RenameButton = styled.button`
@@ -302,9 +333,6 @@ const RenameButton = styled.button`
 const DuplicateButton = RenameButton;
 
 const DeleteButton = styled(RenameButton)`
-    background: unset;
-    padding: 0;
-
     &:hover {
         color: red;
     }
@@ -333,6 +361,17 @@ const RequestEntry = observer(
             transform: CSS.Transform.toString(transform),
             transition,
         };
+
+        function getCleanerRequestUrl() {
+            let url = request.url;
+            const protocol = url.indexOf("://");
+
+            if (protocol > -1) {
+                url = url.substring(protocol + 3);
+            }
+
+            return url;
+        }
 
         function duplicateHandler(e: React.MouseEvent) {
             duplicateRequest(request);
@@ -364,13 +403,15 @@ const RequestEntry = observer(
                 {...attributes}
                 {...listeners}
             >
-                {request.type === "grpc" && (
-                    <RequestMethod>
-                        <ChevronsLeftRight size={16} />
-                    </RequestMethod>
-                )}
-                {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>}
-                <RequestName>{request.name}</RequestName>
+                <RequestFirstLine>
+                    {request.type === "grpc" && (
+                        <RequestMethod>
+                            <ChevronsLeftRight size={16} />
+                        </RequestMethod>
+                    )}
+                    {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>}
+                    <RequestName>{request.name}</RequestName>
+                </RequestFirstLine>
                 {active && (
                     <RequestActions>
                         <DuplicateButton onClick={duplicateHandler}>
@@ -384,6 +425,7 @@ const RequestEntry = observer(
                         </DeleteButton>
                     </RequestActions>
                 )}
+                {!active && <RequestUrl>{getCleanerRequestUrl()}</RequestUrl>}
             </Request>
         );
     },
