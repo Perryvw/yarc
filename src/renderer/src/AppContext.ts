@@ -121,10 +121,16 @@ export class AppContext {
         const newIndex = this.requests.findIndex((item) => item.id === over);
 
         if (oldIndex >= 0 && newIndex >= 0) {
+            const oldActiveRequest = this.activeRequest;
             const newRequests = [...this.requests];
             const [request] = newRequests.splice(oldIndex, 1);
             newRequests.splice(newIndex, 0, request);
             this.setRequestList(newRequests);
+
+            if (oldActiveRequest) {
+                this.setActiveRequest(oldActiveRequest);
+            }
+
             // Persist state
             this.persistState();
         }
