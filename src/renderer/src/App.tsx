@@ -18,7 +18,7 @@ const AppRoot = styled.div`
 
     display: grid;
     grid-template-columns:
-        minmax(min-content, var(--grid-width-directory))
+        var(--grid-width-directory)
         1px
         auto;
     grid-template-rows: min-content 1fr;
@@ -39,7 +39,7 @@ const AppRoot = styled.div`
 const MainContent = styled.div`
     display: grid;
     grid-template-columns:
-        minmax(min-content, var(--grid-width-response))
+        var(--grid-width-response)
         1px
         auto;
 

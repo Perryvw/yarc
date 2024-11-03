@@ -37,6 +37,10 @@ const NewButton = styled.button`
     cursor: pointer;
     anchor-name: --new-request-button;
 
+    & > svg {
+        flex-shrink: 0;
+    }
+
     &:hover {
         background-color: blue;
     }
@@ -98,6 +102,14 @@ const NewRequestTypePopup = styled.div`
 	        transform: scale(0) translateY(100px);
         }
     }
+`;
+
+const RequestName = styled.span`
+    flex-grow: 1;
+    overflow: hidden;
+    position: relative;
+    white-space: nowrap;
+    mask-image: linear-gradient(270deg, #0000, #000 20px);
 `;
 
 export const Directory = observer(({ context }: { context: AppContext }) => {
@@ -205,6 +217,7 @@ const Request = styled.div`
     display: flex;
     gap: 5px;
     align-items: center;
+    overflow: hidden;
 
     &:hover {
         background-color: blue;
@@ -288,7 +301,7 @@ const RequestEntry = observer(
                     </RequestMethod>
                 )}
                 {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>}
-                {request.name}
+                <RequestName>{request.name}</RequestName>
                 {active && (
                     <RequestActions>
                         <RenameButton onClick={renameHandler}>

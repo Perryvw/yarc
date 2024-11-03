@@ -34,7 +34,7 @@ export default function SplitSlider({
 
             const deltaX = e.clientX - startPosition.current.x;
             const deltaPercent = (deltaX / window.innerWidth) * 100;
-            const newWidth = Math.min(99, Math.max(1, startPosition.current.width + deltaPercent));
+            const newWidth = Math.min(90, Math.max(1, startPosition.current.width + deltaPercent));
 
             setWidth(Number(newWidth.toFixed(1)));
         };

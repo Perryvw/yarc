@@ -11,6 +11,8 @@ const RequestHeaderContainer = styled.div`
     padding-left: 0;
     display: flex;
     gap: 10px;
+    min-width: 0;
+    overflow: hidden;
 `;
 
 const RequestMethodAndPath = styled.div`

@@ -1,13 +1,13 @@
 import { Download, PawPrint, Upload } from "lucide-react";
 import styled from "styled-components";
-import { IpcCall, type IpcImportResult } from "../../common/ipc";
-import { useState } from "react";
 
 const Container = styled.div`
     display: flex;
     align-items: center;
     gap: 5px;
     padding: 10px;
+    overflow: hidden;
+    min-width: 0;
 
     & svg {
         flex-shrink: 0;
