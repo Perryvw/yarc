@@ -91,6 +91,8 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
     function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
         if (activeRequest) {
             runInAction(() => {
+                activeRequest.url = event.target.value;
+
                 if (activeRequest.type === "http") {
                     const url = new URL(event.target.value);
 
@@ -104,11 +106,7 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
                         });
                     }
 
-                    url.search = "";
-                    activeRequest.url = url.toString();
                     activeRequest.params = newParams;
-                } else {
-                    activeRequest.url = event.target.value;
                 }
             });
         }
@@ -152,6 +150,13 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
         let url = activeRequest.url;
 
         if (activeRequest.type !== "http") {
+            return url;
+        }
+
+        // :UrlHasDirtyQueryString
+        // If the url already contains a query string (maybe need to parse it to detect properly or have a dirty flag?)
+        // then do not render the url params until the actually change
+        if (url.includes("?")) {
             return url;
         }
 

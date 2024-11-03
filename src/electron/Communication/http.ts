@@ -7,8 +7,13 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
 
     let path = url.pathname;
 
-    if (params.size > 0) {
-        path += `?${params}`;
+    // :UrlHasDirtyQueryString
+    if (!url.search) {
+        if (params.size > 0) {
+            path += `?${params}`;
+        }
+    } else {
+        path += url.search;
     }
 
     return new Promise((resolve) => {

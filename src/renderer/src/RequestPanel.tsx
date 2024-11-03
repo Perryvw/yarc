@@ -64,6 +64,15 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: Reques
         if (activeRequest && activeRequest.type === "http") {
             runInAction(() => {
                 activeRequest.params = params;
+
+                // :UrlHasDirtyQueryString
+                if (!activeRequest.url.includes("?")) {
+                    return;
+                }
+
+                const url = new URL(activeRequest.url);
+                url.search = "";
+                activeRequest.url = url.toString();
             });
         }
     }
