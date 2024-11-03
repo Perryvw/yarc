@@ -49,6 +49,8 @@ export class AppContext {
             setRequestList: action,
             setResponse: action,
             deleteRequest: action,
+            duplicateRequest: action,
+            moveRequest: action,
             persistState: action,
             loadPersistedState: action,
         } satisfies ObservableDefinition<AppContext>);
@@ -114,6 +116,20 @@ export class AppContext {
         }
     }
 
+    public moveRequest(active: string, over: string) {
+        const oldIndex = this.requests.findIndex((item) => item.id === active);
+        const newIndex = this.requests.findIndex((item) => item.id === over);
+
+        if (oldIndex >= 0 && newIndex >= 0) {
+            const newRequests = [...this.requests];
+            const [request] = newRequests.splice(oldIndex, 1);
+            newRequests.splice(newIndex, 0, request);
+            this.setRequestList(newRequests);
+            // Persist state
+            this.persistState();
+        }
+    }
+
     public persistState(): void {
         const requestsWithoutResponse = this.requests.map((r) => {
             const req = toJS(r);
@@ -145,6 +161,7 @@ export class AppContext {
                     // TODO: Remove this, but for now this is useful for debugging
                     const request1: HttpRequestData = {
                         type: "http",
+                        id: Math.random().toString(),
                         name: "Google",
                         url: "https://www.google.com/",
                         params: [
@@ -160,6 +177,7 @@ export class AppContext {
                     };
                     const request2: HttpRequestData = {
                         type: "http",
+                        id: Math.random().toString(),
                         name: "JSON",
                         url: "https://jsonplaceholder.typicode.com/comments",
                         params: [],

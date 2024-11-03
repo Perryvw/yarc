@@ -6,6 +6,7 @@ export interface KeyValue {
 
 export interface HttpRequestData {
     type: "http";
+    id: string;
     name: string;
     url: string;
     params: KeyValue[];
@@ -18,6 +19,7 @@ export interface HttpRequestData {
 
 export interface GrpcRequestData {
     type: "grpc";
+    id: string;
     name: string;
     url: string;
 

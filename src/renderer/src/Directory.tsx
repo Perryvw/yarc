@@ -8,6 +8,10 @@ import { observer } from "mobx-react-lite";
 import type { AppContext } from "./AppContext";
 import { RenameModal, type RenameResult } from "./modals/rename";
 import { runInAction } from "mobx";
+import { closestCenter, DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -120,6 +124,7 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
     function newRequest() {
         const newRequest: HttpRequestData = {
             type: "http",
+            id: Math.random().toString(), // TODO: Fix
             name: "New request",
             method: "GET",
             params: [],
@@ -134,6 +139,7 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
     function newRequestGrpc() {
         const newRequest: GrpcRequestData = {
             type: "grpc",
+            id: Math.random().toString(), // TODO: Fix
             name: "New request",
             url: "new",
         };
@@ -179,37 +185,59 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
         [context],
     );
 
+    const sensors = useSensors(useSensor(PointerSensor));
+
+    const handleDragEnd = useCallback(
+        (event: DragEndEvent) => {
+            const { active, over } = event;
+
+            if (over && active.id !== over.id) {
+                context.moveRequest(active.id as string, over.id as string);
+            }
+        },
+        [context],
+    );
+
     return (
-        <DirectoryRoot>
-            <RequestContainer>
-                {requests.map((r, i) => (
-                    <RequestEntry
-                        activeRequest={context.activeRequest}
-                        key={i.toString()}
-                        request={r}
-                        renameRequest={renameRequest}
-                        selectRequest={selectRequest}
-                        deleteRequest={deleteRequest}
-                        duplicateRequest={duplicateRequest}
-                    />
-                ))}
-            </RequestContainer>
-            <NewRequestTypePopup id="new-request-popover" popover="auto">
-                <NewRequestType onClick={newRequestGrpc}>
-                    <ChevronsLeftRight />
-                    <span>gRPC</span>
-                </NewRequestType>
-                <NewRequestType onClick={newRequest}>
-                    <Globe />
-                    <span>HTTP</span>
-                </NewRequestType>
-            </NewRequestTypePopup>
-            <NewButton type="button" popovertarget="new-request-popover">
-                <CirclePlus />
-                New
-            </NewButton>
-            <RenameModal request={renamingRequest} close={finishRename} />
-        </DirectoryRoot>
+        <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis]}
+            onDragEnd={handleDragEnd}
+        >
+            <SortableContext items={requests} strategy={verticalListSortingStrategy}>
+                <DirectoryRoot>
+                    <RequestContainer>
+                        {requests.map((r, i) => (
+                            <RequestEntry
+                                activeRequest={context.activeRequest}
+                                key={r.id}
+                                request={r}
+                                renameRequest={renameRequest}
+                                selectRequest={selectRequest}
+                                deleteRequest={deleteRequest}
+                                duplicateRequest={duplicateRequest}
+                            />
+                        ))}
+                    </RequestContainer>
+                    <NewRequestTypePopup id="new-request-popover" popover="auto">
+                        <NewRequestType onClick={newRequestGrpc}>
+                            <ChevronsLeftRight />
+                            <span>gRPC</span>
+                        </NewRequestType>
+                        <NewRequestType onClick={newRequest}>
+                            <Globe />
+                            <span>HTTP</span>
+                        </NewRequestType>
+                    </NewRequestTypePopup>
+                    <NewButton type="button" popovertarget="new-request-popover">
+                        <CirclePlus />
+                        New
+                    </NewButton>
+                    <RenameModal request={renamingRequest} close={finishRename} />
+                </DirectoryRoot>
+            </SortableContext>
+        </DndContext>
     );
 });
 
@@ -229,6 +257,7 @@ const Request = styled.div`
     overflow: hidden;
     position: relative;
     border: 1px solid transparent;
+    flex-shrink: 0;
 
     &:hover {
         border-color: var(--color-border);
@@ -292,6 +321,12 @@ const RequestEntry = observer(
     }) => {
         console.log("Rendering request entry");
 
+        const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: request.id });
+        const style = {
+            transform: CSS.Transform.toString(transform),
+            transition,
+        };
+
         function duplicateHandler(e: React.MouseEvent) {
             duplicateRequest(request);
             e.stopPropagation();
@@ -314,7 +349,14 @@ const RequestEntry = observer(
         }, [request, selectRequest]);
 
         return (
-            <Request onClick={selectHandler} className={classNames({ active })}>
+            <Request
+                onClick={selectHandler}
+                className={classNames({ active })}
+                ref={setNodeRef}
+                style={style}
+                {...attributes}
+                {...listeners}
+            >
                 {request.type === "grpc" && (
                     <RequestMethod>
                         <ChevronsLeftRight size={16} />

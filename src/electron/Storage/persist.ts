@@ -71,6 +71,7 @@ function fixPersistedData(
         }
         return {
             type: "http",
+            id: Math.random().toString(), // TODO: Fix
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
             method: ri.method ?? "GET",
@@ -83,6 +84,7 @@ function fixPersistedData(
     function fixGrpcRequest(ri: DeepPartial<GrpcRequestData>): GrpcRequestData {
         return {
             type: "grpc",
+            id: Math.random().toString(), // TODO: Fix
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
         };
