@@ -10,7 +10,7 @@ import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
 
 app.whenReady().then(async () => {
-    const persistedState = await getPersistedState();
+    let persistedState = await getPersistedState();
     const window = new BrowserWindow({
         autoHideMenuBar: true,
         webPreferences: {
@@ -36,7 +36,7 @@ app.whenReady().then(async () => {
     });
 
     ipcMain.handle(IpcCall.PersistState, async (_, state: PersistedState) => {
-        await persistCurrentState(state, window);
+        persistedState = await persistCurrentState(state, window);
 
         // If we are closing then this was the last persist, quit the app
         if (closing) {

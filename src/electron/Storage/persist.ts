@@ -17,6 +17,7 @@ export async function persistCurrentState(state: PersistedState, window: BaseWin
         },
     };
     await fs.writeFile(storageFile, JSON.stringify(stateWithWindow));
+    return stateWithWindow;
 }
 
 export async function getPersistedState(): Promise<PersistedStateWithWindow | undefined> {
