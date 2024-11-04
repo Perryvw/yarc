@@ -77,6 +77,14 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: Reques
         }
     }
 
+    function setRequestHeaders(headers: KeyValue[]) {
+        if (activeRequest && activeRequest.type === "http") {
+            runInAction(() => {
+                activeRequest.headers = headers;
+            });
+        }
+    }
+
     return (
         <RequestPanelRoot>
             {activeRequest?.type === "http" && (
@@ -122,7 +130,7 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: Reques
                         <RequestSectionHeaderName>Headers</RequestSectionHeaderName>
                         <ChevronUp size={20} className="chevron" />
                     </RequestSectionHeader>
-                    <KeyValuesPanel name="headers" params={activeRequest.headers} setParams={() => {}} />
+                    <KeyValuesPanel name="headers" params={activeRequest.headers} setParams={setRequestHeaders} />
                 </RequestSection>
             )}
         </RequestPanelRoot>

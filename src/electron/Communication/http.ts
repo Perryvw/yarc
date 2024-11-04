@@ -16,6 +16,25 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
         path += url.search;
     }
 
+    const headers = request.headers
+        .filter((p) => p.enabled)
+        .reduce(
+            (acc, { key, value }) => {
+                if (acc[key]) {
+                    if (Array.isArray(acc[key])) {
+                        acc[key].push(value);
+                    } else {
+                        acc[key] = [acc[key], value];
+                    }
+                } else {
+                    acc[key] = value;
+                }
+
+                return acc;
+            },
+            {} as Record<string, string | string[]>,
+        );
+
     return new Promise((resolve) => {
         const start = performance.now(); // This isn't good. If we switch to libcurl then get real timings from there.
         const req = net.request({
@@ -24,6 +43,7 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
             hostname: url.hostname,
             port: Number(url.port),
             path: path,
+            headers: headers,
         });
 
         req.on("response", (response) => {
