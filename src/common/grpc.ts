@@ -9,5 +9,11 @@ export interface ProtoContent {
 
 export interface ProtoService {
     name: string;
-    method: string[];
+    methods: MethodInfo[];
+}
+
+export interface MethodInfo {
+    name: string;
+    requestStream: boolean;
+    serverStream: boolean;
 }

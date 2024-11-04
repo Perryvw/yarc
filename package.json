@@ -18,6 +18,7 @@
         "@dnd-kit/modifiers": "^7.0.0",
         "@dnd-kit/sortable": "^8.0.0",
         "@electron-toolkit/preload": "^3.0.1",
+        "@grpc/grpc-js": "^1.12.2",
         "@uiw/react-codemirror": "^4.23.6",
         "classnames": "^2.5.1",
         "electron": "^33.0.2",

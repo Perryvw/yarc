@@ -3,7 +3,7 @@ import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useCallback, useState } from "react";
 import styled from "styled-components";
-import type { ProtoContent } from "../../common/grpc";
+import type { MethodInfo, ProtoContent } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
 import type { GrpcRequestData } from "../../common/request-types";
 import type { ProtoConfig } from "./AppContext";
@@ -49,13 +49,13 @@ export const GrpcRequestPanel = observer(
             [activeRequest],
         );
 
-        const [rpcs, setRpcs] = useState<Array<{ service: string; method: string }> | undefined>(undefined);
+        const [rpcs, setRpcs] = useState<Array<{ service: string; method: MethodInfo }> | undefined>(undefined);
         if (activeRequest.protoFile && !rpcs) {
             window.electron.ipcRenderer
                 .invoke(IpcCall.ReadProtoContent, activeRequest.protoFile.protoPath, activeRequest.protoFile.rootDir)
                 .then((protoContent: ProtoContent) => {
                     const rpcs = protoContent.services.flatMap((service) =>
-                        service.method.map((rpc) => ({ service: service.name, method: rpc })),
+                        service.methods.map((rpc) => ({ service: service.name, method: rpc })),
                     );
                     setRpcs(rpcs);
                 });
@@ -66,7 +66,10 @@ export const GrpcRequestPanel = observer(
                 runInAction(() => {
                     if (rpcs) {
                         const rpc = rpcs[Number(e.target.value)];
-                        activeRequest.rpc = rpc;
+                        activeRequest.rpc = {
+                            service: rpc.service,
+                            method: rpc.method.name,
+                        };
                         persist();
                     }
                 });
@@ -90,7 +93,8 @@ export const GrpcRequestPanel = observer(
             (rpcs &&
                 activeRequest.rpc &&
                 rpcs?.findIndex(
-                    (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method === activeRequest.rpc?.method,
+                    (rpc) =>
+                        rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc?.method,
                 )) ??
             -1;
 
@@ -125,7 +129,7 @@ export const GrpcRequestPanel = observer(
                         Change Method...
                     </option>
                     {rpcs?.map((rpc, i) => (
-                        <option key={i.toString()} value={i}>{`${rpc.service} / ${rpc.method}`}</option>
+                        <option key={i.toString()} value={i}>{`${rpc.service} / ${rpc.method.name}`}</option>
                     ))}
                 </select>
                 <CodeMirror
