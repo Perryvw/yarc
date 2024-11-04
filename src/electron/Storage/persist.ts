@@ -101,6 +101,8 @@ function fixPersistedData(
                 service: ri.rpc?.service ?? "",
                 method: ri.rpc?.method ?? "",
             },
+
+            body: ri.body ?? "{}",
         };
     }
 

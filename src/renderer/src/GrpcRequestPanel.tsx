@@ -1,3 +1,4 @@
+import CodeMirror from "@uiw/react-codemirror";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useCallback, useState } from "react";
@@ -30,14 +31,17 @@ export const GrpcRequestPanel = observer(
             setProtoModalOpen(false);
         }, [protoConfig]);
 
+        const flattenedRoots = protoConfig.roots.flatMap((r) =>
+            r.protoFiles.map((p) => ({ protoPath: p, rootPath: r.rootPath })),
+        );
+
         const onProtoFileChange = useCallback(
             (e: ChangeEvent<HTMLSelectElement>) => {
                 runInAction(() => {
-                    const [rootI, fileI] = e.target.value.split("/");
-                    const protoRoot = protoConfig.roots[Number(rootI)];
+                    const protoRoot = flattenedRoots[Number(e.target.value)];
                     activeRequest.protoFile = {
                         rootDir: protoRoot.rootPath,
-                        protoPath: protoRoot.protoFiles[Number(fileI)],
+                        protoPath: protoRoot.protoPath,
                     };
                     persist();
                 });
@@ -50,7 +54,6 @@ export const GrpcRequestPanel = observer(
             window.electron.ipcRenderer
                 .invoke(IpcCall.ReadProtoContent, activeRequest.protoFile.protoPath, activeRequest.protoFile.rootDir)
                 .then((protoContent: ProtoContent) => {
-                    console.log(protoContent);
                     const rpcs = protoContent.services.flatMap((service) =>
                         service.method.map((rpc) => ({ service: service.name, method: rpc })),
                     );
@@ -64,15 +67,32 @@ export const GrpcRequestPanel = observer(
                     if (rpcs) {
                         const rpc = rpcs[Number(e.target.value)];
                         activeRequest.rpc = rpc;
-                        console.log("persist");
                         persist();
-                    } else {
-                        console.log("no rpcs???");
                     }
                 });
             },
             [rpcs, activeRequest],
         );
+
+        const onRequestBodyChanged = useCallback(
+            (value: string) => {
+                runInAction(() => {
+                    activeRequest.body = value;
+                    persist();
+                });
+            },
+            [activeRequest],
+        );
+
+        const selectedRoot = flattenedRoots.findIndex((r) => r.protoPath === activeRequest.protoFile?.protoPath);
+
+        const selectedRpc =
+            (rpcs &&
+                activeRequest.rpc &&
+                rpcs?.findIndex(
+                    (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method === activeRequest.rpc?.method,
+                )) ??
+            -1;
 
         return (
             <RequestPanelRoot>
@@ -83,31 +103,23 @@ export const GrpcRequestPanel = observer(
                 Proto file:
                 <br />
                 Current: {activeRequest.protoFile?.protoPath ?? "<no proto file>"}
-                <select onChange={onProtoFileChange} defaultValue={-1}>
+                <select onChange={onProtoFileChange} defaultValue={selectedRoot}>
                     <option value={-1} disabled>
                         Change proto file...
                     </option>
-                    {protoConfig.roots.flatMap((r, i) =>
-                        r.protoFiles.map((p, j) => (
-                            <option key={j.toString()} value={`${i}/${j}`}>
-                                {p}
-                            </option>
-                        )),
-                    )}
+                    {flattenedRoots.map((r, i) => (
+                        <option key={i.toString()} value={i}>
+                            {r.protoPath}
+                        </option>
+                    ))}
                 </select>
                 RPC:
                 <br />
                 Current: {activeRequest.rpc ? `${activeRequest.rpc.service} / ${activeRequest.rpc.method}` : "<no rpc>"}
                 <select
-                    id="rpcs"
                     onChange={onRpcChange}
                     disabled={activeRequest.protoFile === undefined}
-                    defaultValue={
-                        rpcs?.findIndex(
-                            (rpc) =>
-                                rpc.service === activeRequest.rpc?.service && rpc.method === activeRequest.rpc.method,
-                        ) ?? -1
-                    }
+                    defaultValue={selectedRpc}
                 >
                     <option value={-1} disabled>
                         Change Method...
@@ -116,6 +128,16 @@ export const GrpcRequestPanel = observer(
                         <option key={i.toString()} value={i}>{`${rpc.service} / ${rpc.method}`}</option>
                     ))}
                 </select>
+                <CodeMirror
+                    theme="dark"
+                    basicSetup={{ foldGutter: true }}
+                    style={{
+                        flexBasis: "100%",
+                        overflow: "hidden",
+                    }}
+                    value={activeRequest.body}
+                    onChange={onRequestBodyChanged}
+                />
             </RequestPanelRoot>
         );
     },

@@ -134,6 +134,7 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
             id: Math.random().toString(), // TODO: Fix
             name: "New request",
             url: "new",
+            body: "{}",
         };
         context.addRequest(newRequest);
         context.setActiveRequestById(requests.length - 1);
