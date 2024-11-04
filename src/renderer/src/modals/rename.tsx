@@ -39,25 +39,24 @@ export function RenameModal({
         }
     }, [request]);
 
-    function cancel() {
-        close({ cancelled: true });
-    }
-    function ok() {
-        if (request === undefined) cancel();
+    function onClose() {
+        if (ref.current?.returnValue !== "save") {
+            close({ cancelled: true });
+            return;
+        }
+
         close({ cancelled: false, name: newName });
     }
 
     return (
-        <RenameDialog ref={ref}>
-            Rename {request?.name}:<br />
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} />
-            <br />
-            <RenameOkButton type="button" onClick={ok}>
-                Ok
-            </RenameOkButton>
-            <RenameCancelButton type="button" onClick={cancel}>
-                Cancel
-            </RenameCancelButton>
+        <RenameDialog ref={ref} onClose={onClose}>
+            <form method="dialog">
+                Rename {request?.name}:<br />
+                <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} />
+                <br />
+                <RenameOkButton value="save">Save</RenameOkButton>
+                <RenameCancelButton value="cancel">Cancel</RenameCancelButton>
+            </form>
         </RenameDialog>
     );
 }
