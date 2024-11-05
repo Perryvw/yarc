@@ -13,7 +13,7 @@ import {
 import type { ProtoRoot } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
-import type { HttpRequestData, RequestData, RequestList, ResponseData } from "../../common/request-types";
+import type { HttpRequestData, RequestData, RequestList, HttpResponseData } from "../../common/request-types";
 
 export class AppContext {
     requests: RequestList = [];
@@ -78,7 +78,7 @@ export class AppContext {
         this.requests = requests;
     }
 
-    public setResponse(response: ResponseData | undefined) {
+    public setResponse(response: HttpResponseData | undefined) {
         if (this.activeRequest) {
             this.activeRequest.response = response;
         }

@@ -2,7 +2,7 @@ import { type ChangeEvent, useState } from "react";
 import { Play } from "lucide-react";
 import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
-import type { KeyValue, RequestData } from "../../common/request-types";
+import type { GrpcResponse, HttpResponseData, KeyValue, RequestData } from "../../common/request-types";
 import { observer } from "mobx-react-lite";
 import { runInAction, toJS } from "mobx";
 import { httpVerbColorPalette } from "./HttpVerb";
@@ -127,12 +127,22 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
         setIsExecutionAnimating(true);
 
         if (activeRequest && activeRequest.type === "http") {
-            const response = await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, toJS(activeRequest));
+            const response: HttpResponseData = await window.electron.ipcRenderer.invoke(
+                IpcCall.HttpRequest,
+                toJS(activeRequest),
+            );
             runInAction(() => {
                 activeRequest.response = response;
             });
         } else if (activeRequest && activeRequest.type === "grpc") {
             // TODO
+            const response: GrpcResponse = await window.electron.ipcRenderer.invoke(
+                IpcCall.GrpcRequest,
+                toJS(activeRequest),
+            );
+            runInAction(() => {
+                activeRequest.response = response;
+            });
         }
 
         setIsExecuting(false);

@@ -11,6 +11,7 @@ import { RequestPanel } from "./RequestPanel";
 import { ResponsePanel } from "./ResponsePanel";
 import { runInAction, toJS } from "mobx";
 import { GrpcRequestPanel } from "./GrpcRequestPanel";
+import { GrpcResponsePanel } from "./GrpcResponsePanel";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;
@@ -128,7 +129,10 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                 )}
                 {context.activeRequest?.type === "http" && <RequestPanel activeRequest={context.activeRequest} />}
                 <SplitSlider width={context.gridWidthDirectory} setWidth={setResponseWidth} />
-                <ResponsePanel response={context.activeRequest?.response} />
+                {context.activeRequest?.type === "http" && <ResponsePanel response={context.activeRequest?.response} />}
+                {context.activeRequest?.type === "grpc" && (
+                    <GrpcResponsePanel response={context.activeRequest?.response} />
+                )}
             </MainContent>
         </AppRoot>
     );

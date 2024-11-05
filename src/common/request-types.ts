@@ -17,7 +17,7 @@ export interface HttpRequestData {
     bodyForm: KeyValue[];
     body: string;
 
-    response?: ResponseData;
+    response?: HttpResponseData;
 }
 
 export interface GrpcRequestData {
@@ -31,16 +31,31 @@ export interface GrpcRequestData {
 
     body: string;
 
-    response?: ResponseData;
+    response?: GrpcResponse;
 }
 
 export type RequestData = HttpRequestData | GrpcRequestData;
 
 export type RequestList = RequestData[];
 
-export interface ResponseData {
+export interface HttpResponseData {
     statusCode: number;
     time: number;
     headers: Record<string, string | string[]>;
+    body: string;
+}
+
+export type GrpcResponse = GrpcError | GrpcResponseData;
+
+export interface GrpcError {
+    success: false;
+    code: string;
+    detail: string;
+    time: number;
+}
+
+export interface GrpcResponseData {
+    success: true;
+    time: number;
     body: string;
 }

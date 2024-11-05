@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { CircleSlash2 } from "lucide-react";
 import { Tab, Tabs } from "./Tabs";
 import { observer } from "mobx-react-lite";
-import type { HttpResponseData } from "../../common/request-types";
+import type { GrpcResponse, HttpResponseData } from "../../common/request-types";
 
 const ResponsePanelRoot = styled.div`
     display: flex;
@@ -117,8 +117,7 @@ const codemirrorTheme = EditorView.theme({
     },
 });
 
-export const ResponsePanel = observer(({ response }: { response: HttpResponseData | undefined }) => {
-    const [tab, setTab] = useState<"body" | "headers">("body");
+export const GrpcResponsePanel = observer(({ response }: { response: GrpcResponse | undefined }) => {
     const [prettyPrint, setPrettyPrint] = useState(true);
 
     function formatHeader(value: string | string[]) {
@@ -146,65 +145,57 @@ export const ResponsePanel = observer(({ response }: { response: HttpResponseDat
         );
     }
 
+    if (!response.success) {
+        return (
+            <ResponsePanelRoot>
+                <Status>
+                    <div>
+                        <StatusCode className={statusColor(500)}>{response.code}</StatusCode>
+                    </div>
+                    <div>
+                        Time: <b>{(response.time / 1000).toFixed(2)}s</b>
+                    </div>
+                </Status>
+
+                <ResponseBody>{response.detail}</ResponseBody>
+            </ResponsePanelRoot>
+        );
+    }
+
     return (
         <ResponsePanelRoot>
             <Status>
                 <div>
-                    Status: <StatusCode className={statusColor(response.statusCode)}>{response.statusCode}</StatusCode>
-                </div>
-                <div>
-                    Size: <b>{response.body.length}</b>
+                    <StatusCode className={statusColor(200)}>OK</StatusCode>
                 </div>
                 <div>
                     Time: <b>{(response.time / 1000).toFixed(2)}s</b>
                 </div>
             </Status>
 
-            <Tabs>
-                <Tab type="button" className={tab === "body" ? "active" : ""} onClick={() => setTab("body")}>
-                    Response
-                </Tab>
-                <Tab type="button" className={tab === "headers" ? "active" : ""} onClick={() => setTab("headers")}>
-                    Headers
-                </Tab>
-            </Tabs>
-
-            {tab === "body" && (
-                <ResponseBody>
-                    <div>
-                        <label>
-                            <input
-                                type="checkbox"
-                                onClick={() => setPrettyPrint(!prettyPrint)}
-                                defaultChecked={prettyPrint}
-                            />
-                            Pretty print
-                        </label>
-                    </div>
-                    <CodeMirror
-                        readOnly
-                        theme="dark"
-                        value={response.body}
-                        basicSetup={{ foldGutter: true }}
-                        extensions={[codemirrorTheme, json(), html()]}
-                        style={{
-                            flexBasis: "100%",
-                            overflow: "hidden",
-                        }}
-                    />
-                </ResponseBody>
-            )}
-
-            {tab === "headers" && (
-                <ResponseHeaders>
-                    {Object.keys(response.headers).map((key) => (
-                        <ResponseHeader key={key}>
-                            <ResponseHeaderKey>{key}</ResponseHeaderKey>
-                            {formatHeader(response.headers[key])}
-                        </ResponseHeader>
-                    ))}
-                </ResponseHeaders>
-            )}
+            <ResponseBody>
+                <div>
+                    <label>
+                        <input
+                            type="checkbox"
+                            onClick={() => setPrettyPrint(!prettyPrint)}
+                            defaultChecked={prettyPrint}
+                        />
+                        Pretty print
+                    </label>
+                </div>
+                <CodeMirror
+                    readOnly
+                    theme="dark"
+                    value={response.body}
+                    basicSetup={{ foldGutter: true }}
+                    extensions={[codemirrorTheme, json(), html()]}
+                    style={{
+                        flexBasis: "100%",
+                        overflow: "hidden",
+                    }}
+                />
+            </ResponseBody>
         </ResponsePanelRoot>
     );
 });

@@ -14,6 +14,7 @@ export interface ProtoService {
 
 export interface MethodInfo {
     name: string;
+    path: string;
     requestStream: boolean;
     serverStream: boolean;
 }

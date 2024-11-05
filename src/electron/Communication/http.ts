@@ -1,7 +1,7 @@
 import { net } from "electron";
-import type { HttpRequestData, ResponseData } from "../../common/request-types";
+import type { HttpRequestData, HttpResponseData } from "../../common/request-types";
 
-export async function makeHttpRequest(request: HttpRequestData): Promise<ResponseData> {
+export async function makeHttpRequest(request: HttpRequestData): Promise<HttpResponseData> {
     const url = new URL(request.url);
     const params = new URLSearchParams(request.params.filter((p) => p.enabled).map((kv) => [kv.key, kv.value]));
 

@@ -3,8 +3,14 @@ import { BrowserWindow, app, ipcMain } from "electron";
 import type { ProtoContent, ProtoRoot } from "../common/grpc";
 import { type BrowseProtoResult, IpcCall, IpcEvent } from "../common/ipc";
 import type { PersistedState } from "../common/persist-state";
-import type { HttpRequestData, RequestList, ResponseData } from "../common/request-types";
-import { browseProtoRoot, findProtoFiles, parseProtoFile } from "./Communication/grpc";
+import type {
+    GrpcRequestData,
+    GrpcResponse,
+    HttpRequestData,
+    HttpResponseData,
+    RequestList,
+} from "../common/request-types";
+import { browseProtoRoot, findProtoFiles, makeGrpcRequest, parseProtoFile } from "./Communication/grpc";
 import { makeHttpRequest } from "./Communication/http";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
@@ -27,8 +33,12 @@ app.whenReady().then(async () => {
         window.maximize();
     }
 
-    ipcMain.handle(IpcCall.HttpRequest, async (_, request: HttpRequestData): Promise<ResponseData> => {
+    ipcMain.handle(IpcCall.HttpRequest, async (_, request: HttpRequestData): Promise<HttpResponseData> => {
         return await makeHttpRequest(request);
+    });
+
+    ipcMain.handle(IpcCall.GrpcRequest, async (_, request: GrpcRequestData): Promise<GrpcResponse> => {
+        return await makeGrpcRequest(request);
     });
 
     ipcMain.handle(IpcCall.LoadPersistedState, async () => {
