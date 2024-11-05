@@ -12,6 +12,7 @@ import { closestCenter, DndContext, type DragEndEvent, PointerSensor, useSensor,
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { httpVerbColorPalette } from "./HttpVerb";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -242,12 +243,14 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
 });
 
 const RequestName = styled.span`
+    display: flex;
+    gap: 5px;
+    align-items: center;
     flex-grow: 1;
     overflow: hidden;
     position: relative;
     white-space: nowrap;
     mask-image: linear-gradient(270deg, #0000, #000 20px);
-    transition: color .2s;
 `;
 
 const RequestUrl = styled(RequestName)`
@@ -258,6 +261,7 @@ const RequestUrl = styled(RequestName)`
 `;
 
 const Request = styled.div`
+    --method-color: #FFF;
     border: unset;
     background: unset;
     text-align: left;
@@ -265,7 +269,6 @@ const Request = styled.div`
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    gap: 5px;
     margin: 0 6px;
     margin-bottom: 5px;
     position: relative;
@@ -283,7 +286,7 @@ const Request = styled.div`
     }
 
     &.active ${RequestName} {
-        color: hsl(96, 46%, 57%);
+        color: var(--method-color);
     }
 
     &:before {
@@ -291,12 +294,12 @@ const Request = styled.div`
         content: "";
         width: 3px;
         height: 60%;
-        background-color: hsl(96, 46%, 57%);
+        background-color: var(--method-color);
         left: 0;
         top: 20%;
         border-radius: 12px;
         opacity: 0;
-        transition: opacity .2s;
+        transition: opacity .4s;
     }
 
     &.active:before {
@@ -304,15 +307,9 @@ const Request = styled.div`
     }
 `;
 
-const RequestFirstLine = styled.div`
-    display: flex;
-    align-items: center;
-`;
-
 const RequestMethod = styled.span`
     display: flex;
-    font-size: 11px;
-    min-width: 30px;
+    color: var(--method-color);
 `;
 
 const RequestActions = styled.div`
@@ -362,6 +359,7 @@ const RequestEntry = observer(
         const style = {
             transform: CSS.Transform.toString(transform),
             transition,
+            "--method-color": request.type === "http" && httpVerbColorPalette[request.method],
         };
 
         function getCleanerRequestUrl() {
@@ -405,15 +403,14 @@ const RequestEntry = observer(
                 {...attributes}
                 {...listeners}
             >
-                <RequestFirstLine>
+                <RequestName>
                     {request.type === "grpc" && (
                         <RequestMethod>
                             <ChevronsLeftRight size={16} />
                         </RequestMethod>
                     )}
-                    {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>}
-                    <RequestName>{request.name}</RequestName>
-                </RequestFirstLine>
+                    {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>} {request.name}
+                </RequestName>
                 {active && (
                     <RequestActions>
                         <DuplicateButton onClick={duplicateHandler}>

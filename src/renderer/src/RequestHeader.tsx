@@ -5,6 +5,7 @@ import { IpcCall } from "../../common/ipc";
 import type { KeyValue, RequestData } from "../../common/request-types";
 import { observer } from "mobx-react-lite";
 import { runInAction, toJS } from "mobx";
+import { httpVerbColorPalette } from "./HttpVerb";
 
 const RequestHeaderContainer = styled.div`
     padding: 15px;
@@ -176,13 +177,16 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
             <RequestMethodAndPath>
                 {activeRequest?.type === "http" && (
                     <RequestMethod value={activeRequest.method} onChange={onMethodChange}>
-                        <option>GET</option>
-                        <option>POST</option>
-                        <option>PUT</option>
-                        <option>PATCH</option>
-                        <option>DELETE</option>
-                        <option>HEAD</option>
-                        <option>OPTIONS</option>
+                        {Object.keys(httpVerbColorPalette).map((verb) => (
+                            <option
+                                key={verb}
+                                style={{
+                                    color: httpVerbColorPalette[verb],
+                                }}
+                            >
+                                {verb}
+                            </option>
+                        ))}
                     </RequestMethod>
                 )}
                 <RequestPath type="text" value={getFullUrl()} placeholder="url..." onChange={onUrlChange} />
