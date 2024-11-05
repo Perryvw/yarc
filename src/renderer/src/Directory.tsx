@@ -422,7 +422,7 @@ const RequestEntry = observer(
                         </DeleteButton>
                     </RequestActions>
                 )}
-                {!active && <RequestUrl>{getCleanerRequestUrl()}</RequestUrl>}
+                {!active && <RequestUrl>{getCleanerRequestUrl() || "No URL"}</RequestUrl>}
             </Request>
         );
     },
