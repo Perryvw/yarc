@@ -35,7 +35,7 @@ export async function exportDirectory(requests: RequestList) {
     });
 
     if (!result.canceled) {
-        const serializedData = JSON.stringify(requests);
+        const serializedData = JSON.stringify(requests, null, 4);
         await fs.writeFile(result.filePath, serializedData);
     }
 }
