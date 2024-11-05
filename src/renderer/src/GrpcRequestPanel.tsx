@@ -13,6 +13,7 @@ const RequestPanelRoot = styled.div`
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding: 20px;
     overflow-y: auto;
     min-width: 0;
     border-right: 1px solid hsla(0, 0%, 100%, 0.075);
