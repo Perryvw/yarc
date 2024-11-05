@@ -8,14 +8,14 @@ import { Tab, Tabs } from "./Tabs";
 import { observer } from "mobx-react-lite";
 import type { HttpResponseData } from "../../common/request-types";
 
-const ResponsePanelRoot = styled.div`
+export const ResponsePanelRoot = styled.div`
     display: flex;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
 `;
 
-const ResponsePanelEmpty = styled.div`
+export const ResponsePanelEmpty = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -26,7 +26,7 @@ const ResponsePanelEmpty = styled.div`
     margin-top: 100px;
 `;
 
-const Status = styled.div`
+export const Status = styled.div`
     padding: 10px;
     display: flex;
     justify-content: space-between;
@@ -34,7 +34,7 @@ const Status = styled.div`
     border-bottom: 1px solid var(--color-border);
 `;
 
-const StatusCode = styled.b`
+export const StatusCode = styled.b`
     border-radius: 16px;
     background: rgb(107 114 128);
     color: #fff;
@@ -58,7 +58,7 @@ const StatusCode = styled.b`
     }
 `;
 
-const ResponseBody = styled.div`
+export const ResponseBody = styled.div`
     display: flex;
     flex-direction: column;
     height: 100%;
