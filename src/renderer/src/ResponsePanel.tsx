@@ -120,6 +120,7 @@ const codemirrorTheme = EditorView.theme({
 export const ResponsePanel = observer(({ response }: { response: HttpResponseData | undefined }) => {
     const [tab, setTab] = useState<"body" | "headers">("body");
     const [prettyPrint, setPrettyPrint] = useState(true);
+    const [lineWrap, setlineWrap] = useState(true);
 
     function formatHeader(value: string | string[]) {
         if (!Array.isArray(value)) {
@@ -144,6 +145,12 @@ export const ResponsePanel = observer(({ response }: { response: HttpResponseDat
                 </ResponsePanelEmpty>
             </ResponsePanelRoot>
         );
+    }
+
+    const extensions = [codemirrorTheme, json(), html()];
+
+    if (lineWrap) {
+        extensions.push(EditorView.lineWrapping);
     }
 
     return (
@@ -180,13 +187,17 @@ export const ResponsePanel = observer(({ response }: { response: HttpResponseDat
                             />
                             Pretty print
                         </label>
+                        <label>
+                            <input type="checkbox" onClick={() => setlineWrap(!lineWrap)} defaultChecked={lineWrap} />
+                            Wrap lines
+                        </label>
                     </div>
                     <CodeMirror
                         readOnly
                         theme="dark"
                         value={response.body}
                         basicSetup={{ foldGutter: true }}
-                        extensions={[codemirrorTheme, json(), html()]}
+                        extensions={extensions}
                         style={{
                             flexBasis: "100%",
                             overflow: "hidden",
