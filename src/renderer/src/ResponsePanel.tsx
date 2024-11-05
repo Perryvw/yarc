@@ -160,7 +160,7 @@ export const ResponsePanel = observer(({ response }: { response: HttpResponseDat
                     Status: <StatusCode className={statusColor(response.statusCode)}>{response.statusCode}</StatusCode>
                 </div>
                 <div>
-                    Size: <b>{response.body.length}</b>
+                    Size: <b>{bytesToSize1024(response.body.length)}</b>
                 </div>
                 <div>
                     Time: <b>{(response.time / 1000).toFixed(2)}s</b>
@@ -226,4 +226,15 @@ function statusColor(statusCode: number) {
     if (statusCode >= 300) return "status-300";
     if (statusCode >= 200) return "status-200";
     return "";
+}
+
+function bytesToSize1024(bytes: number) {
+    if (bytes < 1024) {
+        return `${bytes} B`;
+    }
+
+    const units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+
+    return `${(bytes / 1024 ** i).toFixed(2)} ${units[i]}`;
 }
