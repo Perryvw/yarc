@@ -37,6 +37,15 @@ export function RenameModal({
         } else {
             ref.current?.close();
         }
+
+        // Close modal when escape is pressed
+        const closeOnEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                close({ cancelled: true });
+            }
+        };
+        window.addEventListener("keydown", closeOnEsc);
+        return () => window.removeEventListener("keydown", closeOnEsc);
     }, [request]);
 
     function onClose() {
