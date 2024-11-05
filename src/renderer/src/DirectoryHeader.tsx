@@ -30,14 +30,36 @@ const ImportButton = styled(ExportButton)`
     margin-left: auto;
 `;
 
+const SearchInput = styled.input`
+    display: flex;
+    flex-grow: 1;
+    border: 2px solid var(--color-background-contrast);
+    border-radius: 64px;
+    padding: 6px 12px;
+    outline: 0;
+    background: unset;
+`;
+
 export default function DirectoryHeader({
     importDirectory,
     exportDirectory,
-}: { importDirectory: () => void; exportDirectory: () => void }) {
+    search,
+    setSearch,
+}: {
+    importDirectory: () => void;
+    exportDirectory: () => void;
+    search: string;
+    setSearch: (search: string) => void;
+}) {
     return (
         <Container>
             <PawPrint size={16} />
-            Directory
+            <SearchInput
+                type="search"
+                placeholder="Search…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+            />
             <ImportButton title="Import" onClick={importDirectory}>
                 <Download />
             </ImportButton>

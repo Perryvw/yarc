@@ -19,7 +19,6 @@ const RequestHeaderContainer = styled.div`
 const RequestMethodAndPath = styled.div`
     display: flex;
     flex-grow: 1;
-    border-radius: 5px;
     border: 2px solid var(--color-background-contrast);
     border-radius: 64px;
 

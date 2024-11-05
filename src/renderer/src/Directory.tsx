@@ -9,7 +9,7 @@ import type { AppContext } from "./AppContext";
 import { RenameModal, type RenameResult } from "./modals/rename";
 import { runInAction } from "mobx";
 import { closestCenter, DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { httpVerbColorPalette } from "./HttpVerb";
@@ -108,7 +108,7 @@ const NewRequestTypePopup = styled.div`
     }
 `;
 
-export const Directory = observer(({ context }: { context: AppContext }) => {
+export const Directory = observer(({ context, search }: { context: AppContext; search: string }) => {
     const { requests } = context;
     console.log("rendering directory");
 
@@ -199,6 +199,16 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
         [context],
     );
 
+    function getFilteredRequests() {
+        if (search) {
+            const str = search.toUpperCase();
+
+            return requests.filter((r) => r.name.toUpperCase().includes(str) || r.url.toUpperCase().includes(str));
+        }
+
+        return requests;
+    }
+
     return (
         <DirectoryRoot>
             <DndContext
@@ -209,7 +219,7 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
             >
                 <SortableContext items={requests} strategy={verticalListSortingStrategy}>
                     <RequestContainer>
-                        {requests.map((r, i) => (
+                        {getFilteredRequests().map((r) => (
                             <RequestEntry
                                 active={context.activeRequest === r}
                                 key={r.id}

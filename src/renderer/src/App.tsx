@@ -4,7 +4,7 @@ import RequestHeader from "./RequestHeader";
 import { AppContext } from "./AppContext";
 import styled from "styled-components";
 import SplitSlider from "./SplitSlider";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { IpcCall, IpcEvent, type IpcImportResult } from "../../common/ipc";
 import { observer } from "mobx-react-lite";
 import { RequestPanel } from "./RequestPanel";
@@ -92,6 +92,8 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
         await window.electron.ipcRenderer.invoke(IpcCall.ExportDirectory, toJS(context.requests));
     }, [context]);
 
+    const [search, setSearch] = useState("");
+
     return (
         <AppRoot
             style={
@@ -101,7 +103,12 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                 } as React.CSSProperties
             }
         >
-            <DirectoryHeader importDirectory={importDirectory} exportDirectory={exportDirectory} />
+            <DirectoryHeader
+                importDirectory={importDirectory}
+                exportDirectory={exportDirectory}
+                search={search}
+                setSearch={setSearch}
+            />
             <SplitSlider
                 width={context.gridWidthDirectory}
                 setWidth={setDirectoryWidth}
@@ -110,7 +117,7 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                 }}
             />
             <RequestHeader activeRequest={context.activeRequest} />
-            <Directory context={context} />
+            <Directory context={context} search={search} />
             <MainContent>
                 {context.activeRequest?.type === "grpc" && (
                     <GrpcRequestPanel
