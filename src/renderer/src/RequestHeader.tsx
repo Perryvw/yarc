@@ -178,6 +178,11 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
                     <RequestMethod value={activeRequest.method} onChange={onMethodChange}>
                         <option>GET</option>
                         <option>POST</option>
+                        <option>PUT</option>
+                        <option>PATCH</option>
+                        <option>DELETE</option>
+                        <option>HEAD</option>
+                        <option>OPTIONS</option>
                     </RequestMethod>
                 )}
                 <RequestPath type="text" value={getFullUrl()} placeholder="url..." onChange={onUrlChange} />

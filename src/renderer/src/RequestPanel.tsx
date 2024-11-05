@@ -2,8 +2,8 @@ import CodeMirror from "@uiw/react-codemirror";
 import styled from "styled-components";
 import { KeyValuesPanel } from "./KeyValuesPanel";
 import { ChevronUp } from "lucide-react";
-import type { KeyValue, RequestData } from "../../common/request-types";
-import { observer } from "mobx-react-lite";
+import type { HttpRequestData, KeyValue, RequestData } from "../../common/request-types";
+import { enableStaticRendering, observer } from "mobx-react-lite";
 import { runInAction } from "mobx";
 
 const RequestPanelRoot = styled.div`
@@ -49,90 +49,125 @@ const RequestSectionHeaderName = styled.div`
     }
 `;
 
-export const RequestPanel = observer(({ activeRequest }: { activeRequest: RequestData | undefined }) => {
-    const requestBody = activeRequest ? (activeRequest.type === "http" ? activeRequest.body : "protobuf") : "";
-
+export const RequestPanel = observer(({ activeRequest }: { activeRequest: HttpRequestData }) => {
     function onRequestBodyChanged(value: string) {
-        if (activeRequest && activeRequest.type === "http") {
-            runInAction(() => {
-                activeRequest.body = value;
-            });
-        }
+        runInAction(() => {
+            activeRequest.body = value;
+        });
     }
 
     function setRequestParams(params: KeyValue[]) {
-        if (activeRequest && activeRequest.type === "http") {
-            runInAction(() => {
-                activeRequest.params = params;
+        runInAction(() => {
+            activeRequest.params = params;
 
-                // :UrlHasDirtyQueryString
-                if (!activeRequest.url.includes("?")) {
-                    return;
-                }
+            // :UrlHasDirtyQueryString
+            if (!activeRequest.url.includes("?")) {
+                return;
+            }
 
-                const url = new URL(activeRequest.url);
-                url.search = "";
-                activeRequest.url = url.toString();
-            });
-        }
+            const url = new URL(activeRequest.url);
+            url.search = "";
+            activeRequest.url = url.toString();
+        });
     }
 
     function setRequestHeaders(headers: KeyValue[]) {
-        if (activeRequest && activeRequest.type === "http") {
-            runInAction(() => {
-                activeRequest.headers = headers;
+        runInAction(() => {
+            activeRequest.headers = headers;
+        });
+    }
+
+    function setRequestBodyForm(form: KeyValue[]) {
+        runInAction(() => {
+            // TODO: add the missing content-type header when setting form
+            activeRequest.bodyForm = form;
+        });
+    }
+
+    function setRequestBodyType(contentType: string) {
+        runInAction(() => {
+            const existing = activeRequest.headers.find((x) => x.key === "Content-Type");
+
+            if (existing) {
+                existing.enabled = true;
+                existing.value = contentType;
+                return;
+            }
+
+            activeRequest.headers.push({
+                enabled: true,
+                key: "Content-Type",
+                value: contentType,
             });
-        }
+        });
+    }
+
+    function isKeyValuesBodyForm() {
+        const contentType = activeRequest.headers.find((x) => x.key === "Content-Type");
+
+        return !contentType || contentType.value === "application/x-www-form-urlencoded";
     }
 
     return (
         <RequestPanelRoot>
-            {activeRequest?.type === "http" && (
-                <RequestSection open>
-                    <RequestSectionHeader>
-                        <RequestSectionHeaderName>Parameters</RequestSectionHeaderName>
-                        <ChevronUp size={20} className="chevron" />
-                    </RequestSectionHeader>
-                    <KeyValuesPanel
-                        name="query-parameters"
-                        params={activeRequest.params}
-                        setParams={setRequestParams}
-                    />
-                </RequestSection>
-            )}
+            <RequestSection open>
+                <RequestSectionHeader>
+                    <RequestSectionHeaderName className={activeRequest.params.length > 0 ? "has-dot" : ""}>
+                        Parameters
+                    </RequestSectionHeaderName>
+                    <ChevronUp size={20} className="chevron" />
+                </RequestSectionHeader>
+                <KeyValuesPanel name="query-parameters" params={activeRequest.params} setParams={setRequestParams} />
+            </RequestSection>
 
             <RequestSection open>
                 <RequestSectionHeader>
-                    <RequestSectionHeaderName className={requestBody?.length > 0 ? "has-dot" : ""}>
+                    <RequestSectionHeaderName
+                        className={activeRequest.body.length > 0 || activeRequest.bodyForm.length > 0 ? "has-dot" : ""}
+                    >
                         Body
                     </RequestSectionHeaderName>
                     <ChevronUp size={20} className="chevron" />
                 </RequestSectionHeader>
-                Type:
-                <button type="button">application/json</button>
-                <button type="button">application/x-www-form-urlencoded</button>
-                <KeyValuesPanel name="form-parameters" params={[]} setParams={() => {}} />
-                <CodeMirror
-                    theme="dark"
-                    basicSetup={{ foldGutter: true }}
-                    style={{
-                        flexBasis: "100%",
-                        overflow: "hidden",
-                    }}
-                    value={requestBody}
-                    onChange={onRequestBodyChanged}
-                />
+                <div>
+                    Type:
+                    <button type="button" onClick={() => setRequestBodyType("application/x-www-form-urlencoded")}>
+                        x-www-form-urlencoded
+                    </button>
+                    <button type="button" onClick={() => setRequestBodyType("application/json")}>
+                        json
+                    </button>
+                </div>
+
+                {isKeyValuesBodyForm() ? (
+                    <KeyValuesPanel
+                        name="form-parameters"
+                        params={activeRequest.bodyForm}
+                        setParams={setRequestBodyForm}
+                    />
+                ) : (
+                    <CodeMirror
+                        theme="dark"
+                        basicSetup={{ foldGutter: true }}
+                        style={{
+                            flexBasis: "100%",
+                            overflow: "hidden",
+                        }}
+                        value={activeRequest.body}
+                        onChange={onRequestBodyChanged}
+                    />
+                )}
             </RequestSection>
 
-            {activeRequest?.type === "http" && (
-                <RequestSection open>
-                    <RequestSectionHeader>
-                        <RequestSectionHeaderName>Headers</RequestSectionHeaderName>
-                        <ChevronUp size={20} className="chevron" />
-                    </RequestSectionHeader>
-                    <KeyValuesPanel name="headers" params={activeRequest.headers} setParams={setRequestHeaders} />
-                </RequestSection>
-            )}
+            <RequestSection open>
+                <RequestSectionHeader>
+                    <RequestSectionHeaderName className={activeRequest.headers.length > 0 ? "has-dot" : ""}>
+                        Headers
+                    </RequestSectionHeaderName>
+                    <ChevronUp size={20} className="chevron" />
+                </RequestSectionHeader>
+                <KeyValuesPanel name="headers" params={activeRequest.headers} setParams={setRequestHeaders} />
+            </RequestSection>
         </RequestPanelRoot>
     );
 });

@@ -1,7 +1,6 @@
 import { Plus, Trash, Trash2 } from "lucide-react";
 import styled from "styled-components";
 import type { KeyValue } from "../../common/request-types";
-import { useState } from "react";
 import { commonHeaders } from "../../common/common-headers";
 import { observer } from "mobx-react-lite";
 
@@ -9,7 +8,6 @@ const QueryParameters = styled.table`
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-    border-top: 1px solid var(--color-border);
 
     & td {
         text-align: center;
@@ -20,6 +18,10 @@ const QueryParameters = styled.table`
         &:first-child {
             border-left: 0;
         }
+    }
+
+    & .kv-header td {
+        border-left-color: transparent;
     }
 `;
 
@@ -181,14 +183,14 @@ export const KeyValuesPanel = observer(
             <>
                 <QueryParameters>
                     <tbody>
-                        <tr>
+                        <tr className="kv-header">
                             <td style={{ width: "32px" }}>
                                 <QueryParameterDelete type="button" onClick={createNewParam}>
                                     <Plus size={16} />
                                 </QueryParameterDelete>
                             </td>
                             <td style={{ width: "50%" }} />
-                            <td style={{ width: "50%", borderLeft: "0" }} />
+                            <td style={{ width: "50%" }} />
                             <td style={{ width: "32px" }}>
                                 <QueryParameterDelete type="button" onClick={clearParams}>
                                     <Trash2 size={16} />

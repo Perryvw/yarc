@@ -35,6 +35,24 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
             {} as Record<string, string | string[]>,
         );
 
+    let body = request.body;
+
+    if (request.type === "http") {
+        const contentType = request.headers.find((x) => x.key === "Content-Type");
+
+        if (!contentType || contentType.value === "application/x-www-form-urlencoded") {
+            const bodyFormParams = new URLSearchParams();
+
+            for (const kv of request.bodyForm) {
+                if (kv.enabled) {
+                    bodyFormParams.append(kv.key, kv.value);
+                }
+            }
+
+            body = bodyFormParams.toString();
+        }
+    }
+
     return new Promise((resolve) => {
         const start = performance.now(); // This isn't good. If we switch to libcurl then get real timings from there.
         const req = net.request({
@@ -61,7 +79,9 @@ export async function makeHttpRequest(request: HttpRequestData): Promise<Respons
             });
         });
 
-        req.write(request.body);
+        if (body) {
+            req.write(body);
+        }
 
         req.end();
     });

@@ -4,14 +4,17 @@ export interface KeyValue {
     value: string;
 }
 
+export type HttpMethodVerb = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
+
 export interface HttpRequestData {
     type: "http";
     id: string;
     name: string;
     url: string;
+    method: HttpMethodVerb;
     params: KeyValue[];
     headers: KeyValue[];
-    method: "GET" | "POST";
+    bodyForm: KeyValue[];
     body: string;
 
     response?: ResponseData;

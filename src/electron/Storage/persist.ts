@@ -81,6 +81,7 @@ function fixPersistedData(
             url: ri.url ?? "",
             method: ri.method ?? "GET",
             body: ri.body ?? "",
+            bodyForm: ri.bodyForm?.map(fixKeyValue).filter(notUndefined) ?? [],
             headers: ri.headers?.map(fixKeyValue).filter(notUndefined) ?? [],
             params: ri.params?.map(fixKeyValue).filter(notUndefined) ?? [],
         };

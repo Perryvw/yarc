@@ -112,15 +112,14 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
             <RequestHeader activeRequest={context.activeRequest} />
             <Directory context={context} />
             <MainContent>
-                {context.activeRequest?.type === "grpc" ? (
+                {context.activeRequest?.type === "grpc" && (
                     <GrpcRequestPanel
                         activeRequest={context.activeRequest}
                         protoConfig={context.protoConfig}
                         persist={() => context.persistState()}
                     />
-                ) : (
-                    <RequestPanel activeRequest={context.activeRequest} />
                 )}
+                {context.activeRequest?.type === "http" && <RequestPanel activeRequest={context.activeRequest} />}
                 <SplitSlider width={context.gridWidthDirectory} setWidth={setResponseWidth} />
                 <ResponsePanel response={context.activeRequest?.response} />
             </MainContent>

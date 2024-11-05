@@ -187,6 +187,7 @@ export class AppContext {
                         ],
                         headers: [],
                         method: "GET",
+                        bodyForm: [],
                         body: "", // google doesnt like extra data
                     };
                     const request2: HttpRequestData = {
@@ -196,6 +197,7 @@ export class AppContext {
                         url: "https://jsonplaceholder.typicode.com/comments",
                         params: [],
                         headers: [],
+                        bodyForm: [],
                         method: "GET",
                         body: "B",
                     };

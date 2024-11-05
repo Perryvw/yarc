@@ -121,8 +121,9 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
             method: "GET",
             params: [],
             headers: [],
-            url: "new",
-            body: "new",
+            bodyForm: [],
+            url: "",
+            body: "{\n\t\n}",
         };
         context.addRequest(newRequest);
         context.setActiveRequestById(requests.length - 1);
@@ -134,7 +135,7 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
             id: Math.random().toString(), // TODO: Fix
             name: "New request",
             url: "new",
-            body: "{}",
+            body: "{\n\t\n}",
         };
         context.addRequest(newRequest);
         context.setActiveRequestById(requests.length - 1);
