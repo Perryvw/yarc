@@ -173,38 +173,6 @@ export class AppContext {
                         // Only the root path is persisted, discover proto files from the root on disk
                         this.protoConfig.refreshProtoRoot(root);
                     }
-                } else {
-                    // TODO: Remove this, but for now this is useful for debugging
-                    const request1: HttpRequestData = {
-                        type: "http",
-                        id: Math.random().toString(),
-                        name: "Google",
-                        url: "https://www.google.com/",
-                        params: [
-                            {
-                                enabled: true,
-                                key: "test",
-                                value: "123456",
-                            },
-                        ],
-                        headers: [],
-                        method: "GET",
-                        bodyForm: [],
-                        body: "", // google doesnt like extra data
-                    };
-                    const request2: HttpRequestData = {
-                        type: "http",
-                        id: Math.random().toString(),
-                        name: "JSON",
-                        url: "https://jsonplaceholder.typicode.com/comments",
-                        params: [],
-                        headers: [],
-                        bodyForm: [],
-                        method: "GET",
-                        body: "B",
-                    };
-                    this.setRequestList([request1, request2]);
-                    this.setActiveRequestById(0);
                 }
             }),
         );
