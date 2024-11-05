@@ -117,7 +117,7 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                     gridRow: "span 2",
                 }}
             />
-            <RequestHeader activeRequest={context.activeRequest} />
+            <RequestHeader context={context} />
             <Directory context={context} search={search} />
             <MainContent>
                 {context.activeRequest?.type === "grpc" && (
@@ -129,7 +129,7 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                 )}
                 {context.activeRequest?.type === "http" && <RequestPanel activeRequest={context.activeRequest} />}
                 <SplitSlider width={context.gridWidthDirectory} setWidth={setResponseWidth} />
-                {context.activeRequest?.type === "http" && <ResponsePanel response={context.activeRequest?.response} />}
+                {context.activeRequest?.type === "http" && <ResponsePanel context={context} />}
                 {context.activeRequest?.type === "grpc" && (
                     <GrpcResponsePanel response={context.activeRequest?.response} />
                 )}

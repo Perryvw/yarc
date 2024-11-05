@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
 import { html } from "@codemirror/lang-html";
@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { CircleSlash2 } from "lucide-react";
 import { Tab, Tabs } from "./Tabs";
 import { observer } from "mobx-react-lite";
-import type { HttpResponseData } from "../../common/request-types";
+import type { AppContext } from "./AppContext";
 
 export const ResponsePanelRoot = styled.div`
     display: flex;
@@ -117,10 +117,11 @@ const codemirrorTheme = EditorView.theme({
     },
 });
 
-export const ResponsePanel = observer(({ response }: { response: HttpResponseData | undefined }) => {
+export const ResponsePanel = observer(({ context }: { context: AppContext }) => {
     const [tab, setTab] = useState<"body" | "headers">("body");
     const [prettyPrint, setPrettyPrint] = useState(true);
     const [lineWrap, setlineWrap] = useState(true);
+    const [runningRequestTime, setRunningRequestTime] = useState(-1);
 
     function formatHeader(value: string | string[]) {
         if (!Array.isArray(value)) {
@@ -136,7 +137,40 @@ export const ResponsePanel = observer(({ response }: { response: HttpResponseDat
         );
     }
 
-    if (!response) {
+    useEffect(() => {
+        if (!context.isExecuting) {
+            return;
+        }
+
+        setRunningRequestTime(0);
+
+        let time = 0;
+        const intervalId = setInterval(() => {
+            time += 100;
+            setRunningRequestTime(time);
+        }, 100);
+
+        return () => {
+            clearInterval(intervalId);
+            setRunningRequestTime(-1);
+        };
+    }, [context.isExecuting]);
+
+    const { activeRequest } = context;
+
+    if (runningRequestTime >= 0) {
+        return (
+            <ResponsePanelRoot>
+                <ResponsePanelEmpty>
+                    <i>
+                        Executing… <b>{(runningRequestTime / 1000).toFixed(2)}s</b>
+                    </i>
+                </ResponsePanelEmpty>
+            </ResponsePanelRoot>
+        );
+    }
+
+    if (!activeRequest || activeRequest.type !== "http" || !activeRequest.response) {
         return (
             <ResponsePanelRoot>
                 <ResponsePanelEmpty>
@@ -147,6 +181,7 @@ export const ResponsePanel = observer(({ response }: { response: HttpResponseDat
         );
     }
 
+    const response = activeRequest.response;
     const extensions = [codemirrorTheme, json(), html()];
 
     if (lineWrap) {

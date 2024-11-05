@@ -6,6 +6,7 @@ import type { GrpcResponse, HttpResponseData, KeyValue, RequestData } from "../.
 import { observer } from "mobx-react-lite";
 import { runInAction, toJS } from "mobx";
 import { httpVerbColorPalette } from "./HttpVerb";
+import type { AppContext } from "./AppContext";
 
 const RequestHeaderContainer = styled.div`
     padding: 15px;
@@ -86,8 +87,8 @@ const RequestButton = styled.button`
     }
 `;
 
-const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData | undefined }) => {
-    const [isExecuting, setIsExecuting] = useState(false);
+const RequestHeader = observer(({ context }: { context: AppContext }) => {
+    const { activeRequest } = context;
     const [isExecutionAnimating, setIsExecutionAnimating] = useState(false);
 
     function onUrlChange(event: ChangeEvent<HTMLInputElement>) {
@@ -123,7 +124,10 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
     }
 
     async function onClick() {
-        setIsExecuting(true);
+        runInAction(() => {
+            context.isExecuting = true;
+        });
+
         setIsExecutionAnimating(true);
 
         if (activeRequest && activeRequest.type === "http") {
@@ -145,11 +149,13 @@ const RequestHeader = observer(({ activeRequest }: { activeRequest: RequestData 
             });
         }
 
-        setIsExecuting(false);
+        runInAction(() => {
+            context.isExecuting = false;
+        });
     }
 
     function onButtonAnimationIteration() {
-        if (!isExecuting) {
+        if (!context.isExecuting) {
             setIsExecutionAnimating(false);
         }
     }

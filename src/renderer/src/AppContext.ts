@@ -18,6 +18,7 @@ import type { HttpRequestData, RequestData, RequestList, HttpResponseData } from
 export class AppContext {
     requests: RequestList = [];
     selectedIndex: number | undefined = undefined;
+    isExecuting = false;
 
     get activeRequest() {
         if (this.selectedIndex === undefined) return undefined;
@@ -37,6 +38,7 @@ export class AppContext {
         makeObservable(this, {
             requests: observable,
             selectedIndex: observable,
+            isExecuting: observable,
             gridWidthDirectory: observable,
             gridWidthResponse: observable,
             protoConfig: observable,
