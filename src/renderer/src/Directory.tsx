@@ -211,7 +211,7 @@ export const Directory = observer(({ context }: { context: AppContext }) => {
                     <RequestContainer>
                         {requests.map((r, i) => (
                             <RequestEntry
-                                activeRequest={context.activeRequest}
+                                active={context.activeRequest === r}
                                 key={r.id}
                                 request={r}
                                 renameRequest={renameRequest}
@@ -339,14 +339,14 @@ const DeleteButton = styled(RenameButton)`
 
 const RequestEntry = observer(
     ({
-        activeRequest,
+        active,
         request,
         renameRequest,
         selectRequest,
         deleteRequest,
         duplicateRequest,
     }: {
-        activeRequest: RequestData | undefined;
+        active: boolean;
         request: RequestData;
         renameRequest: (r: RequestData) => void;
         selectRequest: (r: RequestData) => void;
@@ -387,8 +387,6 @@ const RequestEntry = observer(
             deleteRequest(request);
             e.stopPropagation();
         }
-
-        const active = request === activeRequest;
 
         const selectHandler = useCallback(() => {
             selectRequest(request);
