@@ -112,15 +112,6 @@ export const SelectProtosModal = observer(
             } else {
                 ref.current?.close();
             }
-
-            // Close modal when escape is pressed
-            const closeOnEsc = (e: KeyboardEvent) => {
-                if (e.key === "Escape") {
-                    close();
-                }
-            };
-            window.addEventListener("keydown", closeOnEsc);
-            return () => window.removeEventListener("keydown", closeOnEsc);
         }, [open]);
 
         const addRoot = useCallback(async () => {
@@ -138,7 +129,7 @@ export const SelectProtosModal = observer(
         );
 
         return (
-            <SelectProtosDialog ref={ref}>
+            <SelectProtosDialog ref={ref} onClose={close}>
                 <div style={{ display: "flex", height: "calc(100% - 30px)" }}>
                     <ProtoRootsContainer>
                         Proto roots
