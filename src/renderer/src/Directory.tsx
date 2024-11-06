@@ -3,7 +3,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import classNames from "classnames";
-import { ChevronsLeftRight, Copy, SquarePen, Trash } from "lucide-react";
+import { ChevronsLeftRight, Copy, SquarePen, Trash, History } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
@@ -47,6 +47,7 @@ export const Directory = observer(
         const { requests } = context;
         console.log("rendering directory");
 
+        const [showActiveRequestHistory, setShowActiveRequestHistory] = useState(false);
         const [renamingRequest, renameModal] = useState<RequestData | undefined>(undefined);
 
         const renameRequest = useCallback(
@@ -68,6 +69,7 @@ export const Directory = observer(
 
         const selectRequest = useCallback(
             (request: RequestData) => {
+                setShowActiveRequestHistory(false);
                 context.setActiveRequest(request);
             },
             [context],
@@ -75,6 +77,7 @@ export const Directory = observer(
 
         const deleteRequest = useCallback(
             (request: RequestData) => {
+                setShowActiveRequestHistory(false);
                 context.deleteRequest(request);
             },
             [context],
@@ -133,15 +136,41 @@ export const Directory = observer(
                     <SortableContext items={requests} strategy={verticalListSortingStrategy}>
                         <RequestContainer>
                             {getFilteredRequests().map((r) => (
-                                <RequestEntry
-                                    active={context.activeRequest === r}
-                                    key={r.id}
-                                    request={r}
-                                    renameRequest={renameRequest}
-                                    selectRequest={selectRequest}
-                                    deleteRequest={deleteRequest}
-                                    duplicateRequest={duplicateRequest}
-                                />
+                                <>
+                                    <RequestEntry
+                                        active={context.activeRequest === r}
+                                        key={r.id}
+                                        request={r}
+                                        renameRequest={renameRequest}
+                                        selectRequest={selectRequest}
+                                        deleteRequest={deleteRequest}
+                                        duplicateRequest={duplicateRequest}
+                                        showActiveRequestHistory={showActiveRequestHistory}
+                                        setShowActiveRequestHistory={setShowActiveRequestHistory}
+                                    />
+
+                                    {showActiveRequestHistory && (
+                                        <div
+                                            style={{
+                                                marginLeft: "20px",
+                                            }}
+                                        >
+                                            {r.history.map((r2) => (
+                                                <RequestEntry
+                                                    active={false}
+                                                    key={r2.id}
+                                                    request={r2}
+                                                    renameRequest={renameRequest}
+                                                    selectRequest={selectRequest}
+                                                    deleteRequest={deleteRequest}
+                                                    duplicateRequest={duplicateRequest}
+                                                    showActiveRequestHistory={false}
+                                                    setShowActiveRequestHistory={setShowActiveRequestHistory}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
                             ))}
                         </RequestContainer>
                     </SortableContext>
@@ -247,6 +276,13 @@ const DeleteButton = styled(RenameButton)`
     }
 `;
 
+const HistoryButton = styled(RenameButton)`
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+`;
+
 const RequestEntry = observer(
     ({
         active,
@@ -255,6 +291,8 @@ const RequestEntry = observer(
         selectRequest,
         deleteRequest,
         duplicateRequest,
+        showActiveRequestHistory,
+        setShowActiveRequestHistory,
     }: {
         active: boolean;
         request: RequestData;
@@ -262,6 +300,9 @@ const RequestEntry = observer(
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestData) => void;
         duplicateRequest: (r: RequestData) => void;
+
+        showActiveRequestHistory: boolean;
+        setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
         console.log("Rendering request entry");
 
@@ -298,6 +339,11 @@ const RequestEntry = observer(
             e.stopPropagation();
         }
 
+        function showHistoryHandler(e: React.MouseEvent) {
+            setShowActiveRequestHistory(!showActiveRequestHistory);
+            e.stopPropagation();
+        }
+
         const selectHandler = useCallback(() => {
             selectRequest(request);
         }, [request, selectRequest]);
@@ -330,6 +376,10 @@ const RequestEntry = observer(
                         <DeleteButton onClick={deleteHandler}>
                             <Trash size={16} />
                         </DeleteButton>
+                        <HistoryButton onClick={showHistoryHandler}>
+                            <History size={16} />
+                            History
+                        </HistoryButton>
                     </RequestActions>
                 )}
                 {!active && <RequestUrl>{getCleanerRequestUrl() || "No URL"}</RequestUrl>}

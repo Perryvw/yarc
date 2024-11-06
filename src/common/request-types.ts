@@ -16,6 +16,8 @@ export interface HttpRequestData {
     headers: KeyValue[];
     bodyForm: KeyValue[];
     body: string;
+    lastExecute: number;
+    history: HttpRequestData[];
 
     response?: HttpResponseData;
 }
@@ -25,6 +27,8 @@ export interface GrpcRequestData {
     id: string;
     name: string;
     url: string;
+    lastExecute: number;
+    history: GrpcRequestData[];
 
     protoFile?: { protoPath: string; rootDir: string };
     rpc?: { service: string; method: string };

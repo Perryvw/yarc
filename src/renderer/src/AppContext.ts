@@ -148,6 +148,7 @@ export class AppContext {
         const requestsWithoutResponse = this.requests.map((r) => {
             const req = toJS(r);
             req.response = undefined;
+            req.history = [];
             return req;
         });
         const state: PersistedState = {

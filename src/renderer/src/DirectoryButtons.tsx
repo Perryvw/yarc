@@ -119,6 +119,8 @@ export const DirectoryButtons = observer(
                 bodyForm: [],
                 url: "",
                 body: "",
+                lastExecute: Date.now(),
+                history: [],
             };
             context.addRequest(newRequest);
             context.setActiveRequestById(context.requests.length - 1);
@@ -131,6 +133,8 @@ export const DirectoryButtons = observer(
                 name: "New request",
                 url: "new",
                 body: "{\n\t\n}",
+                lastExecute: Date.now(),
+                history: [],
             };
             context.addRequest(newRequest);
             context.setActiveRequestById(context.requests.length - 1);

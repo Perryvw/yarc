@@ -4,7 +4,13 @@ import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
-import type { GrpcResponse, HttpResponseData, KeyValue } from "../../common/request-types";
+import type {
+    GrpcRequestData,
+    GrpcResponse,
+    HttpRequestData,
+    HttpResponseData,
+    KeyValue,
+} from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { httpVerbColorPalette } from "./HttpVerb";
 
@@ -124,28 +130,39 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
     }
 
     async function onClick() {
+        const request = activeRequest;
+
+        if (!request) {
+            return;
+        }
+
         runInAction(() => {
             context.isExecuting = true;
         });
 
         setIsExecutionAnimating(true);
 
-        if (activeRequest && activeRequest.type === "http") {
-            const response: HttpResponseData = await window.electron.ipcRenderer.invoke(
-                IpcCall.HttpRequest,
-                toJS(activeRequest),
-            );
+        request.lastExecute = Date.now();
+
+        const jsRequest = toJS(request);
+        jsRequest.history = [];
+
+        console.log(toJS(request));
+
+        if (request.type === "http") {
+            request.history.push(jsRequest as HttpRequestData);
+
+            const response: HttpResponseData = await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, jsRequest);
             runInAction(() => {
-                activeRequest.response = response;
+                request.response = response;
             });
-        } else if (activeRequest && activeRequest.type === "grpc") {
+        } else if (request.type === "grpc") {
+            request.history.push(jsRequest as GrpcRequestData);
+
             // TODO
-            const response: GrpcResponse = await window.electron.ipcRenderer.invoke(
-                IpcCall.GrpcRequest,
-                toJS(activeRequest),
-            );
+            const response: GrpcResponse = await window.electron.ipcRenderer.invoke(IpcCall.GrpcRequest, jsRequest);
             runInAction(() => {
-                activeRequest.response = response;
+                request.response = response;
             });
         }
 

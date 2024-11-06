@@ -85,6 +85,8 @@ function fixPersistedData(
             bodyForm: ri.bodyForm?.map(fixKeyValue).filter(notUndefined) ?? [],
             headers: ri.headers?.map(fixKeyValue).filter(notUndefined) ?? [],
             params: ri.params?.map(fixKeyValue).filter(notUndefined) ?? [],
+            lastExecute: ri.lastExecute ?? Date.now(),
+            history: [],
         };
     }
 
@@ -105,6 +107,9 @@ function fixPersistedData(
             },
 
             body: ri.body ?? "{}",
+
+            lastExecute: ri.lastExecute ?? Date.now(),
+            history: [],
         };
     }
 
