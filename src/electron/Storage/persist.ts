@@ -3,6 +3,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { PersistedState, PersistedStateWithWindow } from "../../common/persist-state";
 import type { GrpcRequestData, HttpRequestData, KeyValue, RequestData } from "../../common/request-types";
+import { v7 as uuidv7 } from "uuid";
 
 const storagePath = app.getPath("sessionData");
 const storageFile = path.join(storagePath, "localStorage.json");
@@ -76,7 +77,7 @@ function fixPersistedData(
         }
         return {
             type: "http",
-            id: Math.random().toString(), // TODO: Fix
+            id: uuidv7(),
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
             method: ri.method ?? "GET",
@@ -90,7 +91,7 @@ function fixPersistedData(
     function fixGrpcRequest(ri: DeepPartial<GrpcRequestData>): GrpcRequestData {
         return {
             type: "grpc",
-            id: Math.random().toString(), // TODO: Fix
+            id: uuidv7(),
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
 

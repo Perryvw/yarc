@@ -13,6 +13,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-
 import { CSS } from "@dnd-kit/utilities";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { httpVerbColorPalette } from "./HttpVerb";
+import { v7 as uuidv7 } from "uuid";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -117,14 +118,14 @@ export const Directory = observer(({ context, search }: { context: AppContext; s
     function newRequest() {
         const newRequest: HttpRequestData = {
             type: "http",
-            id: Math.random().toString(), // TODO: Fix
+            id: uuidv7(),
             name: "New request",
             method: "GET",
             params: [],
             headers: [],
             bodyForm: [],
             url: "",
-            body: "{\n\t\n}",
+            body: "",
         };
         context.addRequest(newRequest);
         context.setActiveRequestById(requests.length - 1);
@@ -133,7 +134,7 @@ export const Directory = observer(({ context, search }: { context: AppContext; s
     function newRequestGrpc() {
         const newRequest: GrpcRequestData = {
             type: "grpc",
-            id: Math.random().toString(), // TODO: Fix
+            id: uuidv7(),
             name: "New request",
             url: "new",
             body: "{\n\t\n}",
