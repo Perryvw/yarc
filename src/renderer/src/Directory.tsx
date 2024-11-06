@@ -1,19 +1,19 @@
+import { DndContext, type DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import classNames from "classnames";
+import { ChevronsLeftRight, CirclePlus, Copy, Globe, SquarePen, Trash } from "lucide-react";
+import { runInAction } from "mobx";
+import { observer } from "mobx-react-lite";
 import type React from "react";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { ChevronsLeftRight, CirclePlus, Copy, Globe, SquarePen, Trash } from "lucide-react";
-import type { GrpcRequestData, HttpRequestData, RequestData } from "../../common/request-types";
-import classNames from "classnames";
-import { observer } from "mobx-react-lite";
-import type { AppContext } from "./AppContext";
-import { RenameModal, type RenameResult } from "./modals/rename";
-import { runInAction } from "mobx";
-import { closestCenter, DndContext, type DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { httpVerbColorPalette } from "./HttpVerb";
 import { v7 as uuidv7 } from "uuid";
+import type { GrpcRequestData, HttpRequestData, RequestData } from "../../common/request-types";
+import type { AppContext } from "./AppContext";
+import { httpVerbColorPalette } from "./HttpVerb";
+import { RenameModal, type RenameResult } from "./modals/rename";
 
 const DirectoryRoot = styled.div`
     display: flex;

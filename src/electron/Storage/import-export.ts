@@ -1,7 +1,7 @@
-import { dialog } from "electron";
-import type { RequestList } from "../../common/request-types";
 import * as fs from "node:fs/promises";
+import { dialog } from "electron";
 import type { IpcImportResult } from "../../common/ipc";
+import type { RequestList } from "../../common/request-types";
 
 export async function importDirectory(): Promise<IpcImportResult> {
     const result = await dialog.showOpenDialog({

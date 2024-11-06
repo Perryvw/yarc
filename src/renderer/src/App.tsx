@@ -1,17 +1,17 @@
+import { runInAction, toJS } from "mobx";
+import { observer } from "mobx-react-lite";
+import { useCallback, useEffect, useState } from "react";
+import styled from "styled-components";
+import { IpcCall, IpcEvent, type IpcImportResult } from "../../common/ipc";
+import { AppContext } from "./AppContext";
 import { Directory } from "./Directory";
 import DirectoryHeader from "./DirectoryHeader";
-import RequestHeader from "./RequestHeader";
-import { AppContext } from "./AppContext";
-import styled from "styled-components";
-import SplitSlider from "./SplitSlider";
-import { useCallback, useEffect, useState } from "react";
-import { IpcCall, IpcEvent, type IpcImportResult } from "../../common/ipc";
-import { observer } from "mobx-react-lite";
-import { RequestPanel } from "./RequestPanel";
-import { ResponsePanel } from "./ResponsePanel";
-import { runInAction, toJS } from "mobx";
 import { GrpcRequestPanel } from "./GrpcRequestPanel";
 import { GrpcResponsePanel } from "./GrpcResponsePanel";
+import RequestHeader from "./RequestHeader";
+import { RequestPanel } from "./RequestPanel";
+import { ResponsePanel } from "./ResponsePanel";
+import SplitSlider from "./SplitSlider";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;

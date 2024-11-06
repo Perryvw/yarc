@@ -1,10 +1,10 @@
 import CodeMirror from "@uiw/react-codemirror";
-import styled from "styled-components";
-import { KeyValuesPanel } from "./KeyValuesPanel";
 import { ChevronUp } from "lucide-react";
-import type { HttpRequestData, KeyValue, RequestData } from "../../common/request-types";
-import { enableStaticRendering, observer } from "mobx-react-lite";
 import { runInAction } from "mobx";
+import { enableStaticRendering, observer } from "mobx-react-lite";
+import styled from "styled-components";
+import type { HttpRequestData, KeyValue, RequestData } from "../../common/request-types";
+import { KeyValuesPanel } from "./KeyValuesPanel";
 
 const RequestPanelRoot = styled.div`
     display: flex;

@@ -4,7 +4,9 @@
     "description": "",
     "main": "./out/main/index.js",
     "scripts": {
+        "test": "biome check",
         "lint": "biome lint",
+        "fix:test": "biome check --write",
         "fix:format": "biome format --write",
         "start": "electron-vite preview",
         "dev": "electron-vite dev",

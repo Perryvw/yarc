@@ -13,7 +13,7 @@ import {
 import type { ProtoRoot } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
-import type { HttpRequestData, RequestData, RequestList, HttpResponseData } from "../../common/request-types";
+import type { HttpRequestData, HttpResponseData, RequestData, RequestList } from "../../common/request-types";
 
 export class AppContext {
     requests: RequestList = [];

@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
-import CodeMirror, { EditorView } from "@uiw/react-codemirror";
-import { json } from "@codemirror/lang-json";
 import { html } from "@codemirror/lang-html";
-import styled from "styled-components";
+import { json } from "@codemirror/lang-json";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { CircleSlash2 } from "lucide-react";
-import { Tab, Tabs } from "./Tabs";
 import { observer } from "mobx-react-lite";
+import { useEffect, useState } from "react";
+import styled from "styled-components";
 import type { AppContext } from "./AppContext";
+import { Tab, Tabs } from "./Tabs";
 
 export const ResponsePanelRoot = styled.div`
     display: flex;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import type { RequestData } from "../../../common/request-types";
 import styled from "styled-components";
+import type { RequestData } from "../../../common/request-types";
 
 const RenameDialog = styled.dialog`
 `;

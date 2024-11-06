@@ -1,11 +1,11 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import * as grpc from "@grpc/grpc-js";
+import * as proto from "@grpc/proto-loader";
 import { dialog } from "electron";
 import type { ProtoContent, ProtoService } from "../../common/grpc";
 import type { BrowseProtoResult } from "../../common/ipc";
-import * as proto from "@grpc/proto-loader";
 import type { GrpcRequestData, GrpcResponse, HttpResponseData } from "../../common/request-types";
-import * as grpc from "@grpc/grpc-js";
 
 export async function makeGrpcRequest(request: GrpcRequestData): Promise<GrpcResponse> {
     if (!request.protoFile || !request.rpc) {

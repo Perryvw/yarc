@@ -1,5 +1,5 @@
-import styled from "styled-components";
 import { useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 
 const Container = styled.div`
     cursor: col-resize;

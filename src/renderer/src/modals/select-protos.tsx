@@ -1,10 +1,10 @@
+import { RefreshCcw, Trash } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
 import type { ProtoRoot } from "../../../common/grpc";
 import { type BrowseProtoResult, IpcCall } from "../../../common/ipc";
 import type { ProtoConfig } from "../AppContext";
-import { RefreshCcw, Trash } from "lucide-react";
 
 const SelectProtosDialog = styled.dialog`
     width: 95%;

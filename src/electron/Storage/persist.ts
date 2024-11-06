@@ -1,9 +1,9 @@
-import { app, type BaseWindow } from "electron";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { type BaseWindow, app } from "electron";
+import { v7 as uuidv7 } from "uuid";
 import type { PersistedState, PersistedStateWithWindow } from "../../common/persist-state";
 import type { GrpcRequestData, HttpRequestData, KeyValue, RequestData } from "../../common/request-types";
-import { v7 as uuidv7 } from "uuid";
 
 const storagePath = app.getPath("sessionData");
 const storageFile = path.join(storagePath, "localStorage.json");
