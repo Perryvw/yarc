@@ -55,6 +55,7 @@ export class AppContext {
             moveRequest: action,
             persistState: action,
             loadPersistedState: action,
+            restoreRequestData: action,
         } satisfies ObservableDefinition<AppContext>);
 
         this.loadPersistedState();
@@ -142,6 +143,15 @@ export class AppContext {
             // Persist state
             this.persistState();
         }
+    }
+
+    public restoreRequestData(request: RequestData) {
+        if (this.selectedIndex === undefined) {
+            return;
+        }
+
+        request.history = this.requests[this.selectedIndex].history;
+        this.requests[this.selectedIndex] = request;
     }
 
     public persistState(): void {

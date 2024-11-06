@@ -32,6 +32,34 @@ const RequestContainer = styled.div`
     scrollbar-width: thin;
 `;
 
+const RequestHistory = styled.div`
+    display: flex;
+    gap: 5px;
+    border-left: 2px solid blue;
+    margin-left: 20px;
+    margin-right: 10px;
+    margin-bottom: 20px;
+    flex-direction: column-reverse;
+`;
+
+const RequestHistoryButton = styled.button`
+    border: 0;
+    background: unset;
+    text-align: left;
+    cursor: pointer;
+    padding: 5px 10px;
+    white-space: nowrap;
+
+    &:hover {
+        background: blue;
+    }
+`;
+
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "medium",
+});
+
 export const Directory = observer(
     ({
         context,
@@ -119,6 +147,52 @@ export const Directory = observer(
             return requests;
         }
 
+        function restoreOldRequestFromHistory(request: RequestData) {
+            context.restoreRequestData(request);
+        }
+
+        function getRequestDiff(newRequest: RequestData, oldRequest: RequestData) {
+            const diff = [];
+
+            if (newRequest.type === "http" && oldRequest.type === "http") {
+                if (newRequest.response) {
+                    diff.push(newRequest.response.statusCode);
+                }
+
+                if (newRequest.method !== oldRequest.method) {
+                    diff.push(`${oldRequest.method} » ${newRequest.method}`);
+                }
+
+                if (newRequest.url !== oldRequest.url) {
+                    diff.push("url");
+                }
+
+                if (newRequest.body !== oldRequest.body) {
+                    diff.push("body");
+                }
+
+                /*
+                if (newRequest.bodyForm !== oldRequest.bodyForm) {
+                    diff.push("body");
+                }
+
+                if (newRequest.params !== oldRequest.params) {
+                    diff.push("params");
+                }
+
+                if (newRequest.headers !== oldRequest.headers) {
+                    diff.push("headers");
+                }
+                */
+            }
+
+            if (diff.length === 0) {
+                return "";
+            }
+
+            return diff.join(", ");
+        }
+
         return (
             <DirectoryRoot>
                 <DirectoryButtons
@@ -149,26 +223,25 @@ export const Directory = observer(
                                         setShowActiveRequestHistory={setShowActiveRequestHistory}
                                     />
 
-                                    {showActiveRequestHistory && (
-                                        <div
-                                            style={{
-                                                marginLeft: "20px",
-                                            }}
-                                        >
-                                            {r.history.map((r2) => (
-                                                <RequestEntry
-                                                    active={false}
-                                                    key={r2.id}
-                                                    request={r2}
-                                                    renameRequest={renameRequest}
-                                                    selectRequest={selectRequest}
-                                                    deleteRequest={deleteRequest}
-                                                    duplicateRequest={duplicateRequest}
-                                                    showActiveRequestHistory={false}
-                                                    setShowActiveRequestHistory={setShowActiveRequestHistory}
-                                                />
+                                    {showActiveRequestHistory && context.activeRequest === r && (
+                                        <RequestHistory>
+                                            {r.history.map((oldRequest, i) => (
+                                                <RequestHistoryButton
+                                                    type="button"
+                                                    key={i.toString()}
+                                                    onClick={() => restoreOldRequestFromHistory(oldRequest)}
+                                                >
+                                                    <RequestName>
+                                                        {dateFormatter.format(oldRequest.lastExecute)}
+                                                    </RequestName>
+                                                    {i > 0 && (
+                                                        <RequestUrl>
+                                                            {getRequestDiff(oldRequest, r.history[i - 1])}
+                                                        </RequestUrl>
+                                                    )}
+                                                </RequestHistoryButton>
                                             ))}
-                                        </div>
+                                        </RequestHistory>
                                     )}
                                 </>
                             ))}
@@ -376,10 +449,12 @@ const RequestEntry = observer(
                         <DeleteButton onClick={deleteHandler}>
                             <Trash size={16} />
                         </DeleteButton>
-                        <HistoryButton onClick={showHistoryHandler}>
-                            <History size={16} />
-                            History
-                        </HistoryButton>
+                        {request.history.length > 0 && (
+                            <HistoryButton onClick={showHistoryHandler}>
+                                <History size={16} />
+                                History
+                            </HistoryButton>
+                        )}
                     </RequestActions>
                 )}
                 {!active && <RequestUrl>{getCleanerRequestUrl() || "No URL"}</RequestUrl>}

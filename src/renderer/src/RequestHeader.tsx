@@ -1,5 +1,5 @@
 import { Play } from "lucide-react";
-import { runInAction, toJS } from "mobx";
+import { observable, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useState } from "react";
 import styled, { keyframes } from "styled-components";
@@ -145,24 +145,26 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
         request.lastExecute = Date.now();
 
         const jsRequest = toJS(request);
+        jsRequest.response = undefined;
         jsRequest.history = [];
 
-        console.log(toJS(request));
-
         if (request.type === "http") {
-            request.history.push(jsRequest as HttpRequestData);
+            const requestForHistory = observable(jsRequest) as HttpRequestData;
+            request.history.push(requestForHistory);
 
             const response: HttpResponseData = await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, jsRequest);
             runInAction(() => {
                 request.response = response;
+                requestForHistory.response = response;
             });
         } else if (request.type === "grpc") {
-            request.history.push(jsRequest as GrpcRequestData);
+            const requestForHistory = observable(jsRequest) as GrpcRequestData;
 
             // TODO
             const response: GrpcResponse = await window.electron.ipcRenderer.invoke(IpcCall.GrpcRequest, jsRequest);
             runInAction(() => {
                 request.response = response;
+                requestForHistory.response = response;
             });
         }
 
