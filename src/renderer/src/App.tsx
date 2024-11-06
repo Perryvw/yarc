@@ -104,12 +104,7 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                 } as React.CSSProperties
             }
         >
-            <DirectoryHeader
-                importDirectory={importDirectory}
-                exportDirectory={exportDirectory}
-                search={search}
-                setSearch={setSearch}
-            />
+            <DirectoryHeader search={search} setSearch={setSearch} />
             <SplitSlider
                 width={context.gridWidthDirectory}
                 setWidth={setDirectoryWidth}
@@ -118,7 +113,12 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                 }}
             />
             <RequestHeader context={context} />
-            <Directory context={context} search={search} />
+            <Directory
+                context={context}
+                search={search}
+                importDirectory={importDirectory}
+                exportDirectory={exportDirectory}
+            />
             <MainContent>
                 {context.activeRequest?.type === "grpc" && (
                     <GrpcRequestPanel

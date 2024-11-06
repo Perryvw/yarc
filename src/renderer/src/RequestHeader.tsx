@@ -4,7 +4,7 @@ import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
-import type { GrpcResponse, HttpResponseData, KeyValue, RequestData } from "../../common/request-types";
+import type { GrpcResponse, HttpResponseData, KeyValue } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { httpVerbColorPalette } from "./HttpVerb";
 
@@ -43,7 +43,7 @@ const RequestPath = styled.input`
     font: inherit;
     flex-grow: 1;
     border: 0;
-    padding: 6px 12px;
+    padding: 8px 12px;
     outline: 0;
     background: unset;
 `;

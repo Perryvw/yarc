@@ -3,15 +3,15 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import classNames from "classnames";
-import { ChevronsLeftRight, CirclePlus, Copy, Globe, SquarePen, Trash } from "lucide-react";
+import { ChevronsLeftRight, Copy, SquarePen, Trash } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { v7 as uuidv7 } from "uuid";
-import type { GrpcRequestData, HttpRequestData, RequestData } from "../../common/request-types";
+import type { RequestData } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
+import { DirectoryButtons } from "./DirectoryButtons";
 import { httpVerbColorPalette } from "./HttpVerb";
 import { RenameModal, type RenameResult } from "./modals/rename";
 
@@ -32,226 +32,125 @@ const RequestContainer = styled.div`
     scrollbar-width: thin;
 `;
 
-const NewButton = styled.button`
-    border: unset;
-    background: unset;
-    padding: 10px;
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    cursor: pointer;
-    anchor-name: --new-request-button;
+export const Directory = observer(
+    ({
+        context,
+        search,
+        importDirectory,
+        exportDirectory,
+    }: {
+        context: AppContext;
+        search: string;
+        importDirectory: () => void;
+        exportDirectory: () => void;
+    }) => {
+        const { requests } = context;
+        console.log("rendering directory");
 
-    & > svg {
-        flex-shrink: 0;
-    }
+        const [renamingRequest, renameModal] = useState<RequestData | undefined>(undefined);
 
-    &:hover {
-        background-color: blue;
-    }
-`;
-
-const NewRequestType = styled.button`
-    border: unset;
-    border-bottom: 1px solid var(--color-border);
-    background: unset;
-    padding: 10px;
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    cursor: pointer;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-
-    &:last-child {
-        border-bottom: 0;
-    }
-
-    &:hover {
-        background-color: blue;
-    }
-`;
-
-const NewRequestTypePopup = styled.div`
-    position-anchor: --new-request-button;
-    top: unset;
-    left: anchor(left);
-    right: anchor(right);
-    bottom: anchor(top);
-    margin-bottom: 10px;
-    background: var(--color-background-contrast);
-    border-radius: 10px;
-    border: 0;
-    padding: 0;
-    min-width: 100px;
-    display: flex;
-    flex-direction: column;
-
-    opacity: 0;
-	transform: scale(0) translateY(100px);
-    transform-origin: center center;
-    transition:
-        opacity 0.2s,
-        transform 0.2s cubic-bezier(0.3, 1.5, 0.6, 1),
-        display 0.2s allow-discrete;
-
-    &:popover-open {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-
-    @starting-style {
-        &:popover-open {
-            opacity: 0;
-	        transform: scale(0) translateY(100px);
-        }
-    }
-`;
-
-export const Directory = observer(({ context, search }: { context: AppContext; search: string }) => {
-    const { requests } = context;
-    console.log("rendering directory");
-
-    const [renamingRequest, renameModal] = useState<RequestData | undefined>(undefined);
-
-    function newRequest() {
-        const newRequest: HttpRequestData = {
-            type: "http",
-            id: uuidv7(),
-            name: "New request",
-            method: "GET",
-            params: [],
-            headers: [],
-            bodyForm: [],
-            url: "",
-            body: "",
-        };
-        context.addRequest(newRequest);
-        context.setActiveRequestById(requests.length - 1);
-    }
-
-    function newRequestGrpc() {
-        const newRequest: GrpcRequestData = {
-            type: "grpc",
-            id: uuidv7(),
-            name: "New request",
-            url: "new",
-            body: "{\n\t\n}",
-        };
-        context.addRequest(newRequest);
-        context.setActiveRequestById(requests.length - 1);
-    }
-
-    const renameRequest = useCallback(
-        (request: RequestData) => {
-            renameModal(request);
-        },
-        [context],
-    );
-
-    function finishRename(result: RenameResult) {
-        renameModal(undefined);
-        runInAction(() => {
-            if (!result.cancelled && context.activeRequest) {
-                context.activeRequest.name = result.name;
-                context.persistState();
-            }
-        });
-    }
-
-    const selectRequest = useCallback(
-        (request: RequestData) => {
-            context.setActiveRequest(request);
-        },
-        [context],
-    );
-
-    const deleteRequest = useCallback(
-        (request: RequestData) => {
-            context.deleteRequest(request);
-        },
-        [context],
-    );
-
-    const duplicateRequest = useCallback(
-        (request: RequestData) => {
-            context.duplicateRequest(request);
-        },
-        [context],
-    );
-
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
+        const renameRequest = useCallback(
+            (request: RequestData) => {
+                renameModal(request);
             },
-        }),
-    );
+            [context],
+        );
 
-    const handleDragEnd = useCallback(
-        (event: DragEndEvent) => {
-            const { active, over } = event;
-
-            if (over && active.id !== over.id) {
-                context.moveRequest(active.id as string, over.id as string);
-            }
-        },
-        [context],
-    );
-
-    function getFilteredRequests() {
-        if (search) {
-            const str = search.toUpperCase();
-
-            return requests.filter((r) => r.name.toUpperCase().includes(str) || r.url.toUpperCase().includes(str));
+        function finishRename(result: RenameResult) {
+            renameModal(undefined);
+            runInAction(() => {
+                if (!result.cancelled && context.activeRequest) {
+                    context.activeRequest.name = result.name;
+                    context.persistState();
+                }
+            });
         }
 
-        return requests;
-    }
+        const selectRequest = useCallback(
+            (request: RequestData) => {
+                context.setActiveRequest(request);
+            },
+            [context],
+        );
 
-    return (
-        <DirectoryRoot>
-            <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                modifiers={[restrictToVerticalAxis]}
-                onDragEnd={handleDragEnd}
-            >
-                <SortableContext items={requests} strategy={verticalListSortingStrategy}>
-                    <RequestContainer>
-                        {getFilteredRequests().map((r) => (
-                            <RequestEntry
-                                active={context.activeRequest === r}
-                                key={r.id}
-                                request={r}
-                                renameRequest={renameRequest}
-                                selectRequest={selectRequest}
-                                deleteRequest={deleteRequest}
-                                duplicateRequest={duplicateRequest}
-                            />
-                        ))}
-                    </RequestContainer>
-                </SortableContext>
-            </DndContext>
-            <NewRequestTypePopup id="new-request-popover" popover="auto">
-                <NewRequestType onClick={newRequestGrpc}>
-                    <ChevronsLeftRight />
-                    <span>gRPC</span>
-                </NewRequestType>
-                <NewRequestType onClick={newRequest}>
-                    <Globe />
-                    <span>HTTP</span>
-                </NewRequestType>
-            </NewRequestTypePopup>
-            <NewButton type="button" popovertarget="new-request-popover">
-                <CirclePlus />
-                New
-            </NewButton>
-            <RenameModal request={renamingRequest} close={finishRename} />
-        </DirectoryRoot>
-    );
-});
+        const deleteRequest = useCallback(
+            (request: RequestData) => {
+                context.deleteRequest(request);
+            },
+            [context],
+        );
+
+        const duplicateRequest = useCallback(
+            (request: RequestData) => {
+                context.duplicateRequest(request);
+            },
+            [context],
+        );
+
+        const sensors = useSensors(
+            useSensor(PointerSensor, {
+                activationConstraint: {
+                    distance: 8,
+                },
+            }),
+        );
+
+        const handleDragEnd = useCallback(
+            (event: DragEndEvent) => {
+                const { active, over } = event;
+
+                if (over && active.id !== over.id) {
+                    context.moveRequest(active.id as string, over.id as string);
+                }
+            },
+            [context],
+        );
+
+        function getFilteredRequests() {
+            if (search) {
+                const str = search.toUpperCase();
+
+                return requests.filter((r) => r.name.toUpperCase().includes(str) || r.url.toUpperCase().includes(str));
+            }
+
+            return requests;
+        }
+
+        return (
+            <DirectoryRoot>
+                <DirectoryButtons
+                    context={context}
+                    importDirectory={importDirectory}
+                    exportDirectory={exportDirectory}
+                />
+
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    modifiers={[restrictToVerticalAxis]}
+                    onDragEnd={handleDragEnd}
+                >
+                    <SortableContext items={requests} strategy={verticalListSortingStrategy}>
+                        <RequestContainer>
+                            {getFilteredRequests().map((r) => (
+                                <RequestEntry
+                                    active={context.activeRequest === r}
+                                    key={r.id}
+                                    request={r}
+                                    renameRequest={renameRequest}
+                                    selectRequest={selectRequest}
+                                    deleteRequest={deleteRequest}
+                                    duplicateRequest={duplicateRequest}
+                                />
+                            ))}
+                        </RequestContainer>
+                    </SortableContext>
+                </DndContext>
+                <RenameModal request={renamingRequest} close={finishRename} />
+            </DirectoryRoot>
+        );
+    },
+);
 
 const RequestName = styled.span`
     display: flex;

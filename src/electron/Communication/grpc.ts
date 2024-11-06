@@ -5,7 +5,7 @@ import * as proto from "@grpc/proto-loader";
 import { dialog } from "electron";
 import type { ProtoContent, ProtoService } from "../../common/grpc";
 import type { BrowseProtoResult } from "../../common/ipc";
-import type { GrpcRequestData, GrpcResponse, HttpResponseData } from "../../common/request-types";
+import type { GrpcRequestData, GrpcResponse } from "../../common/request-types";
 
 export async function makeGrpcRequest(request: GrpcRequestData): Promise<GrpcResponse> {
     if (!request.protoFile || !request.rpc) {

@@ -1,9 +1,9 @@
 import CodeMirror from "@uiw/react-codemirror";
 import { ChevronUp } from "lucide-react";
 import { runInAction } from "mobx";
-import { enableStaticRendering, observer } from "mobx-react-lite";
+import { observer } from "mobx-react-lite";
 import styled from "styled-components";
-import type { HttpRequestData, KeyValue, RequestData } from "../../common/request-types";
+import type { HttpRequestData, KeyValue } from "../../common/request-types";
 import { KeyValuesPanel } from "./KeyValuesPanel";
 
 const RequestPanelRoot = styled.div`
