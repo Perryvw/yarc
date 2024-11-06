@@ -1,8 +1,8 @@
 import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { IpcCall, IpcEvent, type IpcImportResult } from "../../common/ipc";
+import { IpcCall, type IpcImportResult } from "../../common/ipc";
 import { AppContext } from "./AppContext";
 import { Directory } from "./Directory";
 import DirectoryHeader from "./DirectoryHeader";
@@ -52,15 +52,6 @@ const MainContent = styled.div`
 `;
 
 const AppContainer = observer(({ context }: { context: AppContext }) => {
-    useEffect(() => {
-        window.electron.ipcRenderer.on(IpcEvent.WindowClosing, () => {
-            context.persistState();
-        });
-
-        context.loadPersistedState();
-        context.setActiveRequestById(0);
-    }, [context]);
-
     const setDirectoryWidth = useCallback(
         (w: number) => {
             runInAction(() => {

@@ -11,7 +11,7 @@ import {
     toJS,
 } from "mobx";
 import type { ProtoRoot } from "../../common/grpc";
-import { IpcCall } from "../../common/ipc";
+import { IpcCall, IpcEvent } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
 import type { HttpResponseData, RequestData, RequestList } from "../../common/request-types";
 
@@ -56,6 +56,12 @@ export class AppContext {
             persistState: action,
             loadPersistedState: action,
         } satisfies ObservableDefinition<AppContext>);
+
+        this.loadPersistedState();
+
+        window.electron.ipcRenderer.on(IpcEvent.WindowClosing, () => {
+            this.persistState();
+        });
     }
 
     public addRequest(request: RequestData) {
