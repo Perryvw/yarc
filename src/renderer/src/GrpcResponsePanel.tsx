@@ -13,7 +13,7 @@ const codemirrorTheme = EditorView.theme({
     },
 });
 
-export const GrpcResponsePanel = observer(({ response }: { response: GrpcResponse | undefined }) => {
+export const GrpcResponsePanel = observer(({ response }: { response: GrpcResponse | undefined }): React.ReactNode => {
     const [prettyPrint, setPrettyPrint] = useState(true);
 
     if (!response) {
@@ -27,7 +27,7 @@ export const GrpcResponsePanel = observer(({ response }: { response: GrpcRespons
         );
     }
 
-    if (!response.success) {
+    if (response.result === "error") {
         return (
             <ResponsePanelRoot>
                 <Status>
@@ -44,42 +44,70 @@ export const GrpcResponsePanel = observer(({ response }: { response: GrpcRespons
         );
     }
 
-    return (
-        <ResponsePanelRoot>
-            <Status>
-                <div>
-                    <StatusCode className={statusColor(200)}>OK</StatusCode>
-                </div>
-                <div>
-                    Time: <b>{(response.time / 1000).toFixed(2)}s</b>
-                </div>
-            </Status>
+    if (response.result === "success") {
+        return (
+            <ResponsePanelRoot>
+                <Status>
+                    <div>
+                        <StatusCode className={statusColor(200)}>OK</StatusCode>
+                    </div>
+                    <div>
+                        Time: <b>{(response.time / 1000).toFixed(2)}s</b>
+                    </div>
+                </Status>
 
-            <ResponseBody>
-                <div>
-                    <label>
-                        <input
-                            type="checkbox"
-                            onClick={() => setPrettyPrint(!prettyPrint)}
-                            defaultChecked={prettyPrint}
-                        />
-                        Pretty print
-                    </label>
-                </div>
-                <CodeMirror
-                    readOnly
-                    theme="dark"
-                    value={response.body}
-                    basicSetup={{ foldGutter: true }}
-                    extensions={[codemirrorTheme, json(), html()]}
-                    style={{
-                        flexBasis: "100%",
-                        overflow: "hidden",
-                    }}
-                />
-            </ResponseBody>
-        </ResponsePanelRoot>
-    );
+                <ResponseBody>
+                    <div>
+                        <label>
+                            <input
+                                type="checkbox"
+                                onClick={() => setPrettyPrint(!prettyPrint)}
+                                defaultChecked={prettyPrint}
+                            />
+                            Pretty print
+                        </label>
+                    </div>
+                    <CodeMirror
+                        readOnly
+                        theme="dark"
+                        value={response.body}
+                        basicSetup={{ foldGutter: true }}
+                        extensions={[codemirrorTheme, json(), html()]}
+                        style={{
+                            flexBasis: "100%",
+                            overflow: "hidden",
+                        }}
+                    />
+                </ResponseBody>
+            </ResponsePanelRoot>
+        );
+    }
+
+    if (response.result === "stream opened") {
+        return (
+            <ResponsePanelRoot>
+                <Status>
+                    <div>
+                        <StatusCode className={statusColor(200)}>STREAMING</StatusCode>
+                    </div>
+                </Status>
+
+                <ResponseBody>
+                    <div>
+                        <label>
+                            <input
+                                type="checkbox"
+                                onClick={() => setPrettyPrint(!prettyPrint)}
+                                defaultChecked={prettyPrint}
+                            />
+                            Pretty print
+                        </label>
+                    </div>
+                    Stream started
+                </ResponseBody>
+            </ResponsePanelRoot>
+        );
+    }
 });
 
 function statusColor(statusCode: number) {

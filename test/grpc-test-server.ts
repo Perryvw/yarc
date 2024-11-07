@@ -1,3 +1,5 @@
+// If you want you can run this test server with `npx tsx test/grpc-test-server.ts`
+
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
 
@@ -20,6 +22,7 @@ interface HelloResponse {
 const server = new grpc.Server();
 server.addService(greeterService.service, {
     SayHello: (call: grpc.ServerWritableStream<HelloRequest, HelloResponse>) => {
+        console.log("handling unary request");
         call.write({ message: `Hello ${call.request.name}!` });
         call.end();
     },

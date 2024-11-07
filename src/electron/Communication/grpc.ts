@@ -5,7 +5,7 @@ import * as proto from "@grpc/proto-loader";
 import { dialog } from "electron";
 import type { ProtoContent, ProtoService } from "../../common/grpc";
 import type { BrowseProtoResult } from "../../common/ipc";
-import type { GrpcRequestData, GrpcResponse } from "../../common/request-types";
+import type { GrpcRequestData, GrpcResponse, GrpcServerStreamOpened } from "../../common/request-types";
 
 export async function makeGrpcRequest(request: GrpcRequestData): Promise<GrpcResponse> {
     if (!request.protoFile || !request.rpc) {
@@ -20,11 +20,21 @@ export async function makeGrpcRequest(request: GrpcRequestData): Promise<GrpcRes
     if (service && isServiceDefinition(service)) {
         const method = service[request.rpc.method];
         if (method) {
-            return await grpcUnaryRequest(request, method, client);
+            if (!method.requestStream && !method.responseStream) {
+                console.log("sending unary request");
+                return await grpcUnaryRequest(request, method, client);
+            }
+
+            if (!method.requestStream && method.responseStream) {
+                console.log("sending server treaming request");
+                return await grpcServerStreamingRequest(request, method, client);
+            }
+
+            return { result: "error", code: "INVALID", detail: "Request streaming is not (yet) supported", time: 0 };
         }
     }
 
-    return Promise.reject("invalid request");
+    return { result: "error", code: "INVALID", detail: "Invalid request", time: 0 };
 }
 
 function grpcUnaryRequest(
@@ -40,16 +50,17 @@ function grpcUnaryRequest(
             (r) => JSON.stringify(method.responseDeserialize(r)),
             JSON.parse(request.body),
             (err: grpc.ServiceError | null, value?: string) => {
+                console.log(err, value);
                 if (err) {
                     resolve({
-                        success: false,
+                        result: "error",
                         code: grpc.status[err.code],
                         detail: err.details,
                         time: performance.now() - start,
                     });
                 } else {
                     resolve({
-                        success: true,
+                        result: "success",
                         body: value ?? "",
                         time: performance.now() - start,
                     });
@@ -57,6 +68,33 @@ function grpcUnaryRequest(
             },
         );
     });
+}
+
+async function grpcServerStreamingRequest(
+    request: GrpcRequestData,
+    method: proto.MethodDefinition<object, object, object, object>,
+    client: grpc.Client,
+): Promise<GrpcServerStreamOpened> {
+    const stream = client.makeServerStreamRequest(
+        method.path,
+        method.requestSerialize,
+        method.responseDeserialize,
+        JSON.parse(request.body),
+    );
+
+    stream.on("data", (data) => {
+        console.log(request.id, data);
+    });
+
+    stream.on("close", () => {
+        console.log(request.id, "close");
+    });
+
+    stream.on("end", () => {
+        console.log(request.id, "end");
+    });
+
+    return { result: "stream opened" };
 }
 
 export async function browseProtoRoot(): Promise<BrowseProtoResult> {
@@ -96,7 +134,7 @@ export async function findProtoFiles(protoRoot: string): Promise<string[]> {
 }
 
 export async function parseProtoFile(protoPath: string, protoRootDir: string): Promise<ProtoContent> {
-    const contents = parseProtoPackageDescription(protoPath, protoRootDir);
+    const contents = await parseProtoPackageDescription(protoPath, protoRootDir);
 
     const services = [];
     for (const [serviceName, serviceDescription] of Object.entries(contents)) {

@@ -49,17 +49,21 @@ export interface HttpResponseData {
     body: string;
 }
 
-export type GrpcResponse = GrpcError | GrpcResponseData;
+export type GrpcResponse = GrpcError | GrpcResponseData | GrpcServerStreamOpened;
 
 export interface GrpcError {
-    success: false;
+    result: "error";
     code: string;
     detail: string;
     time: number;
 }
 
 export interface GrpcResponseData {
-    success: true;
+    result: "success";
     time: number;
     body: string;
+}
+
+export interface GrpcServerStreamOpened {
+    result: "stream opened";
 }
