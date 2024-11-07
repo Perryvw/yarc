@@ -1,4 +1,4 @@
-import { Play } from "lucide-react";
+import { CircleStop, Play } from "lucide-react";
 import { observable, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useState } from "react";
@@ -136,6 +136,11 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             return;
         }
 
+        if (context.isExecuting) {
+            alert("abort request!");
+            return;
+        }
+
         runInAction(() => {
             context.isExecuting = true;
         });
@@ -230,7 +235,7 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
                     onClick={onClick}
                     onAnimationIteration={onButtonAnimationIteration}
                 >
-                    <Play size={16} />
+                    {context.isExecuting ? <CircleStop size={16} /> : <Play size={16} />}
                 </RequestButton>
             </RequestMethodAndPath>
         </RequestHeaderContainer>
