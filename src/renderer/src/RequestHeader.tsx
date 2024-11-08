@@ -136,13 +136,13 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             return;
         }
 
-        if (context.isExecuting) {
+        if (request.isExecuting) {
             alert("abort request!");
             return;
         }
 
         runInAction(() => {
-            context.isExecuting = true;
+            request.isExecuting = true;
         });
 
         setIsExecutionAnimating(true);
@@ -174,12 +174,12 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
         }
 
         runInAction(() => {
-            context.isExecuting = false;
+            request.isExecuting = false;
         });
     }
 
     function onButtonAnimationIteration() {
-        if (!context.isExecuting) {
+        if (!activeRequest?.isExecuting) {
             setIsExecutionAnimating(false);
         }
     }
@@ -235,7 +235,7 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
                     onClick={onClick}
                     onAnimationIteration={onButtonAnimationIteration}
                 >
-                    {context.isExecuting ? <CircleStop size={16} /> : <Play size={16} />}
+                    {activeRequest?.isExecuting ? <CircleStop size={16} /> : <Play size={16} />}
                 </RequestButton>
             </RequestMethodAndPath>
         </RequestHeaderContainer>

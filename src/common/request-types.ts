@@ -17,6 +17,7 @@ export interface HttpRequestData {
     bodyForm: KeyValue[];
     body: string;
     lastExecute: number;
+    isExecuting: boolean;
     history: HttpRequestData[];
 
     response?: HttpResponseData;
@@ -28,6 +29,7 @@ export interface GrpcRequestData {
     name: string;
     url: string;
     lastExecute: number;
+    isExecuting: boolean;
     history: GrpcRequestData[];
 
     protoFile?: { protoPath: string; rootDir: string };

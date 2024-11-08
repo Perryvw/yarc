@@ -5,8 +5,8 @@ import { CircleSlash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import type { AppContext } from "./AppContext";
 import { Tab, Tabs } from "./Tabs";
+import type { RequestData } from "../../common/request-types";
 
 export const ResponsePanelRoot = styled.div`
     display: flex;
@@ -117,7 +117,7 @@ const codemirrorTheme = EditorView.theme({
     },
 });
 
-export const ResponsePanel = observer(({ context }: { context: AppContext }) => {
+export const ResponsePanel = observer(({ activeRequest }: { activeRequest: RequestData }) => {
     const [tab, setTab] = useState<"body" | "headers">("body");
     const [prettyPrint, setPrettyPrint] = useState(true);
     const [lineWrap, setlineWrap] = useState(true);
@@ -138,7 +138,7 @@ export const ResponsePanel = observer(({ context }: { context: AppContext }) => 
     }
 
     useEffect(() => {
-        if (!context.isExecuting) {
+        if (!activeRequest.isExecuting) {
             return;
         }
 
@@ -154,9 +154,7 @@ export const ResponsePanel = observer(({ context }: { context: AppContext }) => 
             clearInterval(intervalId);
             setRunningRequestTime(-1);
         };
-    }, [context.isExecuting]);
-
-    const { activeRequest } = context;
+    }, [activeRequest.isExecuting]);
 
     if (runningRequestTime >= 0) {
         return (
@@ -170,7 +168,7 @@ export const ResponsePanel = observer(({ context }: { context: AppContext }) => 
         );
     }
 
-    if (!activeRequest || activeRequest.type !== "http" || !activeRequest.response) {
+    if (activeRequest.type !== "http" || !activeRequest.response) {
         return (
             <ResponsePanelRoot>
                 <ResponsePanelEmpty>

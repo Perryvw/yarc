@@ -120,6 +120,7 @@ export const DirectoryButtons = observer(
                 url: "",
                 body: "",
                 lastExecute: Date.now(),
+                isExecuting: false,
                 history: [],
             };
             context.addRequest(newRequest);
@@ -134,6 +135,7 @@ export const DirectoryButtons = observer(
                 url: "new",
                 body: "{\n\t\n}",
                 lastExecute: Date.now(),
+                isExecuting: false,
                 history: [],
             };
             context.addRequest(newRequest);
