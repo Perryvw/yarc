@@ -3,7 +3,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import classNames from "classnames";
-import { ChevronsLeftRight, Copy, SquarePen, Trash, History } from "lucide-react";
+import { ChevronsLeftRight, Copy, SquarePen, Trash, History, CirclePlay } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
@@ -254,6 +254,12 @@ export const Directory = observer(
     },
 );
 
+const RequestNameLine = styled.span`
+    display: flex;
+    gap: 5px;
+    align-items: center;
+`;
+
 const RequestName = styled.span`
     display: flex;
     gap: 5px;
@@ -263,6 +269,15 @@ const RequestName = styled.span`
     position: relative;
     white-space: nowrap;
     mask-image: linear-gradient(270deg, #0000, #000 20px);
+`;
+
+const RequestExecuting = styled.span`
+    display: contents;
+    color: green;
+
+    & svg {
+        flex-shrink: 0;
+    }
 `;
 
 const RequestUrl = styled(RequestName)`
@@ -430,14 +445,21 @@ const RequestEntry = observer(
                 {...attributes}
                 {...listeners}
             >
-                <RequestName>
-                    {request.type === "grpc" && (
-                        <RequestMethod>
-                            <ChevronsLeftRight size={16} />
-                        </RequestMethod>
+                <RequestNameLine>
+                    <RequestName>
+                        {request.type === "grpc" && (
+                            <RequestMethod>
+                                <ChevronsLeftRight size={16} />
+                            </RequestMethod>
+                        )}
+                        {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>} {request.name}
+                    </RequestName>
+                    {!active && request.isExecuting && (
+                        <RequestExecuting>
+                            <CirclePlay size={24} />
+                        </RequestExecuting>
                     )}
-                    {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>} {request.name}
-                </RequestName>
+                </RequestNameLine>
                 {active && (
                     <RequestActions>
                         <DuplicateButton onClick={duplicateHandler}>
