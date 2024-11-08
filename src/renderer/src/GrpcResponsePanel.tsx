@@ -4,8 +4,9 @@ import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { CircleSlash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
-import type { GrpcResponse } from "../../common/request-types";
+import type { GrpcResponse, GrpcResponseData, GrpcServerStreamData } from "../../common/request-types";
 import { ResponseBody, ResponsePanelEmpty, ResponsePanelRoot, Status, StatusCode } from "./ResponsePanel";
+import { toJS } from "mobx";
 
 const codemirrorTheme = EditorView.theme({
     "&.cm-editor": {
@@ -14,8 +15,6 @@ const codemirrorTheme = EditorView.theme({
 });
 
 export const GrpcResponsePanel = observer(({ response }: { response: GrpcResponse | undefined }): React.ReactNode => {
-    const [prettyPrint, setPrettyPrint] = useState(true);
-
     if (!response) {
         return (
             <ResponsePanelRoot>
@@ -45,69 +44,79 @@ export const GrpcResponsePanel = observer(({ response }: { response: GrpcRespons
     }
 
     if (response.result === "success") {
-        return (
-            <ResponsePanelRoot>
-                <Status>
-                    <div>
-                        <StatusCode className={statusColor(200)}>OK</StatusCode>
-                    </div>
-                    <div>
-                        Time: <b>{(response.time / 1000).toFixed(2)}s</b>
-                    </div>
-                </Status>
-
-                <ResponseBody>
-                    <div>
-                        <label>
-                            <input
-                                type="checkbox"
-                                onClick={() => setPrettyPrint(!prettyPrint)}
-                                defaultChecked={prettyPrint}
-                            />
-                            Pretty print
-                        </label>
-                    </div>
-                    <CodeMirror
-                        readOnly
-                        theme="dark"
-                        value={response.body}
-                        basicSetup={{ foldGutter: true }}
-                        extensions={[codemirrorTheme, json(), html()]}
-                        style={{
-                            flexBasis: "100%",
-                            overflow: "hidden",
-                        }}
-                    />
-                </ResponseBody>
-            </ResponsePanelRoot>
-        );
+        return <UnaryResponsePanel response={response} />;
     }
 
-    if (response.result === "stream opened") {
-        return (
-            <ResponsePanelRoot>
-                <Status>
-                    <div>
-                        <StatusCode className={statusColor(200)}>STREAMING</StatusCode>
-                    </div>
-                </Status>
-
-                <ResponseBody>
-                    <div>
-                        <label>
-                            <input
-                                type="checkbox"
-                                onClick={() => setPrettyPrint(!prettyPrint)}
-                                defaultChecked={prettyPrint}
-                            />
-                            Pretty print
-                        </label>
-                    </div>
-                    Stream started
-                </ResponseBody>
-            </ResponsePanelRoot>
-        );
+    if (response.result === "stream") {
+        return <StreamingResponsePanel response={response} />;
     }
+});
+
+const UnaryResponsePanel = observer(({ response }: { response: GrpcResponseData }) => {
+    const [prettyPrint, setPrettyPrint] = useState(true);
+
+    return (
+        <ResponsePanelRoot>
+            <Status>
+                <div>
+                    <StatusCode className={statusColor(200)}>OK</StatusCode>
+                </div>
+                <div>
+                    Time: <b>{(response.time / 1000).toFixed(2)}s</b>
+                </div>
+            </Status>
+
+            <ResponseBody>
+                <div>
+                    <label>
+                        <input
+                            type="checkbox"
+                            onClick={() => setPrettyPrint(!prettyPrint)}
+                            defaultChecked={prettyPrint}
+                        />
+                        Pretty print
+                    </label>
+                </div>
+                <CodeMirror
+                    readOnly
+                    theme="dark"
+                    value={response.body}
+                    basicSetup={{ foldGutter: true }}
+                    extensions={[codemirrorTheme, json(), html()]}
+                    style={{
+                        flexBasis: "100%",
+                        overflow: "hidden",
+                    }}
+                />
+            </ResponseBody>
+        </ResponsePanelRoot>
+    );
+});
+
+const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStreamData }) => {
+    const statusColor = response.error ? "status-500" : !response.streamOpen ? "status-200" : "status-300";
+    const statusMessage = response.error ? "ERROR" : response.streamOpen ? "STREAMING" : "FINISHED";
+
+    console.log(toJS(response.responses));
+
+    return (
+        <ResponsePanelRoot>
+            <Status>
+                <div>
+                    <StatusCode className={statusColor}>{statusMessage}</StatusCode>
+                </div>
+            </Status>
+
+            <ResponseBody>
+                Messages:
+                {response.responses.map((r, i) => (
+                    <div key={i.toString()}>
+                        {new Date(r.time).toLocaleTimeString()} - {r.body}
+                    </div>
+                ))}
+            </ResponseBody>
+        </ResponsePanelRoot>
+    );
 });
 
 function statusColor(statusCode: number) {

@@ -16,6 +16,10 @@ export enum IpcCall {
 
 export enum IpcEvent {
     WindowClosing = "window-closing",
+
+    GrpcServerStreamData = "grpc-server-stream-data",
+    GrpcServerStreamEnded = "grpc-server-stream-ended",
+    GrpcServerStreamError = "grpc-server-stream-error",
 }
 
 export type IpcImportResult = { cancelled: true } | { cancelled: false; requests: RequestList };

@@ -1,8 +1,8 @@
 import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { IpcCall, type IpcImportResult } from "../../common/ipc";
+import { IpcCall, IpcEvent, type IpcImportResult } from "../../common/ipc";
 import { AppContext } from "./AppContext";
 import { Directory } from "./Directory";
 import DirectoryHeader from "./DirectoryHeader";

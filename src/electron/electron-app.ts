@@ -38,7 +38,7 @@ app.whenReady().then(async () => {
     });
 
     ipcMain.handle(IpcCall.GrpcRequest, async (_, request: GrpcRequestData): Promise<GrpcResponse> => {
-        return await makeGrpcRequest(request);
+        return await makeGrpcRequest(request, window.webContents);
     });
 
     ipcMain.handle(IpcCall.LoadPersistedState, async () => {

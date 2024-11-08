@@ -51,7 +51,7 @@ export interface HttpResponseData {
     body: string;
 }
 
-export type GrpcResponse = GrpcError | GrpcResponseData | GrpcServerStreamOpened;
+export type GrpcResponse = GrpcError | GrpcResponseData | GrpcServerStreamData;
 
 export interface GrpcError {
     result: "error";
@@ -66,6 +66,9 @@ export interface GrpcResponseData {
     body: string;
 }
 
-export interface GrpcServerStreamOpened {
-    result: "stream opened";
+export interface GrpcServerStreamData {
+    result: "stream";
+    streamOpen: boolean;
+    responses: GrpcResponseData[];
+    error?: GrpcError;
 }

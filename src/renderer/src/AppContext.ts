@@ -10,10 +10,15 @@ import {
     runInAction,
     toJS,
 } from "mobx";
-import type { ProtoRoot } from "../../common/grpc";
+import type {
+    GrpcServerStreamDataEvent,
+    GrpcServerStreamErrorEvent,
+    GrpcStreamClosedEvent,
+    ProtoRoot,
+} from "../../common/grpc";
 import { IpcCall, IpcEvent } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
-import type { HttpResponseData, RequestData, RequestList } from "../../common/request-types";
+import type { GrpcResponseData, HttpResponseData, RequestData, RequestList } from "../../common/request-types";
 
 export class AppContext {
     requests: RequestList = [];
@@ -54,6 +59,10 @@ export class AppContext {
             persistState: action,
             loadPersistedState: action,
             restoreRequestData: action,
+
+            handleGrpcStreamClose: action,
+            handleGrpcStreamData: action,
+            handleGrpcStreamError: action,
         } satisfies ObservableDefinition<AppContext>);
 
         this.loadPersistedState();
@@ -61,6 +70,18 @@ export class AppContext {
         window.electron.ipcRenderer.on(IpcEvent.WindowClosing, () => {
             this.persistState();
         });
+
+        window.electron.ipcRenderer.on(IpcEvent.GrpcServerStreamData, (_, event: GrpcServerStreamDataEvent) =>
+            this.handleGrpcStreamData(event),
+        );
+
+        window.electron.ipcRenderer.on(IpcEvent.GrpcServerStreamEnded, (_, event: GrpcStreamClosedEvent) =>
+            this.handleGrpcStreamClose(event),
+        );
+
+        window.electron.ipcRenderer.on(IpcEvent.GrpcServerStreamError, (_, event: GrpcServerStreamErrorEvent) =>
+            this.handleGrpcStreamError(event),
+        );
     }
 
     public addRequest(request: RequestData) {
@@ -191,6 +212,32 @@ export class AppContext {
                 }
             }),
         );
+    }
+
+    public handleGrpcStreamData(event: GrpcServerStreamDataEvent) {
+        const request = this.requests.find((r) => r.id === event.requestId);
+        if (request?.type === "grpc" && request.response?.result === "stream") {
+            request.response.responses.push(event.response);
+        }
+    }
+
+    public handleGrpcStreamClose(event: GrpcStreamClosedEvent) {
+        const request = this.requests.find((r) => r.id === event.requestId);
+        if (request?.type === "grpc" && request.response?.result === "stream") {
+            request.response.streamOpen = false;
+        }
+    }
+
+    public handleGrpcStreamError(event: GrpcServerStreamErrorEvent) {
+        const request = this.requests.find((r) => r.id === event.requestId);
+        if (request?.type === "grpc" && request.response?.result === "stream") {
+            request.response.error = {
+                result: "error",
+                code: event.code ?? "<unknown>",
+                detail: event.detail ?? "",
+                time: 0,
+            };
+        }
     }
 }
 

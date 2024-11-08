@@ -2,12 +2,18 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
-import { dialog } from "electron";
-import type { ProtoContent, ProtoService } from "../../common/grpc";
-import type { BrowseProtoResult } from "../../common/ipc";
-import type { GrpcRequestData, GrpcResponse, GrpcServerStreamOpened } from "../../common/request-types";
+import { dialog, ipcMain, ipcRenderer, webContents } from "electron";
+import type {
+    GrpcServerStreamDataEvent,
+    GrpcServerStreamErrorEvent,
+    GrpcStreamClosedEvent,
+    ProtoContent,
+    ProtoService,
+} from "../../common/grpc";
+import { IpcEvent, type BrowseProtoResult } from "../../common/ipc";
+import type { GrpcRequestData, GrpcResponse, GrpcServerStreamData } from "../../common/request-types";
 
-export async function makeGrpcRequest(request: GrpcRequestData): Promise<GrpcResponse> {
+export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.WebContents): Promise<GrpcResponse> {
     if (!request.protoFile || !request.rpc) {
         throw "invalid request";
     }
@@ -27,7 +33,7 @@ export async function makeGrpcRequest(request: GrpcRequestData): Promise<GrpcRes
 
             if (!method.requestStream && method.responseStream) {
                 console.log("sending server treaming request");
-                return await grpcServerStreamingRequest(request, method, client);
+                return await grpcServerStreamingRequest(request, method, client, ipc);
             }
 
             return { result: "error", code: "INVALID", detail: "Request streaming is not (yet) supported", time: 0 };
@@ -74,7 +80,8 @@ async function grpcServerStreamingRequest(
     request: GrpcRequestData,
     method: proto.MethodDefinition<object, object, object, object>,
     client: grpc.Client,
-): Promise<GrpcServerStreamOpened> {
+    ipc: Electron.WebContents,
+): Promise<GrpcServerStreamData> {
     const stream = client.makeServerStreamRequest(
         method.path,
         method.requestSerialize,
@@ -83,18 +90,34 @@ async function grpcServerStreamingRequest(
     );
 
     stream.on("data", (data) => {
-        console.log(request.id, data);
-    });
-
-    stream.on("close", () => {
-        console.log(request.id, "close");
+        const eventData: GrpcServerStreamDataEvent = {
+            requestId: request.id,
+            response: {
+                result: "success",
+                body: JSON.stringify(data),
+                time: Date.now(),
+            },
+        };
+        ipc.send(IpcEvent.GrpcServerStreamData, eventData);
     });
 
     stream.on("end", () => {
-        console.log(request.id, "end");
+        const eventData: GrpcStreamClosedEvent = {
+            requestId: request.id,
+        };
+        ipc.send(IpcEvent.GrpcServerStreamEnded, eventData);
     });
 
-    return { result: "stream opened" };
+    stream.on("error", (err: grpc.ServerErrorResponse) => {
+        const eventData: GrpcServerStreamErrorEvent = {
+            requestId: request.id,
+            code: err.code !== undefined ? grpc.status[err.code] : undefined,
+            detail: err.details,
+        };
+        ipc.send(IpcEvent.GrpcServerStreamEnded, eventData);
+    });
+
+    return { result: "stream", streamOpen: true, responses: [] };
 }
 
 export async function browseProtoRoot(): Promise<BrowseProtoResult> {

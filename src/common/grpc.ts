@@ -1,3 +1,5 @@
+import type { GrpcResponseData } from "./request-types";
+
 export interface ProtoRoot {
     rootPath: string;
     protoFiles: string[];
@@ -17,4 +19,19 @@ export interface MethodInfo {
     path: string;
     requestStream: boolean;
     serverStream: boolean;
+}
+
+export interface GrpcStreamClosedEvent {
+    requestId: string;
+}
+
+export interface GrpcServerStreamDataEvent {
+    requestId: string;
+    response: GrpcResponseData;
+}
+
+export interface GrpcServerStreamErrorEvent {
+    requestId: string;
+    code?: string;
+    detail?: string;
 }
