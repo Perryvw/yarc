@@ -44,6 +44,11 @@ export type RequestData = HttpRequestData | GrpcRequestData;
 
 export type RequestList = RequestData[];
 
+export interface HttpResponseEvent {
+    requestId: string;
+    response: HttpResponseData;
+}
+
 export interface HttpResponseData {
     statusCode: number;
     time: number;

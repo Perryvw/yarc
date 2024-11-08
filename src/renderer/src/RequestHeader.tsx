@@ -157,11 +157,8 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             const requestForHistory = observable(jsRequest) as HttpRequestData;
             request.history.push(requestForHistory);
 
-            const response: HttpResponseData = await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, jsRequest);
-            runInAction(() => {
-                request.response = response;
-                requestForHistory.response = response;
-            });
+            await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, jsRequest);
+            // TODO: requestForHistory.response = response;
         } else if (request.type === "grpc") {
             const requestForHistory = observable(jsRequest) as GrpcRequestData;
 
@@ -172,10 +169,6 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
                 requestForHistory.response = response;
             });
         }
-
-        runInAction(() => {
-            request.isExecuting = false;
-        });
     }
 
     function onButtonAnimationIteration() {

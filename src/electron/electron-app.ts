@@ -33,8 +33,8 @@ app.whenReady().then(async () => {
         window.maximize();
     }
 
-    ipcMain.handle(IpcCall.HttpRequest, async (_, request: HttpRequestData): Promise<HttpResponseData> => {
-        return await makeHttpRequest(request);
+    ipcMain.handle(IpcCall.HttpRequest, (_, request: HttpRequestData) => {
+        return makeHttpRequest(request, window.webContents);
     });
 
     ipcMain.handle(IpcCall.GrpcRequest, async (_, request: GrpcRequestData): Promise<GrpcResponse> => {

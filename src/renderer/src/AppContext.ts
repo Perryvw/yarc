@@ -18,7 +18,13 @@ import type {
 } from "../../common/grpc";
 import { IpcCall, IpcEvent } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
-import type { GrpcResponseData, HttpResponseData, RequestData, RequestList } from "../../common/request-types";
+import type {
+    GrpcResponseData,
+    HttpResponseData,
+    HttpResponseEvent,
+    RequestData,
+    RequestList,
+} from "../../common/request-types";
 
 export class AppContext {
     requests: RequestList = [];
@@ -60,6 +66,7 @@ export class AppContext {
             loadPersistedState: action,
             restoreRequestData: action,
 
+            handleHttpResponse: action,
             handleGrpcStreamClose: action,
             handleGrpcStreamData: action,
             handleGrpcStreamError: action,
@@ -70,6 +77,10 @@ export class AppContext {
         window.electron.ipcRenderer.on(IpcEvent.WindowClosing, () => {
             this.persistState();
         });
+
+        window.electron.ipcRenderer.on(IpcEvent.HttpResponseData, (_, event: HttpResponseEvent) =>
+            this.handleHttpResponse(event),
+        );
 
         window.electron.ipcRenderer.on(IpcEvent.GrpcServerStreamData, (_, event: GrpcServerStreamDataEvent) =>
             this.handleGrpcStreamData(event),
@@ -212,6 +223,14 @@ export class AppContext {
                 }
             }),
         );
+    }
+
+    public handleHttpResponse(event: HttpResponseEvent) {
+        const request = this.requests.find((r) => r.id === event.requestId);
+        if (request?.type === "http") {
+            request.response = event.response;
+            request.isExecuting = false;
+        }
     }
 
     public handleGrpcStreamData(event: GrpcServerStreamDataEvent) {

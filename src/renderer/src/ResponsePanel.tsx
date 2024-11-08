@@ -142,19 +142,17 @@ export const ResponsePanel = observer(({ activeRequest }: { activeRequest: Reque
             return;
         }
 
-        setRunningRequestTime(0);
+        setRunningRequestTime(Date.now() - activeRequest.lastExecute);
 
-        let time = 0;
         const intervalId = setInterval(() => {
-            time += 100;
-            setRunningRequestTime(time);
+            setRunningRequestTime(Date.now() - activeRequest.lastExecute);
         }, 100);
 
         return () => {
             clearInterval(intervalId);
             setRunningRequestTime(-1);
         };
-    }, [activeRequest.isExecuting]);
+    }, [activeRequest, activeRequest.isExecuting]);
 
     if (runningRequestTime >= 0) {
         return (
