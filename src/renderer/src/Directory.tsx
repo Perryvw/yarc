@@ -1,13 +1,9 @@
-import { DndContext, type DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import classNames from "classnames";
 import { ChevronsLeftRight, CirclePlay, Copy, History, SquarePen, Trash } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
-import { useCallback, useState } from "react";
+import { Fragment, useCallback, useState } from "react";
 import styled from "styled-components";
 import type { RequestData, RequestDataOrGroup, RequestGroup, RequestList } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
@@ -30,6 +26,7 @@ const RequestContainer = styled.div`
     display: flex;
     flex-direction: column;
     scrollbar-width: thin;
+    position: relative;
 `;
 
 const RequestHistory = styled.div`
@@ -53,6 +50,15 @@ const RequestHistoryButton = styled.button`
     &:hover {
         background: blue;
     }
+`;
+
+const DragIndicator = styled.div`
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: blue;
+    pointer-events: none;
 `;
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -118,25 +124,6 @@ export const Directory = observer(
             [context],
         );
 
-        const sensors = useSensors(
-            useSensor(PointerSensor, {
-                activationConstraint: {
-                    distance: 8,
-                },
-            }),
-        );
-
-        const handleDragEnd = useCallback(
-            (event: DragEndEvent) => {
-                const { active, over } = event;
-
-                if (over && active.id !== over.id) {
-                    context.moveRequest(active.id as string, over.id as string);
-                }
-            },
-            [context],
-        );
-
         return (
             <DirectoryRoot>
                 <DirectoryButtons
@@ -145,23 +132,16 @@ export const Directory = observer(
                     exportDirectory={exportDirectory}
                 />
 
-                <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    modifiers={[restrictToVerticalAxis]}
-                    onDragEnd={handleDragEnd}
-                >
-                    <SortableRequests
-                        requests={context.requests}
-                        context={context}
-                        deleteRequest={deleteRequest}
-                        duplicateRequest={duplicateRequest}
-                        renameRequest={renameRequest}
-                        selectRequest={selectRequest}
-                        showActiveRequestHistory={showActiveRequestHistory}
-                        setShowActiveRequestHistory={setShowActiveRequestHistory}
-                    />
-                </DndContext>
+                <SortableRequests
+                    requests={context.requests}
+                    context={context}
+                    deleteRequest={deleteRequest}
+                    duplicateRequest={duplicateRequest}
+                    renameRequest={renameRequest}
+                    selectRequest={selectRequest}
+                    showActiveRequestHistory={showActiveRequestHistory}
+                    setShowActiveRequestHistory={setShowActiveRequestHistory}
+                />
                 <RenameModal request={renamingRequest} close={finishRename} />
             </DirectoryRoot>
         );
@@ -308,10 +288,7 @@ const RequestEntry = observer(
     }) => {
         console.log("Rendering request entry");
 
-        const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: request.id });
         const style = {
-            transform: CSS.Transform.toString(transform),
-            transition,
             "--method-color": request.type === "http" && httpVerbColorPalette[request.method],
         };
 
@@ -351,14 +328,7 @@ const RequestEntry = observer(
         }, [request, selectRequest]);
 
         return (
-            <Request
-                onClick={selectHandler}
-                className={classNames({ active })}
-                ref={setNodeRef}
-                style={style}
-                {...attributes}
-                {...listeners}
-            >
+            <Request onClick={selectHandler} className={classNames({ active })} style={style}>
                 <RequestNameLine>
                     <RequestName>
                         {request.type === "grpc" && (
@@ -423,12 +393,7 @@ const RequestGroupEntry = observer(
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
         console.log("Rendering request entry");
-
-        const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: request.id });
-        const style = {
-            transform: CSS.Transform.toString(transform),
-            transition,
-        };
+        const [isOver, setIsOver] = useState(false);
 
         function renameHandler(e: React.MouseEvent) {
             renameRequest(request);
@@ -445,7 +410,7 @@ const RequestGroupEntry = observer(
         }, [request, selectRequest]);
 
         return (
-            <Request ref={setNodeRef} onClick={selectHandler} style={style} {...attributes} {...listeners}>
+            <Request onClick={selectHandler}>
                 <RequestNameLine>
                     <RequestName>{request.name}</RequestName>
                 </RequestNameLine>
@@ -557,15 +522,26 @@ const SortableRequests = observer(
         }
 
         return (
-            <SortableContext items={requests} strategy={verticalListSortingStrategy}>
-                <RequestContainer>
-                    {requests.map((r) =>
-                        r.type === "group" ? (
-                            <RequestGroupEntry
-                                active={false}
-                                key={r.id}
+            <RequestContainer>
+                {requests.map((r, index) =>
+                    r.type === "group" ? (
+                        <RequestGroupEntry
+                            active={false}
+                            key={r.id}
+                            request={r}
+                            context={context}
+                            renameRequest={renameRequest}
+                            selectRequest={selectRequest}
+                            deleteRequest={deleteRequest}
+                            duplicateRequest={duplicateRequest}
+                            showActiveRequestHistory={showActiveRequestHistory}
+                            setShowActiveRequestHistory={setShowActiveRequestHistory}
+                        />
+                    ) : (
+                        <Fragment key={r.id}>
+                            <RequestEntry
+                                active={r === context.activeRequest}
                                 request={r}
-                                context={context}
                                 renameRequest={renameRequest}
                                 selectRequest={selectRequest}
                                 deleteRequest={deleteRequest}
@@ -573,45 +549,27 @@ const SortableRequests = observer(
                                 showActiveRequestHistory={showActiveRequestHistory}
                                 setShowActiveRequestHistory={setShowActiveRequestHistory}
                             />
-                        ) : (
-                            <>
-                                <RequestEntry
-                                    active={r === context.activeRequest}
-                                    key={r.id}
-                                    request={r}
-                                    renameRequest={renameRequest}
-                                    selectRequest={selectRequest}
-                                    deleteRequest={deleteRequest}
-                                    duplicateRequest={duplicateRequest}
-                                    showActiveRequestHistory={showActiveRequestHistory}
-                                    setShowActiveRequestHistory={setShowActiveRequestHistory}
-                                />
 
-                                {showActiveRequestHistory && context.activeRequest === r && (
-                                    <RequestHistory>
-                                        {r.history.map((oldRequest, i) => (
-                                            <RequestHistoryButton
-                                                type="button"
-                                                key={i.toString()}
-                                                onClick={() => restoreOldRequestFromHistory(oldRequest)}
-                                            >
-                                                <RequestName>
-                                                    {dateFormatter.format(oldRequest.lastExecute)}
-                                                </RequestName>
-                                                {i > 0 && (
-                                                    <RequestUrl>
-                                                        {getRequestDiff(oldRequest, r.history[i - 1])}
-                                                    </RequestUrl>
-                                                )}
-                                            </RequestHistoryButton>
-                                        ))}
-                                    </RequestHistory>
-                                )}
-                            </>
-                        ),
-                    )}
-                </RequestContainer>
-            </SortableContext>
+                            {showActiveRequestHistory && context.activeRequest === r && (
+                                <RequestHistory>
+                                    {r.history.map((oldRequest, i) => (
+                                        <RequestHistoryButton
+                                            type="button"
+                                            key={i.toString()}
+                                            onClick={() => restoreOldRequestFromHistory(oldRequest)}
+                                        >
+                                            <RequestName>{dateFormatter.format(oldRequest.lastExecute)}</RequestName>
+                                            {i > 0 && (
+                                                <RequestUrl>{getRequestDiff(oldRequest, r.history[i - 1])}</RequestUrl>
+                                            )}
+                                        </RequestHistoryButton>
+                                    ))}
+                                </RequestHistory>
+                            )}
+                        </Fragment>
+                    ),
+                )}
+            </RequestContainer>
         );
     },
 );
