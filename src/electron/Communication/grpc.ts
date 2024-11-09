@@ -2,7 +2,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
-import { dialog, ipcMain, ipcRenderer, webContents } from "electron";
+import { dialog } from "electron";
 import type {
     GrpcServerStreamDataEvent,
     GrpcServerStreamErrorEvent,
@@ -32,7 +32,7 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
             }
 
             if (!method.requestStream && method.responseStream) {
-                console.log("sending server treaming request");
+                console.log("sending server streaming request");
                 return await grpcServerStreamingRequest(request, method, client, ipc);
             }
 

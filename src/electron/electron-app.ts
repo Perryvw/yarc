@@ -38,7 +38,11 @@ app.whenReady().then(async () => {
     });
 
     ipcMain.handle(IpcCall.GrpcRequest, async (_, request: GrpcRequestData): Promise<GrpcResponse> => {
-        return await makeGrpcRequest(request, window.webContents);
+        try {
+            return await makeGrpcRequest(request, window.webContents);
+        } catch (err: unknown) {
+            return { result: "error", code: "EXCEPTION", detail: JSON.stringify(err), time: 0 };
+        }
     });
 
     ipcMain.handle(IpcCall.LoadPersistedState, async () => {

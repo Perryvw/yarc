@@ -1,9 +1,11 @@
 import CodeMirror from "@uiw/react-codemirror";
-import { runInAction, toJS } from "mobx";
+import { jsonLanguage } from "@codemirror/lang-json";
+import * as CodeMirrorLint from "@codemirror/lint";
+import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
-import { type ChangeEvent, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
-import type { MethodInfo, ProtoContent, ProtoFileDescriptor } from "../../common/grpc";
+import type { MethodInfo, ProtoContent } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
 import type { GrpcRequestData } from "../../common/request-types";
 import type { ProtoConfig } from "./AppContext";
@@ -127,6 +129,26 @@ export const GrpcRequestPanel = observer(
             [activeRequest, rpcs],
         );
 
+        const linter = CodeMirrorLint.linter((view) => {
+            const content = view.state.doc.toString();
+            const parsedJson = jsonLanguage.parser.parse(content);
+            const cursor = parsedJson.cursor();
+
+            console.log(cursor.node, cursor.node.type.name); // JsonText
+            console.log(cursor.firstChild());
+            console.log(cursor.node, cursor.node.type); // Object
+
+            const diagnostics: CodeMirrorLint.Diagnostic[] = [];
+            const d: CodeMirrorLint.Diagnostic = {
+                from: 3,
+                to: 10,
+                severity: "error",
+                message: "testerino",
+            };
+            //diagnostics.push(d);
+            return diagnostics;
+        });
+
         return (
             <RequestPanelRoot>
                 <SelectProtosModal open={protoModalOpen} close={closeProtoModal} protoConfig={protoConfig} />
@@ -149,6 +171,8 @@ export const GrpcRequestPanel = observer(
                         }}
                         value={activeRequest.body}
                         onChange={onRequestBodyChanged}
+                        extensions={[linter, jsonLanguage]}
+                        lang="json"
                     />
                 )}
             </RequestPanelRoot>
