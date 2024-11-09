@@ -7,5 +7,6 @@
         "jsx": "react-jsx",
         "strict": true,
         "module": "CommonJS"
-    }
+    },
+    "include": ["src/**/*", "test/**/*"]
 }

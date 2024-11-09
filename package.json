@@ -6,6 +6,7 @@
     "scripts": {
         "test": "biome check",
         "lint": "biome lint",
+        "check:tsc": "tsc --noEmit",
         "fix:test": "biome check --write",
         "fix:format": "biome format --write",
         "start": "electron-vite preview",
