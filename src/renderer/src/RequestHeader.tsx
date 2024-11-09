@@ -165,6 +165,7 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             // TODO
             const response: GrpcResponse = await window.electron.ipcRenderer.invoke(IpcCall.GrpcRequest, jsRequest);
             runInAction(() => {
+                request.isExecuting = false;
                 request.response = response;
                 requestForHistory.response = response;
             });

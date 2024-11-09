@@ -98,14 +98,18 @@ function fixPersistedData(
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
 
-            protoFile: {
-                protoPath: ri.protoFile?.protoPath ?? "",
-                rootDir: ri.protoFile?.rootDir ?? "",
-            },
-            rpc: {
-                service: ri.rpc?.service ?? "",
-                method: ri.rpc?.method ?? "",
-            },
+            protoFile: ri.protoFile
+                ? {
+                      protoPath: ri.protoFile?.protoPath ?? "",
+                      rootDir: ri.protoFile?.rootDir ?? "",
+                  }
+                : undefined,
+            rpc: ri.rpc
+                ? {
+                      service: ri.rpc?.service ?? "",
+                      method: ri.rpc?.method ?? "",
+                  }
+                : undefined,
 
             body: ri.body ?? "{}",
 
@@ -119,7 +123,7 @@ function fixPersistedData(
         requests: incoming.requests?.map(fixRequest).filter(notUndefined) ?? [],
         protoRoots: incoming.protoRoots?.filter(notUndefined) ?? [],
         layout: {
-            directoryWidth: incoming.layout?.directoryWidth ?? 10,
+            directoryWidth: incoming.layout?.directoryWidth ?? 20,
             repsonseWidth: incoming.layout?.repsonseWidth ?? 50,
         },
         window: {

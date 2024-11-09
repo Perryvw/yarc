@@ -5,6 +5,11 @@ export interface ProtoRoot {
     protoFiles: string[];
 }
 
+export interface ProtoFileDescriptor {
+    protoPath: string;
+    rootPath: string;
+}
+
 export interface ProtoContent {
     services: ProtoService[];
 }

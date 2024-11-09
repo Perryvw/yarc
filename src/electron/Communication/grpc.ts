@@ -56,7 +56,6 @@ function grpcUnaryRequest(
             (r) => JSON.stringify(method.responseDeserialize(r)),
             JSON.parse(request.body),
             (err: grpc.ServiceError | null, value?: string) => {
-                console.log(err, value);
                 if (err) {
                     resolve({
                         result: "error",
@@ -145,7 +144,7 @@ export async function findProtoFiles(protoRoot: string): Promise<string[]> {
                 await findInDir(p);
             } else {
                 if (f.endsWith(".proto")) {
-                    result.push(p);
+                    result.push(path.relative(protoRoot, p));
                 }
             }
         }
@@ -182,7 +181,7 @@ export async function parseProtoFile(protoPath: string, protoRootDir: string): P
 }
 
 function parseProtoPackageDescription(protoPath: string, protoRootDir: string): Promise<proto.PackageDefinition> {
-    return proto.load(protoPath, { includeDirs: [protoRootDir] });
+    return proto.load(path.join(protoRootDir, protoPath), { includeDirs: [protoRootDir] });
 }
 
 function isServiceDefinition(desc: proto.AnyDefinition): desc is proto.ServiceDefinition {

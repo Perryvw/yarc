@@ -1,14 +1,16 @@
-import { RefreshCcw, Trash } from "lucide-react";
+import { ArrowBigRight, RefreshCcw, Trash } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
-import type { ProtoRoot } from "../../../common/grpc";
+import type { ProtoFileDescriptor, ProtoRoot } from "../../../common/grpc";
 import { type BrowseProtoResult, IpcCall } from "../../../common/ipc";
 import type { ProtoConfig } from "../AppContext";
 
 const SelectProtosDialog = styled.dialog`
     width: 95%;
     height: 95%;
+    border: solid 1px grey;
+    border-radius: 10px;
 `;
 
 const ProtoRootsContainer = styled.div`
@@ -83,7 +85,15 @@ const ProtoTreeEntry = styled.div`
 
 const ProtoTreeEntryHeader = styled.div`
     padding: 10px;
-    background-color: darkred;
+    background-color: grey;
+`;
+
+const ProtoTreeEntryNoFile = styled.div`
+    white-space: nowrap;
+    padding: 3px 10px 3px 30px;
+    border-style: solid;
+    border-color: grey;
+    border-width: 0px 0px 1px 0px;
 `;
 
 const ProtoTreeEntryFile = styled.div`
@@ -92,7 +102,23 @@ const ProtoTreeEntryFile = styled.div`
     border-style: solid;
     border-color: grey;
     border-width: 0px 0px 1px 0px;
+
+    cursor: pointer;
+
+    &:hover {
+        background-color: blue;
+    }
 `;
+
+const SelectProtoButton = styled.div`
+    background-color: green;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    float: right;
+`;
+
+export type SelectProtoModalResult = { cancelled: true } | { cancelled: false; protoFile: ProtoFileDescriptor };
 
 export const SelectProtosModal = observer(
     ({
@@ -101,7 +127,7 @@ export const SelectProtosModal = observer(
         protoConfig,
     }: {
         open: boolean;
-        close: () => void;
+        close: (result: SelectProtoModalResult) => void;
         protoConfig: ProtoConfig;
     }) => {
         const ref = useRef<HTMLDialogElement>(null);
@@ -129,7 +155,7 @@ export const SelectProtosModal = observer(
         );
 
         return (
-            <SelectProtosDialog ref={ref} onClose={close}>
+            <SelectProtosDialog ref={ref} onClose={() => close({ cancelled: true })}>
                 <div style={{ display: "flex", height: "calc(100% - 30px)" }}>
                     <ProtoRootsContainer>
                         Proto roots
@@ -143,16 +169,32 @@ export const SelectProtosModal = observer(
                         </AddRootButton>
                     </ProtoRootsContainer>
                     <ProtoTreeContainer>
-                        Detected proto files
+                        Select proto file:
                         <ProtoTree>
                             {protoConfig.roots.map((root, i) => (
                                 <ProtoTreeEntry key={i.toString()}>
                                     <ProtoTreeEntryHeader>{root.rootPath}</ProtoTreeEntryHeader>
                                     {root.protoFiles.length === 0 ? (
-                                        <ProtoTreeEntryFile>No proto files found</ProtoTreeEntryFile>
+                                        <ProtoTreeEntryNoFile>No proto files found</ProtoTreeEntryNoFile>
                                     ) : (
                                         root.protoFiles.map((f, j) => (
-                                            <ProtoTreeEntryFile key={j.toString()}>{f}</ProtoTreeEntryFile>
+                                            <ProtoTreeEntryFile
+                                                key={j.toString()}
+                                                onClick={() =>
+                                                    close({
+                                                        cancelled: false,
+                                                        protoFile: {
+                                                            protoPath: f,
+                                                            rootPath: root.rootPath,
+                                                        },
+                                                    })
+                                                }
+                                            >
+                                                {f}
+                                                <SelectProtoButton>
+                                                    <ArrowBigRight />
+                                                </SelectProtoButton>
+                                            </ProtoTreeEntryFile>
                                         ))
                                     )}
                                 </ProtoTreeEntry>
@@ -160,7 +202,7 @@ export const SelectProtosModal = observer(
                         </ProtoTree>
                     </ProtoTreeContainer>
                 </div>
-                <button type="button" onClick={close}>
+                <button type="button" onClick={() => close({ cancelled: true })}>
                     Close
                 </button>
             </SelectProtosDialog>

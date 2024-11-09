@@ -36,7 +36,7 @@ export class AppContext {
         return this.requests[this.selectedIndex];
     }
 
-    gridWidthDirectory = 10;
+    gridWidthDirectory = 20;
     gridWidthResponse = 50;
 
     protoConfig: ProtoConfig;
@@ -242,6 +242,9 @@ export class AppContext {
 
     public handleGrpcStreamClose(event: GrpcStreamClosedEvent) {
         const request = this.requests.find((r) => r.id === event.requestId);
+        if (request) {
+            request.isExecuting = false;
+        }
         if (request?.type === "grpc" && request.response?.result === "stream") {
             request.response.streamOpen = false;
         }
@@ -249,6 +252,9 @@ export class AppContext {
 
     public handleGrpcStreamError(event: GrpcServerStreamErrorEvent) {
         const request = this.requests.find((r) => r.id === event.requestId);
+        if (request) {
+            request.isExecuting = false;
+        }
         if (request?.type === "grpc" && request.response?.result === "stream") {
             request.response.error = {
                 result: "error",
