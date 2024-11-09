@@ -156,23 +156,49 @@ export class AppContext {
         }
     }
 
-    public moveRequest(active: string, over: string) {
-        const oldIndex = this.requests.findIndex((item) => item.id === active);
-        const newIndex = this.requests.findIndex((item) => item.id === over);
+    public findRequestById(
+        id: string,
+        requests: RequestDataOrGroup[] = this.requests,
+    ): {
+        request: RequestDataOrGroup;
+        requests: RequestDataOrGroup[];
+        index: number;
+    } | null {
+        for (let i = 0; i < requests.length; i++) {
+            const request = requests[i];
 
-        if (oldIndex >= 0 && newIndex >= 0) {
-            const oldActiveRequest = this.activeRequest;
-            const newRequests = [...this.requests];
-            const [request] = newRequests.splice(oldIndex, 1);
-            newRequests.splice(newIndex, 0, request);
-            this.setRequestList(newRequests);
+            if (request.id === id) {
+                return { request, requests, index: i };
+            }
 
-            if (oldActiveRequest) {
-                this.setActiveRequest(oldActiveRequest);
+            if (request.type === "group") {
+                const found = this.findRequestById(id, request.requests);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public moveRequest(who: string, where: string) {
+        const oldIndex = this.findRequestById(who);
+        const newIndex = this.findRequestById(where);
+
+        console.log(oldIndex, newIndex);
+
+        if (oldIndex !== null && newIndex !== null) {
+            const [request] = oldIndex.requests.splice(oldIndex.index, 1);
+
+            if (newIndex.request.type === "group") {
+                newIndex.request.requests.push(request);
+            } else {
+                newIndex.requests.splice(newIndex.index, 0, request);
             }
 
             // Persist state
-            this.persistState();
+            //this.persistState();
         }
     }
 

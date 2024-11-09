@@ -3,7 +3,7 @@ import { ChevronsLeftRight, CirclePlay, Copy, History, SquarePen, Trash } from "
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
-import { Fragment, useCallback, useState } from "react";
+import { Fragment, useCallback, useRef, useState } from "react";
 import styled from "styled-components";
 import type { RequestData, RequestDataOrGroup, RequestGroup, RequestList } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
@@ -27,6 +27,7 @@ const RequestContainer = styled.div`
     flex-direction: column;
     scrollbar-width: thin;
     position: relative;
+    padding: 5px 0;
 `;
 
 const RequestHistory = styled.div`
@@ -52,15 +53,6 @@ const RequestHistoryButton = styled.button`
     }
 `;
 
-const DragIndicator = styled.div`
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background-color: blue;
-    pointer-events: none;
-`;
-
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
     timeStyle: "medium",
@@ -78,9 +70,10 @@ export const Directory = observer(
         importDirectory: () => void;
         exportDirectory: () => void;
     }) => {
-        const { requests } = context;
         console.log("rendering directory");
 
+        const [isDragging, setIsDragging] = useState(false);
+        const [draggingOverRequestId, setDraggingOverRequestId] = useState<string | null>(null);
         const [showActiveRequestHistory, setShowActiveRequestHistory] = useState(false);
         const [renamingRequest, renameModal] = useState<RequestDataOrGroup | undefined>(undefined);
 
@@ -124,6 +117,25 @@ export const Directory = observer(
             [context],
         );
 
+        function handleDragStart() {
+            setIsDragging(true);
+        }
+
+        function handleDragEnd() {
+            setIsDragging(false);
+            setDraggingOverRequestId(null);
+        }
+
+        function handleDragEnter(request: RequestDataOrGroup) {
+            setDraggingOverRequestId(request.id);
+        }
+
+        function handleDragLeave(request: RequestDataOrGroup) {
+            if (draggingOverRequestId === request.id) {
+                setDraggingOverRequestId(null);
+            }
+        }
+
         return (
             <DirectoryRoot>
                 <DirectoryButtons
@@ -132,16 +144,27 @@ export const Directory = observer(
                     exportDirectory={exportDirectory}
                 />
 
-                <SortableRequests
-                    requests={context.requests}
-                    context={context}
-                    deleteRequest={deleteRequest}
-                    duplicateRequest={duplicateRequest}
-                    renameRequest={renameRequest}
-                    selectRequest={selectRequest}
-                    showActiveRequestHistory={showActiveRequestHistory}
-                    setShowActiveRequestHistory={setShowActiveRequestHistory}
-                />
+                <RequestContainer
+                    className={classNames({
+                        "is-dragging": isDragging,
+                    })}
+                >
+                    <SortableRequests
+                        requests={context.requests}
+                        context={context}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        deleteRequest={deleteRequest}
+                        duplicateRequest={duplicateRequest}
+                        renameRequest={renameRequest}
+                        selectRequest={selectRequest}
+                        showActiveRequestHistory={showActiveRequestHistory}
+                        setShowActiveRequestHistory={setShowActiveRequestHistory}
+                        draggingOverRequestId={draggingOverRequestId}
+                    />
+                </RequestContainer>
                 <RenameModal request={renamingRequest} close={finishRename} />
             </DirectoryRoot>
         );
@@ -183,7 +206,6 @@ const RequestUrl = styled(RequestName)`
 
 const Request = styled.div`
     --method-color: #FFF;
-    border: unset;
     background: unset;
     text-align: left;
     padding: 6px 14px;
@@ -194,11 +216,17 @@ const Request = styled.div`
     margin-bottom: 5px;
     position: relative;
     border-radius: 10px;
-    overflow: hidden;
     position: relative;
     border: 1px solid transparent;
     flex-shrink: 0;
     position: relative;
+
+    transform: translate(0, 0); // TODO: This is a fix for rounded corners while dragging
+
+    // TODO: This an unhinged selector, find a better way to do this
+    .is-dragging & * {
+        pointer-events: none;
+    }
 
     &.active,
     &:hover {
@@ -225,6 +253,22 @@ const Request = styled.div`
 
     &.active:before {
         opacity: 1;
+    }
+
+    &.is-drag-over:after {
+        content: "";
+        position: absolute;
+        top: -5px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: blue;
+        border-radius: 10px;
+        pointer-events: none;
+    }
+
+    &.is-drag-over-group {
+        border: 1px dashed blue;
     }
 `;
 
@@ -267,8 +311,14 @@ const HistoryButton = styled(RenameButton)`
 
 const RequestEntry = observer(
     ({
+        context,
         active,
+        isDragOver,
         request,
+        onDragStart,
+        onDragEnd,
+        onDragEnter,
+        onDragLeave,
         renameRequest,
         selectRequest,
         deleteRequest,
@@ -276,8 +326,14 @@ const RequestEntry = observer(
         showActiveRequestHistory,
         setShowActiveRequestHistory,
     }: {
+        context: AppContext;
         active: boolean;
+        isDragOver: boolean;
         request: RequestData;
+        onDragStart: () => void;
+        onDragEnd: () => void;
+        onDragEnter: (r: RequestData) => void;
+        onDragLeave: (r: RequestData) => void;
         renameRequest: (r: RequestData) => void;
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestData) => void;
@@ -287,10 +343,6 @@ const RequestEntry = observer(
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
         console.log("Rendering request entry");
-
-        const style = {
-            "--method-color": request.type === "http" && httpVerbColorPalette[request.method],
-        };
 
         function getCleanerRequestUrl() {
             let url = request.url;
@@ -327,8 +379,62 @@ const RequestEntry = observer(
             selectRequest(request);
         }, [request, selectRequest]);
 
+        const handleDragStart = (e: React.DragEvent) => {
+            e.dataTransfer.setData("yarc/drag", request.id);
+            //e.dataTransfer.setDragImage(e.target, 0, 0);
+            e.dataTransfer.effectAllowed = "move";
+
+            console.log("dragging", request.id);
+
+            onDragStart();
+        };
+
+        const handleDragEnd = (e: React.DragEvent) => {
+            onDragEnd();
+        };
+
+        const handleDragEnter = (e: React.DragEvent) => {
+            e.preventDefault();
+            onDragEnter(request);
+        };
+
+        const handleDragOver = (e: React.DragEvent) => {
+            e.preventDefault();
+        };
+
+        const handleDragLeave = (e: React.DragEvent) => {
+            onDragLeave(request);
+        };
+
+        const handleDrop = (e: React.DragEvent) => {
+            const movedRequestId = e.dataTransfer.getData("yarc/drag");
+
+            if (!movedRequestId) {
+                return;
+            }
+
+            console.log("dropped", movedRequestId, "on", request.id);
+
+            context.moveRequest(movedRequestId, request.id);
+        };
+
         return (
-            <Request onClick={selectHandler} className={classNames({ active })} style={style}>
+            <Request
+                onClick={selectHandler}
+                className={classNames({ active, "is-drag-over": isDragOver })}
+                style={
+                    {
+                        "--method-color": request.type === "http" && httpVerbColorPalette[request.method],
+                    } as React.CSSProperties
+                }
+                draggable="true"
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+            >
                 <RequestNameLine>
                     <RequestName>
                         {request.type === "grpc" && (
@@ -372,18 +478,29 @@ const RequestEntry = observer(
 const RequestGroupEntry = observer(
     ({
         active,
+        isDragOver,
         context,
         request,
+        onDragStart,
+        onDragEnd,
+        onDragEnter,
+        onDragLeave,
         renameRequest,
         selectRequest,
         deleteRequest,
         duplicateRequest,
         showActiveRequestHistory,
         setShowActiveRequestHistory,
+        draggingOverRequestId,
     }: {
         active: boolean;
+        isDragOver: boolean;
         context: AppContext;
         request: RequestGroup;
+        onDragStart: () => void;
+        onDragEnd: () => void;
+        onDragEnter: (r: RequestDataOrGroup) => void;
+        onDragLeave: (r: RequestDataOrGroup) => void;
         renameRequest: (r: RequestDataOrGroup) => void;
         selectRequest: (r: RequestDataOrGroup) => void;
         deleteRequest: (r: RequestDataOrGroup) => void;
@@ -391,9 +508,9 @@ const RequestGroupEntry = observer(
 
         showActiveRequestHistory: boolean;
         setShowActiveRequestHistory: (v: boolean) => void;
+        draggingOverRequestId: string | null;
     }) => {
-        console.log("Rendering request entry");
-        const [isOver, setIsOver] = useState(false);
+        console.log("Rendering request group entry");
 
         function renameHandler(e: React.MouseEvent) {
             renameRequest(request);
@@ -409,8 +526,57 @@ const RequestGroupEntry = observer(
             selectRequest(request);
         }, [request, selectRequest]);
 
+        const handleDragStart = (e: React.DragEvent) => {
+            e.dataTransfer.setData("yarc/drag", request.id);
+            //e.dataTransfer.setDragImage(e.target, 0, 0);
+            e.dataTransfer.effectAllowed = "move";
+
+            console.log("dragging group", request.id);
+
+            onDragStart();
+        };
+
+        const handleDragEnd = (e: React.DragEvent) => {
+            onDragEnd();
+        };
+
+        const handleDragEnter = (e: React.DragEvent) => {
+            e.preventDefault();
+            onDragEnter(request);
+        };
+
+        const handleDragOver = (e: React.DragEvent) => {
+            e.preventDefault();
+        };
+
+        const handleDragLeave = (e: React.DragEvent) => {
+            onDragLeave(request);
+        };
+
+        const handleDrop = (e: React.DragEvent) => {
+            const movedRequestId = e.dataTransfer.getData("yarc/drag");
+
+            if (!movedRequestId) {
+                return;
+            }
+
+            console.log("dropped", movedRequestId, "on group", request.id);
+
+            context.moveRequest(movedRequestId, request.id);
+        };
+
         return (
-            <Request onClick={selectHandler}>
+            <Request
+                className={classNames({ active, "is-drag-over-group": isDragOver })}
+                onClick={selectHandler}
+                draggable="true"
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+            >
                 <RequestNameLine>
                     <RequestName>{request.name}</RequestName>
                 </RequestNameLine>
@@ -429,12 +595,17 @@ const RequestGroupEntry = observer(
                 <SortableRequests
                     requests={request.requests}
                     context={context}
+                    onDragStart={onDragStart}
+                    onDragEnd={onDragEnd}
+                    onDragEnter={onDragEnter}
+                    onDragLeave={onDragLeave}
                     deleteRequest={deleteRequest}
                     duplicateRequest={duplicateRequest}
                     renameRequest={renameRequest}
                     selectRequest={selectRequest}
                     showActiveRequestHistory={showActiveRequestHistory}
                     setShowActiveRequestHistory={setShowActiveRequestHistory}
+                    draggingOverRequestId={draggingOverRequestId}
                 />
             </Request>
         );
@@ -445,15 +616,24 @@ const SortableRequests = observer(
     ({
         requests,
         context,
+        onDragStart,
+        onDragEnd,
+        onDragEnter,
+        onDragLeave,
         renameRequest,
         selectRequest,
         deleteRequest,
         duplicateRequest,
         showActiveRequestHistory,
         setShowActiveRequestHistory,
+        draggingOverRequestId,
     }: {
         requests: RequestList;
         context: AppContext;
+        onDragStart: () => void;
+        onDragEnd: () => void;
+        onDragEnter: (r: RequestDataOrGroup) => void;
+        onDragLeave: (r: RequestDataOrGroup) => void;
         renameRequest: (r: RequestDataOrGroup) => void;
         selectRequest: (r: RequestDataOrGroup) => void;
         deleteRequest: (r: RequestDataOrGroup) => void;
@@ -461,6 +641,7 @@ const SortableRequests = observer(
 
         showActiveRequestHistory: boolean;
         setShowActiveRequestHistory: (v: boolean) => void;
+        draggingOverRequestId: string | null;
     }) => {
         // function getFilteredRequests() {
         //     if (search) {
@@ -522,54 +703,70 @@ const SortableRequests = observer(
         }
 
         return (
-            <RequestContainer>
-                {requests.map((r, index) =>
-                    r.type === "group" ? (
-                        <RequestGroupEntry
-                            active={false}
-                            key={r.id}
-                            request={r}
-                            context={context}
-                            renameRequest={renameRequest}
-                            selectRequest={selectRequest}
-                            deleteRequest={deleteRequest}
-                            duplicateRequest={duplicateRequest}
-                            showActiveRequestHistory={showActiveRequestHistory}
-                            setShowActiveRequestHistory={setShowActiveRequestHistory}
-                        />
-                    ) : (
-                        <Fragment key={r.id}>
-                            <RequestEntry
-                                active={r === context.activeRequest}
+            <>
+                {requests.map((r) => (
+                    <Fragment key={r.id}>
+                        {r.type === "group" ? (
+                            <RequestGroupEntry
+                                active={false}
+                                isDragOver={r.id === draggingOverRequestId}
                                 request={r}
+                                context={context}
+                                onDragStart={onDragStart}
+                                onDragEnd={onDragEnd}
+                                onDragEnter={onDragEnter}
+                                onDragLeave={onDragLeave}
                                 renameRequest={renameRequest}
                                 selectRequest={selectRequest}
                                 deleteRequest={deleteRequest}
                                 duplicateRequest={duplicateRequest}
                                 showActiveRequestHistory={showActiveRequestHistory}
                                 setShowActiveRequestHistory={setShowActiveRequestHistory}
+                                draggingOverRequestId={draggingOverRequestId}
                             />
-
-                            {showActiveRequestHistory && context.activeRequest === r && (
-                                <RequestHistory>
-                                    {r.history.map((oldRequest, i) => (
-                                        <RequestHistoryButton
-                                            type="button"
-                                            key={i.toString()}
-                                            onClick={() => restoreOldRequestFromHistory(oldRequest)}
-                                        >
-                                            <RequestName>{dateFormatter.format(oldRequest.lastExecute)}</RequestName>
-                                            {i > 0 && (
-                                                <RequestUrl>{getRequestDiff(oldRequest, r.history[i - 1])}</RequestUrl>
-                                            )}
-                                        </RequestHistoryButton>
-                                    ))}
-                                </RequestHistory>
-                            )}
-                        </Fragment>
-                    ),
-                )}
-            </RequestContainer>
+                        ) : (
+                            <>
+                                <RequestEntry
+                                    context={context}
+                                    active={r === context.activeRequest}
+                                    isDragOver={r.id === draggingOverRequestId}
+                                    request={r}
+                                    onDragStart={onDragStart}
+                                    onDragEnd={onDragEnd}
+                                    onDragEnter={onDragEnter}
+                                    onDragLeave={onDragLeave}
+                                    renameRequest={renameRequest}
+                                    selectRequest={selectRequest}
+                                    deleteRequest={deleteRequest}
+                                    duplicateRequest={duplicateRequest}
+                                    showActiveRequestHistory={showActiveRequestHistory}
+                                    setShowActiveRequestHistory={setShowActiveRequestHistory}
+                                />
+                                {showActiveRequestHistory && context.activeRequest === r && (
+                                    <RequestHistory>
+                                        {r.history.map((oldRequest, i) => (
+                                            <RequestHistoryButton
+                                                type="button"
+                                                key={i.toString()}
+                                                onClick={() => restoreOldRequestFromHistory(oldRequest)}
+                                            >
+                                                <RequestName>
+                                                    {dateFormatter.format(oldRequest.lastExecute)}
+                                                </RequestName>
+                                                {i > 0 && (
+                                                    <RequestUrl>
+                                                        {getRequestDiff(oldRequest, r.history[i - 1])}
+                                                    </RequestUrl>
+                                                )}
+                                            </RequestHistoryButton>
+                                        ))}
+                                    </RequestHistory>
+                                )}
+                            </>
+                        )}
+                    </Fragment>
+                ))}
+            </>
         );
     },
 );
