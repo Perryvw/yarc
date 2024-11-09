@@ -3,7 +3,7 @@ import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import classNames from "classnames";
-import { ChevronsLeftRight, Copy, SquarePen, Trash, History, CirclePlay } from "lucide-react";
+import { ChevronsLeftRight, CirclePlay, Copy, History, SquarePen, Trash } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
@@ -136,65 +136,6 @@ export const Directory = observer(
             },
             [context],
         );
-
-        function getFilteredRequests() {
-            if (search) {
-                const str = search.toUpperCase();
-
-                return requests.filter(
-                    (r) =>
-                        r.type !== "group" && (r.name.toUpperCase().includes(str) || r.url.toUpperCase().includes(str)),
-                );
-            }
-
-            return requests;
-        }
-
-        function restoreOldRequestFromHistory(request: RequestData) {
-            context.restoreRequestData(request);
-        }
-
-        function getRequestDiff(newRequest: RequestData, oldRequest: RequestData) {
-            const diff = [];
-
-            if (newRequest.type === "http" && oldRequest.type === "http") {
-                if (newRequest.response) {
-                    diff.push(newRequest.response.statusCode);
-                }
-
-                if (newRequest.method !== oldRequest.method) {
-                    diff.push(`${oldRequest.method} » ${newRequest.method}`);
-                }
-
-                if (newRequest.url !== oldRequest.url) {
-                    diff.push("url");
-                }
-
-                if (newRequest.body !== oldRequest.body) {
-                    diff.push("body");
-                }
-
-                /*
-                if (newRequest.bodyForm !== oldRequest.bodyForm) {
-                    diff.push("body");
-                }
-
-                if (newRequest.params !== oldRequest.params) {
-                    diff.push("params");
-                }
-
-                if (newRequest.headers !== oldRequest.headers) {
-                    diff.push("headers");
-                }
-                */
-            }
-
-            if (diff.length === 0) {
-                return "";
-            }
-
-            return diff.join(", ");
-        }
 
         return (
             <DirectoryRoot>
@@ -556,6 +497,19 @@ const SortableRequests = observer(
         showActiveRequestHistory: boolean;
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
+        // function getFilteredRequests() {
+        //     if (search) {
+        //         const str = search.toUpperCase();
+
+        //         return requests.filter(
+        //             (r) =>
+        //                 r.type !== "group" && (r.name.toUpperCase().includes(str) || r.url.toUpperCase().includes(str)),
+        //         );
+        //     }
+
+        //     return requests;
+        // }
+
         function restoreOldRequestFromHistory(request: RequestData) {
             context.restoreRequestData(request);
         }
