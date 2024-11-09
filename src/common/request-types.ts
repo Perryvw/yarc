@@ -42,7 +42,16 @@ export interface GrpcRequestData {
 
 export type RequestData = HttpRequestData | GrpcRequestData;
 
-export type RequestList = RequestData[];
+export interface RequestGroup {
+    type: "group";
+    id: string;
+    name: string;
+    requests: RequestDataOrGroup[];
+}
+
+export type RequestDataOrGroup = RequestData | RequestGroup;
+
+export type RequestList = RequestDataOrGroup[];
 
 export interface HttpResponseEvent {
     requestId: string;

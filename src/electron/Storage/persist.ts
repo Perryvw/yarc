@@ -3,7 +3,13 @@ import * as path from "node:path";
 import { type BaseWindow, app } from "electron";
 import { v7 as uuidv7 } from "uuid";
 import type { PersistedState, PersistedStateWithWindow } from "../../common/persist-state";
-import type { GrpcRequestData, HttpRequestData, KeyValue, RequestData } from "../../common/request-types";
+import type {
+    GrpcRequestData,
+    HttpRequestData,
+    KeyValue,
+    RequestDataOrGroup,
+    RequestGroup,
+} from "../../common/request-types";
 
 const storagePath = app.getPath("sessionData");
 const storageFile = path.join(storagePath, "localStorage.json");
@@ -56,14 +62,18 @@ function fixPersistedData(
         return undefined;
     }
 
-    function fixRequest(r: DeepPartial<RequestData> | undefined): RequestData | undefined {
+    function fixRequest(r: DeepPartial<RequestDataOrGroup> | undefined): RequestDataOrGroup | undefined {
         if (r === undefined) return undefined;
 
         if (r.type === "grpc") {
             return fixGrpcRequest(r);
         }
-
-        return fixHttpRequest(r as HttpRequestData);
+        if (r.type === "http") {
+            return fixHttpRequest(r);
+        }
+        if (r.type === "group") {
+            return fixGroup(r);
+        }
     }
 
     function fixHttpRequest(ri: DeepPartial<HttpRequestData>): HttpRequestData {
@@ -112,6 +122,15 @@ function fixPersistedData(
             lastExecute: ri.lastExecute ?? Date.now(),
             isExecuting: false,
             history: [],
+        };
+    }
+
+    function fixGroup(ri: DeepPartial<RequestGroup>): RequestGroup {
+        return {
+            type: "group",
+            id: uuidv7(),
+            name: ri.name ?? "Restored group",
+            requests: ri.requests?.map(fixRequest).filter(notUndefined) ?? [],
         };
     }
 

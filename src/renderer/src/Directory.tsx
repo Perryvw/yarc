@@ -9,7 +9,7 @@ import { observer } from "mobx-react-lite";
 import type React from "react";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import type { RequestData } from "../../common/request-types";
+import type { RequestData, RequestDataOrGroup, RequestGroup, RequestList } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { DirectoryButtons } from "./DirectoryButtons";
 import { httpVerbColorPalette } from "./HttpVerb";
@@ -76,10 +76,10 @@ export const Directory = observer(
         console.log("rendering directory");
 
         const [showActiveRequestHistory, setShowActiveRequestHistory] = useState(false);
-        const [renamingRequest, renameModal] = useState<RequestData | undefined>(undefined);
+        const [renamingRequest, renameModal] = useState<RequestDataOrGroup | undefined>(undefined);
 
         const renameRequest = useCallback(
-            (request: RequestData) => {
+            (request: RequestDataOrGroup) => {
                 renameModal(request);
             },
             [context],
@@ -88,15 +88,15 @@ export const Directory = observer(
         function finishRename(result: RenameResult) {
             renameModal(undefined);
             runInAction(() => {
-                if (!result.cancelled && context.activeRequest) {
-                    context.activeRequest.name = result.name;
+                if (!result.cancelled && result.request) {
+                    result.request.name = result.name;
                     context.persistState();
                 }
             });
         }
 
         const selectRequest = useCallback(
-            (request: RequestData) => {
+            (request: RequestDataOrGroup) => {
                 setShowActiveRequestHistory(false);
                 context.setActiveRequest(request);
             },
@@ -104,7 +104,7 @@ export const Directory = observer(
         );
 
         const deleteRequest = useCallback(
-            (request: RequestData) => {
+            (request: RequestDataOrGroup) => {
                 setShowActiveRequestHistory(false);
                 context.deleteRequest(request);
             },
@@ -141,7 +141,10 @@ export const Directory = observer(
             if (search) {
                 const str = search.toUpperCase();
 
-                return requests.filter((r) => r.name.toUpperCase().includes(str) || r.url.toUpperCase().includes(str));
+                return requests.filter(
+                    (r) =>
+                        r.type !== "group" && (r.name.toUpperCase().includes(str) || r.url.toUpperCase().includes(str)),
+                );
             }
 
             return requests;
@@ -207,46 +210,16 @@ export const Directory = observer(
                     modifiers={[restrictToVerticalAxis]}
                     onDragEnd={handleDragEnd}
                 >
-                    <SortableContext items={requests} strategy={verticalListSortingStrategy}>
-                        <RequestContainer>
-                            {getFilteredRequests().map((r) => (
-                                <>
-                                    <RequestEntry
-                                        active={context.activeRequest === r}
-                                        key={r.id}
-                                        request={r}
-                                        renameRequest={renameRequest}
-                                        selectRequest={selectRequest}
-                                        deleteRequest={deleteRequest}
-                                        duplicateRequest={duplicateRequest}
-                                        showActiveRequestHistory={showActiveRequestHistory}
-                                        setShowActiveRequestHistory={setShowActiveRequestHistory}
-                                    />
-
-                                    {showActiveRequestHistory && context.activeRequest === r && (
-                                        <RequestHistory>
-                                            {r.history.map((oldRequest, i) => (
-                                                <RequestHistoryButton
-                                                    type="button"
-                                                    key={i.toString()}
-                                                    onClick={() => restoreOldRequestFromHistory(oldRequest)}
-                                                >
-                                                    <RequestName>
-                                                        {dateFormatter.format(oldRequest.lastExecute)}
-                                                    </RequestName>
-                                                    {i > 0 && (
-                                                        <RequestUrl>
-                                                            {getRequestDiff(oldRequest, r.history[i - 1])}
-                                                        </RequestUrl>
-                                                    )}
-                                                </RequestHistoryButton>
-                                            ))}
-                                        </RequestHistory>
-                                    )}
-                                </>
-                            ))}
-                        </RequestContainer>
-                    </SortableContext>
+                    <SortableRequests
+                        requests={context.requests}
+                        context={context}
+                        deleteRequest={deleteRequest}
+                        duplicateRequest={duplicateRequest}
+                        renameRequest={renameRequest}
+                        selectRequest={selectRequest}
+                        showActiveRequestHistory={showActiveRequestHistory}
+                        setShowActiveRequestHistory={setShowActiveRequestHistory}
+                    />
                 </DndContext>
                 <RenameModal request={renamingRequest} close={finishRename} />
             </DirectoryRoot>
@@ -481,6 +454,210 @@ const RequestEntry = observer(
                 )}
                 {!active && <RequestUrl>{getCleanerRequestUrl() || "No URL"}</RequestUrl>}
             </Request>
+        );
+    },
+);
+
+const RequestGroupEntry = observer(
+    ({
+        active,
+        context,
+        request,
+        renameRequest,
+        selectRequest,
+        deleteRequest,
+        duplicateRequest,
+        showActiveRequestHistory,
+        setShowActiveRequestHistory,
+    }: {
+        active: boolean;
+        context: AppContext;
+        request: RequestGroup;
+        renameRequest: (r: RequestDataOrGroup) => void;
+        selectRequest: (r: RequestDataOrGroup) => void;
+        deleteRequest: (r: RequestDataOrGroup) => void;
+        duplicateRequest: (r: RequestData) => void;
+
+        showActiveRequestHistory: boolean;
+        setShowActiveRequestHistory: (v: boolean) => void;
+    }) => {
+        console.log("Rendering request entry");
+
+        const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: request.id });
+        const style = {
+            transform: CSS.Transform.toString(transform),
+            transition,
+        };
+
+        function renameHandler(e: React.MouseEvent) {
+            renameRequest(request);
+            e.stopPropagation();
+        }
+
+        function deleteHandler(e: React.MouseEvent) {
+            deleteRequest(request);
+            e.stopPropagation();
+        }
+
+        const selectHandler = useCallback(() => {
+            selectRequest(request);
+        }, [request, selectRequest]);
+
+        return (
+            <Request ref={setNodeRef} onClick={selectHandler} style={style} {...attributes} {...listeners}>
+                <RequestNameLine>
+                    <RequestName>{request.name}</RequestName>
+                </RequestNameLine>
+
+                {active && (
+                    <RequestActions>
+                        <RenameButton onClick={renameHandler}>
+                            <SquarePen size={16} />
+                        </RenameButton>
+                        <DeleteButton onClick={deleteHandler}>
+                            <Trash size={16} />
+                        </DeleteButton>
+                    </RequestActions>
+                )}
+
+                <SortableRequests
+                    requests={request.requests}
+                    context={context}
+                    deleteRequest={deleteRequest}
+                    duplicateRequest={duplicateRequest}
+                    renameRequest={renameRequest}
+                    selectRequest={selectRequest}
+                    showActiveRequestHistory={showActiveRequestHistory}
+                    setShowActiveRequestHistory={setShowActiveRequestHistory}
+                />
+            </Request>
+        );
+    },
+);
+
+const SortableRequests = observer(
+    ({
+        requests,
+        context,
+        renameRequest,
+        selectRequest,
+        deleteRequest,
+        duplicateRequest,
+        showActiveRequestHistory,
+        setShowActiveRequestHistory,
+    }: {
+        requests: RequestList;
+        context: AppContext;
+        renameRequest: (r: RequestDataOrGroup) => void;
+        selectRequest: (r: RequestDataOrGroup) => void;
+        deleteRequest: (r: RequestDataOrGroup) => void;
+        duplicateRequest: (r: RequestData) => void;
+
+        showActiveRequestHistory: boolean;
+        setShowActiveRequestHistory: (v: boolean) => void;
+    }) => {
+        function restoreOldRequestFromHistory(request: RequestData) {
+            context.restoreRequestData(request);
+        }
+
+        function getRequestDiff(newRequest: RequestData, oldRequest: RequestData) {
+            const diff = [];
+
+            if (newRequest.type === "http" && oldRequest.type === "http") {
+                if (newRequest.response) {
+                    diff.push(newRequest.response.statusCode);
+                }
+
+                if (newRequest.method !== oldRequest.method) {
+                    diff.push(`${oldRequest.method} » ${newRequest.method}`);
+                }
+
+                if (newRequest.url !== oldRequest.url) {
+                    diff.push("url");
+                }
+
+                if (newRequest.body !== oldRequest.body) {
+                    diff.push("body");
+                }
+
+                /*
+                if (newRequest.bodyForm !== oldRequest.bodyForm) {
+                    diff.push("body");
+                }
+
+                if (newRequest.params !== oldRequest.params) {
+                    diff.push("params");
+                }
+
+                if (newRequest.headers !== oldRequest.headers) {
+                    diff.push("headers");
+                }
+                */
+            }
+
+            if (diff.length === 0) {
+                return "";
+            }
+
+            return diff.join(", ");
+        }
+
+        return (
+            <SortableContext items={requests} strategy={verticalListSortingStrategy}>
+                <RequestContainer>
+                    {requests.map((r) =>
+                        r.type === "group" ? (
+                            <RequestGroupEntry
+                                active={false}
+                                key={r.id}
+                                request={r}
+                                context={context}
+                                renameRequest={renameRequest}
+                                selectRequest={selectRequest}
+                                deleteRequest={deleteRequest}
+                                duplicateRequest={duplicateRequest}
+                                showActiveRequestHistory={showActiveRequestHistory}
+                                setShowActiveRequestHistory={setShowActiveRequestHistory}
+                            />
+                        ) : (
+                            <>
+                                <RequestEntry
+                                    active={r === context.activeRequest}
+                                    key={r.id}
+                                    request={r}
+                                    renameRequest={renameRequest}
+                                    selectRequest={selectRequest}
+                                    deleteRequest={deleteRequest}
+                                    duplicateRequest={duplicateRequest}
+                                    showActiveRequestHistory={showActiveRequestHistory}
+                                    setShowActiveRequestHistory={setShowActiveRequestHistory}
+                                />
+
+                                {showActiveRequestHistory && context.activeRequest === r && (
+                                    <RequestHistory>
+                                        {r.history.map((oldRequest, i) => (
+                                            <RequestHistoryButton
+                                                type="button"
+                                                key={i.toString()}
+                                                onClick={() => restoreOldRequestFromHistory(oldRequest)}
+                                            >
+                                                <RequestName>
+                                                    {dateFormatter.format(oldRequest.lastExecute)}
+                                                </RequestName>
+                                                {i > 0 && (
+                                                    <RequestUrl>
+                                                        {getRequestDiff(oldRequest, r.history[i - 1])}
+                                                    </RequestUrl>
+                                                )}
+                                            </RequestHistoryButton>
+                                        ))}
+                                    </RequestHistory>
+                                )}
+                            </>
+                        ),
+                    )}
+                </RequestContainer>
+            </SortableContext>
         );
     },
 );

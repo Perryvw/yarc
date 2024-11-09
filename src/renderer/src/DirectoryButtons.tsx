@@ -1,8 +1,8 @@
-import { ChevronsLeftRight, CirclePlus, Download, Globe, Upload } from "lucide-react";
+import { ChevronsLeftRight, CirclePlus, Download, Folder, Globe, Upload } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
-import type { GrpcRequestData, HttpRequestData } from "../../common/request-types";
+import type { GrpcRequestData, HttpRequestData, RequestGroup } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 
 const DirectoryButtonsContainer = styled.div`
@@ -142,6 +142,16 @@ export const DirectoryButtons = observer(
             context.setActiveRequestById(context.requests.length - 1);
         }
 
+        function newGroup() {
+            const group: RequestGroup = {
+                type: "group",
+                id: uuidv7(),
+                name: "Group",
+                requests: [],
+            };
+            context.addRequest(group);
+        }
+
         return (
             <DirectoryButtonsContainer>
                 <NewRequestTypePopup id="new-request-popover" popover="auto">
@@ -152,6 +162,10 @@ export const DirectoryButtons = observer(
                     <NewRequestType onClick={newRequest}>
                         <Globe />
                         <span>HTTP</span>
+                    </NewRequestType>
+                    <NewRequestType onClick={newGroup}>
+                        <Folder />
+                        <span>Group</span>
                     </NewRequestType>
                 </NewRequestTypePopup>
                 <ImportButton title="Import" onClick={importDirectory}>

@@ -23,6 +23,7 @@ import type {
     HttpResponseData,
     HttpResponseEvent,
     RequestData,
+    RequestDataOrGroup,
     RequestList,
 } from "../../common/request-types";
 
@@ -95,11 +96,11 @@ export class AppContext {
         );
     }
 
-    public addRequest(request: RequestData) {
+    public addRequest(request: RequestDataOrGroup) {
         this.requests.push(isObservable(request) ? request : request);
     }
 
-    public setActiveRequest(request: RequestData) {
+    public setActiveRequest(request: RequestDataOrGroup) {
         const index = this.requests.indexOf(request);
         this.setActiveRequestById(index);
     }
@@ -118,12 +119,12 @@ export class AppContext {
     }
 
     public setResponse(response: HttpResponseData | undefined) {
-        if (this.activeRequest) {
+        if (this.activeRequest && this.activeRequest.type !== "group") {
             this.activeRequest.response = response;
         }
     }
 
-    public deleteRequest(request: RequestData) {
+    public deleteRequest(request: RequestDataOrGroup) {
         const index = this.requests.indexOf(request);
         if (index >= 0) {
             // Remove request from list
@@ -180,15 +181,18 @@ export class AppContext {
             return;
         }
 
-        request.history = this.requests[this.selectedIndex].history;
+        const activeRequest = this.requests[this.selectedIndex];
+        if (activeRequest.type !== "group") {
+            request.history = activeRequest.history;
+        }
         this.requests[this.selectedIndex] = request;
     }
 
     public persistState(): void {
         const requestsWithoutResponse = this.requests.map((r) => {
             const req = toJS(r);
-            req.response = undefined;
-            req.history = [];
+            if (req.type !== "group") req.response = undefined;
+            if (req.type !== "group") req.history = [];
             return req;
         });
         const state: PersistedState = {
