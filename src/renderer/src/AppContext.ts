@@ -3,7 +3,6 @@ import {
     type IComputedFactory,
     type IObservableFactory,
     action,
-    computed,
     isObservable,
     makeAutoObservable,
     makeObservable,
@@ -20,7 +19,6 @@ import type {
 import { IpcCall, IpcEvent } from "../../common/ipc";
 import type { PersistedState } from "../../common/persist-state";
 import type {
-    GrpcResponseData,
     HttpResponseData,
     HttpResponseEvent,
     RequestData,
@@ -38,6 +36,7 @@ export class AppContext {
     isDragging = false;
     draggingOverRequestId: string | null = null;
     draggingInsertPosition: "above" | "below" | "group" = "above";
+    draggingStartClientY = 0;
 
     protoConfig: ProtoConfig;
 
@@ -71,6 +70,7 @@ export class AppContext {
 
     public addRequest(request: RequestDataOrGroup) {
         this.requests.push(isObservable(request) ? request : request);
+        this.persistState();
     }
 
     public setActiveRequest(request: RequestData | undefined) {
@@ -162,7 +162,7 @@ export class AppContext {
         }
 
         if (position === "group" && newIndex.request.type === "group") {
-            newIndex.request.requests.push(request);
+            newIndex.request.requests.unshift(request);
         } else {
             const delta = position === "below" ? 1 : 0;
             newIndex.requests.splice(newIndex.index + delta, 0, request);

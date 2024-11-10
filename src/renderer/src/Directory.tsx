@@ -407,10 +407,12 @@ const RequestEntry = observer(
 
         const handleDragStart = (e: React.DragEvent) => {
             e.dataTransfer.setData("yarc/drag", request.id);
-            //e.dataTransfer.setDragImage(e.target, 0, 0);
             e.dataTransfer.effectAllowed = "move";
 
-            console.log("dragging", request.id);
+            const rect = e.currentTarget.getBoundingClientRect();
+            runInAction(() => {
+                context.draggingStartClientY = rect.bottom;
+            });
 
             onDragStart();
         };
@@ -421,18 +423,17 @@ const RequestEntry = observer(
 
         const handleDragEnter = (e: React.DragEvent) => {
             e.preventDefault();
+
+            const rect = e.currentTarget.getBoundingClientRect();
+            runInAction(() => {
+                context.draggingInsertPosition = context.draggingStartClientY > rect.bottom ? "above" : "below";
+            });
+
             onDragEnter(request);
         };
 
         const handleDragOver = (e: React.DragEvent) => {
             e.preventDefault();
-
-            const rect = e.currentTarget.getBoundingClientRect();
-            const y = e.clientY - rect.top;
-
-            runInAction(() => {
-                context.draggingInsertPosition = y > rect.height / 2 ? "below" : "above";
-            });
         };
 
         const handleDragLeave = (e: React.DragEvent) => {
@@ -563,10 +564,12 @@ const RequestGroupEntry = observer(
 
         const handleDragStart = (e: React.DragEvent) => {
             e.dataTransfer.setData("yarc/drag", request.id);
-            //e.dataTransfer.setDragImage(e.target, 0, 0);
             e.dataTransfer.effectAllowed = "move";
 
-            console.log("dragging group", request.id);
+            const rect = e.currentTarget.getBoundingClientRect();
+            runInAction(() => {
+                context.draggingStartClientY = rect.bottom;
+            });
 
             onDragStart();
         };
@@ -578,14 +581,14 @@ const RequestGroupEntry = observer(
         const handleDragEnter = (e: React.DragEvent) => {
             e.preventDefault();
             onDragEnter(request);
-        };
-
-        const handleDragOver = (e: React.DragEvent) => {
-            e.preventDefault();
 
             runInAction(() => {
                 context.draggingInsertPosition = "group";
             });
+        };
+
+        const handleDragOver = (e: React.DragEvent) => {
+            e.preventDefault();
         };
 
         const handleDragLeave = (e: React.DragEvent) => {
