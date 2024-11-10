@@ -2,6 +2,7 @@ name: Build/release Electron app
 
 on:
   push:
+    tags: "*"
 
 env:
   NODE_VERSION: 20.17.0
