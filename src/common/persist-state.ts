@@ -5,7 +5,7 @@ export interface PersistedState {
     protoRoots: string[];
     layout: {
         directoryWidth: number;
-        repsonseWidth: number;
+        responseWidth: number;
     };
 }
 

@@ -88,7 +88,7 @@ export class AppContext {
     }
 
     public deleteRequest(request: RequestDataOrGroup) {
-        const index = this.requests.indexOf(request);
+        const index = this.requests.indexOf(request); // TODO: fix
         if (index >= 0) {
             this.setActiveRequest(undefined);
 
@@ -102,7 +102,7 @@ export class AppContext {
     }
 
     public duplicateRequest(request: RequestData) {
-        const index = this.requests.indexOf(request);
+        const index = this.requests.indexOf(request); // TODO: fix
         if (index >= 0) {
             // Remove request from list
             const newRequests = [...this.requests];
@@ -194,7 +194,7 @@ export class AppContext {
             protoRoots: this.protoConfig.roots.map((r) => r.rootPath),
             layout: {
                 directoryWidth: this.gridWidthDirectory,
-                repsonseWidth: this.gridWidthResponse,
+                responseWidth: this.gridWidthResponse,
             },
         };
         window.electron.ipcRenderer.invoke(IpcCall.PersistState, toJS(state));
@@ -205,7 +205,7 @@ export class AppContext {
             runInAction(() => {
                 if (state) {
                     this.gridWidthDirectory = state.layout.directoryWidth;
-                    this.gridWidthResponse = state.layout.repsonseWidth;
+                    this.gridWidthResponse = state.layout.responseWidth;
 
                     this.setRequestList(state.requests);
 

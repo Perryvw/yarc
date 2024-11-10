@@ -144,7 +144,7 @@ function fixPersistedData(
         protoRoots: incoming.protoRoots?.filter(notUndefined) ?? [],
         layout: {
             directoryWidth: incoming.layout?.directoryWidth ?? 20,
-            repsonseWidth: incoming.layout?.repsonseWidth ?? 50,
+            responseWidth: incoming.layout?.responseWidth ?? 50,
         },
         window: {
             maximized: incoming.window?.maximized ?? false,

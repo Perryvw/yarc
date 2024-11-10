@@ -129,12 +129,14 @@ export const Directory = observer(
         }
 
         function handleDragEnter(request: RequestDataOrGroup) {
+            console.log("enter", request.id);
             runInAction(() => {
                 context.draggingOverRequestId = request.id;
             });
         }
 
         function handleDragLeave(request: RequestDataOrGroup) {
+            console.log("leave", request.id);
             runInAction(() => {
                 if (context.draggingOverRequestId === request.id) {
                     context.draggingOverRequestId = null;
@@ -215,20 +217,37 @@ const RequestActions = styled.div`
     height: 20px;
 `;
 
+const RequestGroupInner = styled.div`
+    margin-left: 15px;
+`;
+
+const RequestGroupArrow = styled.span`
+    display: flex;
+    color: var(--method-color);
+    width: 16px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+`;
+
 const RequestGroupRoot = styled.div`
     border: 1px solid transparent;
     border-radius: 10px;
-    border-left: 1px solid red;
-    padding: 6px 4px;
-    margin-left: 6px;
+    background: hsl(222deg 18% 30% / .1);
+    margin: 0 6px;
 
     &.is-drag-over-group {
         border: 1px dashed blue;
     }
 
-    & > ${RequestNameLine},
-    & > ${RequestActions} {
-        padding: 0 10px;
+    & > ${RequestNameLine} {
+        position: sticky;
+        top: 0;
+        padding: 6px 0;
+        z-index: 1;
+    }
+
+    .is-dragging & > ${RequestNameLine} * {
+        pointer-events: none;
     }
 `;
 
@@ -621,38 +640,42 @@ const RequestGroupEntry = observer(
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
                 >
-                    {!request.collapsed && <ChevronDown size={20} />}
-                    {request.collapsed && <ChevronUp size={20} />}
-                    <RequestName>{request.name}</RequestName>
+                    <RequestName>
+                        <RequestGroupArrow>
+                            {request.collapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </RequestGroupArrow>
+                        {request.name}
+                    </RequestName>
+                    {!request.collapsed && (
+                        <RequestActions>
+                            <RenameButton onClick={renameHandler}>
+                                <SquarePen size={16} />
+                            </RenameButton>
+                            <DeleteButton onClick={deleteHandler}>
+                                <Trash size={16} />
+                            </DeleteButton>
+                        </RequestActions>
+                    )}
                 </RequestNameLine>
 
-                {!request.collapsed && (
-                    <RequestActions>
-                        <RenameButton onClick={renameHandler}>
-                            <SquarePen size={16} />
-                        </RenameButton>
-                        <DeleteButton onClick={deleteHandler}>
-                            <Trash size={16} />
-                        </DeleteButton>
-                    </RequestActions>
-                )}
-
-                {!request.collapsed && (
-                    <SortableRequests
-                        requests={request.requests}
-                        context={context}
-                        onDragStart={onDragStart}
-                        onDragEnd={onDragEnd}
-                        onDragEnter={onDragEnter}
-                        onDragLeave={onDragLeave}
-                        deleteRequest={deleteRequest}
-                        duplicateRequest={duplicateRequest}
-                        renameRequest={renameRequest}
-                        selectRequest={selectRequest}
-                        showActiveRequestHistory={showActiveRequestHistory}
-                        setShowActiveRequestHistory={setShowActiveRequestHistory}
-                    />
-                )}
+                <RequestGroupInner>
+                    {!request.collapsed && (
+                        <SortableRequests
+                            requests={request.requests}
+                            context={context}
+                            onDragStart={onDragStart}
+                            onDragEnd={onDragEnd}
+                            onDragEnter={onDragEnter}
+                            onDragLeave={onDragLeave}
+                            deleteRequest={deleteRequest}
+                            duplicateRequest={duplicateRequest}
+                            renameRequest={renameRequest}
+                            selectRequest={selectRequest}
+                            showActiveRequestHistory={showActiveRequestHistory}
+                            setShowActiveRequestHistory={setShowActiveRequestHistory}
+                        />
+                    )}
+                </RequestGroupInner>
             </RequestGroupRoot>
         );
     },
