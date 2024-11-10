@@ -35,6 +35,10 @@ export class AppContext {
     gridWidthDirectory = 20;
     gridWidthResponse = 50;
 
+    isDragging = false;
+    draggingOverRequestId: string | null = null;
+    draggingInsertPosition: "above" | "below" | "group" = "above";
+
     protoConfig: ProtoConfig;
 
     constructor() {
@@ -136,7 +140,7 @@ export class AppContext {
         return null;
     }
 
-    public moveRequest(who: string, where: string) {
+    public moveRequest(who: string, where: string, position: "below" | "above" | "group") {
         if (who === where) {
             return;
         }
@@ -157,10 +161,11 @@ export class AppContext {
             return;
         }
 
-        if (newIndex.request.type === "group") {
+        if (position === "group" && newIndex.request.type === "group") {
             newIndex.request.requests.push(request);
         } else {
-            newIndex.requests.splice(newIndex.index, 0, request);
+            const delta = position === "below" ? 1 : 0;
+            newIndex.requests.splice(newIndex.index + delta, 0, request);
         }
 
         // Persist state
@@ -216,7 +221,7 @@ export class AppContext {
     }
 
     public handleHttpResponse(event: HttpResponseEvent) {
-        const request = this.requests.find((r) => r.id === event.requestId);
+        const request = this.requests.find((r) => r.id === event.requestId); // TODO: fix
         if (request?.type === "http") {
             request.response = event.response;
             request.isExecuting = false;
@@ -224,17 +229,20 @@ export class AppContext {
     }
 
     public handleGrpcStreamData(event: GrpcServerStreamDataEvent) {
-        const request = this.requests.find((r) => r.id === event.requestId);
+        const request = this.requests.find((r) => r.id === event.requestId); // TODO: fix
         if (request?.type === "grpc" && request.response?.result === "stream") {
             request.response.responses.push(event.response);
         }
     }
 
     public handleGrpcStreamClose(event: GrpcStreamClosedEvent) {
-        const request = this.requests.find((r) => r.id === event.requestId);
-        if (request) {
-            request.isExecuting = false;
+        const request = this.requests.find((r) => r.id === event.requestId); // TODO: fix
+        if (request?.type !== "grpc") {
+            return;
         }
+
+        request.isExecuting = false;
+
         if (request?.type === "grpc" && request.response?.result === "stream") {
             request.response.streamOpen = false;
         }
@@ -242,10 +250,14 @@ export class AppContext {
 
     public handleGrpcStreamError(event: GrpcServerStreamErrorEvent) {
         const request = this.requests.find((r) => r.id === event.requestId);
-        if (request) {
-            request.isExecuting = false;
+
+        if (request?.type !== "grpc") {
+            return;
         }
-        if (request?.type === "grpc" && request.response?.result === "stream") {
+
+        request.isExecuting = false;
+
+        if (request.response?.result === "stream") {
             request.response.error = {
                 result: "error",
                 code: event.code ?? "<unknown>",
