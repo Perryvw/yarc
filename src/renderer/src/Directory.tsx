@@ -205,16 +205,26 @@ const RequestUrl = styled(RequestName)`
     height: 20px;
 `;
 
+const RequestActions = styled.div`
+    display: flex;
+    gap: 15px;
+    height: 20px;
+`;
+
 const RequestGroupRoot = styled.div`
     border: 1px solid transparent;
     border-radius: 10px;
     border-left: 1px solid red;
-    padding: 6px 14px;
-    padding-right: 0;
+    padding: 6px 4px;
     margin-left: 6px;
 
     &.is-drag-over-group {
         border: 1px dashed blue;
+    }
+
+    & > ${RequestNameLine},
+    & > ${RequestActions} {
+        padding: 0 10px;
     }
 `;
 
@@ -285,12 +295,6 @@ const Request = styled.div`
 const RequestMethod = styled.span`
     display: flex;
     color: var(--method-color);
-`;
-
-const RequestActions = styled.div`
-    display: flex;
-    gap: 15px;
-    height: 20px;
 `;
 
 const RenameButton = styled.button`

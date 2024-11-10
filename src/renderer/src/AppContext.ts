@@ -66,6 +66,7 @@ export class AppContext {
             persistState: action,
             loadPersistedState: action,
             restoreRequestData: action,
+            findRequestById: action,
 
             handleHttpResponse: action,
             handleGrpcStreamClose: action,
