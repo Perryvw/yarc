@@ -161,22 +161,29 @@ export class AppContext {
 
     public moveRequest(who: string, where: string) {
         const oldIndex = this.findRequestById(who);
+
+        if (oldIndex === null) {
+            return;
+        }
+
+        const [request] = oldIndex.requests.splice(oldIndex.index, 1);
+
+        // Find the new index after removing the request so its placed in the correct place
         const newIndex = this.findRequestById(where);
 
-        console.log(oldIndex, newIndex);
-
-        if (oldIndex !== null && newIndex !== null) {
-            const [request] = oldIndex.requests.splice(oldIndex.index, 1);
-
-            if (newIndex.request.type === "group") {
-                newIndex.request.requests.push(request);
-            } else {
-                newIndex.requests.splice(newIndex.index, 0, request);
-            }
-
-            // Persist state
-            //this.persistState();
+        if (newIndex === null) {
+            oldIndex.requests.splice(oldIndex.index, 0, request); // insert back
+            return;
         }
+
+        if (newIndex.request.type === "group") {
+            newIndex.request.requests.push(request);
+        } else {
+            newIndex.requests.splice(newIndex.index, 0, request);
+        }
+
+        // Persist state
+        //this.persistState();
     }
 
     public restoreRequestData(request: RequestData) {
