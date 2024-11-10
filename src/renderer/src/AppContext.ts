@@ -160,6 +160,10 @@ export class AppContext {
     }
 
     public moveRequest(who: string, where: string) {
+        if (who === where) {
+            return;
+        }
+
         const oldIndex = this.findRequestById(who);
 
         if (oldIndex === null) {
