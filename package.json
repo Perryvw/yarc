@@ -12,9 +12,9 @@
         "start": "electron-vite preview",
         "dev": "electron-vite dev",
         "build": "electron-vite build",
-        "package:linux": "npm run build && electron-builder --linux -p never --dir",
-        "package:mac": "npm run build && electron-builder --mac -p never --dir",
-        "package:win": "npm run build && electron-builder --win -p never --dir"
+        "package:linux": "npm run build && electron-builder --linux -p never",
+        "package:mac": "npm run build && electron-builder --mac -p never",
+        "package:win": "npm run build && electron-builder --win -p never"
     },
     "dependencies": {
         "@codemirror/lang-html": "^6.4.9",
