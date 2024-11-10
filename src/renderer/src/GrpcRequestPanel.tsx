@@ -1,6 +1,6 @@
-import CodeMirror from "@uiw/react-codemirror";
 import { jsonLanguage } from "@codemirror/lang-json";
 import * as CodeMirrorLint from "@codemirror/lint";
+import CodeMirror from "@uiw/react-codemirror";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useCallback, useState } from "react";

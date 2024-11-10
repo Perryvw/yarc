@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { ChevronDown, ChevronsLeftRight, ChevronUp, CirclePlay, Copy, History, SquarePen, Trash } from "lucide-react";
+import { ChevronDown, ChevronUp, ChevronsLeftRight, CirclePlay, Copy, History, SquarePen, Trash } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";

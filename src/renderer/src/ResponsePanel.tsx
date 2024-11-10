@@ -5,8 +5,8 @@ import { CircleSlash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Tab, Tabs } from "./Tabs";
 import type { RequestData } from "../../common/request-types";
+import { Tab, Tabs } from "./Tabs";
 
 export const ResponsePanelRoot = styled.div`
     display: flex;

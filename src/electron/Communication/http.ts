@@ -1,6 +1,6 @@
 import { net } from "electron";
-import type { HttpRequestData, HttpResponseData, HttpResponseEvent } from "../../common/request-types";
 import { IpcEvent } from "../../common/ipc";
+import type { HttpRequestData, HttpResponseData, HttpResponseEvent } from "../../common/request-types";
 
 export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.WebContents) {
     const url = new URL(request.url);

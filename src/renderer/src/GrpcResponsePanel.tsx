@@ -2,11 +2,11 @@ import { html } from "@codemirror/lang-html";
 import { json } from "@codemirror/lang-json";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { CircleSlash2 } from "lucide-react";
+import { toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useState } from "react";
 import type { GrpcResponse, GrpcResponseData, GrpcServerStreamData } from "../../common/request-types";
 import { ResponseBody, ResponsePanelEmpty, ResponsePanelRoot, Status, StatusCode } from "./ResponsePanel";
-import { toJS } from "mobx";
 
 const codemirrorTheme = EditorView.theme({
     "&.cm-editor": {

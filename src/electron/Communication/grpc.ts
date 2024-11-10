@@ -10,7 +10,7 @@ import type {
     ProtoContent,
     ProtoService,
 } from "../../common/grpc";
-import { IpcEvent, type BrowseProtoResult } from "../../common/ipc";
+import { type BrowseProtoResult, IpcEvent } from "../../common/ipc";
 import type { GrpcRequestData, GrpcResponse, GrpcServerStreamData } from "../../common/request-types";
 
 export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.WebContents): Promise<GrpcResponse> {
