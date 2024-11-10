@@ -29,13 +29,7 @@ import type {
 
 export class AppContext {
     requests: RequestList = [];
-    selectedIndex: number | undefined = undefined;
-
-    get activeRequest() {
-        if (this.selectedIndex === undefined) return undefined;
-
-        return this.requests[this.selectedIndex];
-    }
+    activeRequest: RequestData | undefined;
 
     gridWidthDirectory = 10;
     gridWidthResponse = 50;
@@ -48,15 +42,12 @@ export class AppContext {
 
         makeObservable(this, {
             requests: observable,
-            selectedIndex: observable,
+            activeRequest: observable,
             gridWidthDirectory: observable,
             gridWidthResponse: observable,
             protoConfig: observable,
 
-            activeRequest: computed,
-
             setActiveRequest: action,
-            setActiveRequestById: action,
             addRequest: action,
             setRequestList: action,
             setResponse: action,
@@ -101,18 +92,8 @@ export class AppContext {
         this.requests.push(isObservable(request) ? request : request);
     }
 
-    public setActiveRequest(request: RequestDataOrGroup) {
-        const index = this.requests.indexOf(request);
-        this.setActiveRequestById(index);
-    }
-
-    public setActiveRequestById(index: number | undefined) {
-        if (index === undefined) {
-            this.selectedIndex = undefined;
-            return;
-        }
-
-        this.selectedIndex = index;
+    public setActiveRequest(request: RequestData | undefined) {
+        this.activeRequest = request;
     }
 
     public setRequestList(requests: RequestList) {
@@ -120,7 +101,7 @@ export class AppContext {
     }
 
     public setResponse(response: HttpResponseData | undefined) {
-        if (this.activeRequest && this.activeRequest.type !== "group") {
+        if (this.activeRequest) {
             this.activeRequest.response = response;
         }
     }
@@ -128,19 +109,14 @@ export class AppContext {
     public deleteRequest(request: RequestDataOrGroup) {
         const index = this.requests.indexOf(request);
         if (index >= 0) {
+            this.setActiveRequest(undefined);
+
             // Remove request from list
             const newRequests = [...this.requests];
             newRequests.splice(index, 1);
             this.setRequestList(newRequests);
             // Persist state
             this.persistState();
-
-            if (this.requests.length > 0) {
-                // Set active request to next event in the list
-                this.setActiveRequestById(Math.min(index, this.requests.length - 1));
-            } else {
-                this.setActiveRequestById(undefined);
-            }
         }
     }
 
@@ -204,15 +180,13 @@ export class AppContext {
     }
 
     public restoreRequestData(request: RequestData) {
-        if (this.selectedIndex === undefined) {
+        if (this.activeRequest === undefined) {
             return;
         }
 
-        const activeRequest = this.requests[this.selectedIndex];
-        if (activeRequest.type !== "group") {
-            request.history = activeRequest.history;
+        if (this.activeRequest) {
+            request.history = this.activeRequest.history;
         }
-        this.requests[this.selectedIndex] = request;
     }
 
     public persistState(): void {
@@ -241,9 +215,6 @@ export class AppContext {
                     this.gridWidthResponse = state.layout.repsonseWidth;
 
                     this.setRequestList(state.requests);
-                    if (state.requests.length > 0) {
-                        this.setActiveRequestById(0);
-                    }
 
                     this.protoConfig.roots = observable<ProtoRoot>([]);
                     for (const protoRoot of state.protoRoots) {

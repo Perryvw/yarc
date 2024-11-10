@@ -95,7 +95,7 @@ export const Directory = observer(
         }
 
         const selectRequest = useCallback(
-            (request: RequestDataOrGroup) => {
+            (request: RequestData) => {
                 setShowActiveRequestHistory(false);
                 context.setActiveRequest(request);
             },
@@ -518,7 +518,7 @@ const RequestGroupEntry = observer(
         onDragEnter: (r: RequestDataOrGroup) => void;
         onDragLeave: (r: RequestDataOrGroup) => void;
         renameRequest: (r: RequestDataOrGroup) => void;
-        selectRequest: (r: RequestDataOrGroup) => void;
+        selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestDataOrGroup) => void;
         duplicateRequest: (r: RequestData) => void;
 
@@ -656,7 +656,7 @@ const SortableRequests = observer(
         onDragEnter: (r: RequestDataOrGroup) => void;
         onDragLeave: (r: RequestDataOrGroup) => void;
         renameRequest: (r: RequestDataOrGroup) => void;
-        selectRequest: (r: RequestDataOrGroup) => void;
+        selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestDataOrGroup) => void;
         duplicateRequest: (r: RequestData) => void;
 
