@@ -1,0 +1,9 @@
+appId: "com.yarc.app"
+
+directories:
+  output: "./dist"
+
+files:
+  - "!*.*"
+  - "!**/*"
+  - "./out/**/*"
