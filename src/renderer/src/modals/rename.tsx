@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import type { RequestData } from "../../../common/request-types";
+import type { RequestData, RequestDataOrGroup } from "../../../common/request-types";
 
 const RenameDialog = styled.dialog`
 `;
@@ -17,13 +17,13 @@ const RenameOkButton = styled(RenameCancelButton)`
     background-color: blue;
 `;
 
-export type RenameResult = { cancelled: true } | { cancelled: false; name: string };
+export type RenameResult = { cancelled: true } | { cancelled: false; request?: RequestDataOrGroup; name: string };
 
 export function RenameModal({
     request,
     close,
 }: {
-    request: RequestData | undefined;
+    request: RequestDataOrGroup | undefined;
     close: (result: RenameResult) => void;
 }) {
     const ref = useRef<HTMLDialogElement>(null);
@@ -45,7 +45,7 @@ export function RenameModal({
             return;
         }
 
-        close({ cancelled: false, name: newName });
+        close({ cancelled: false, request, name: newName });
     }
 
     return (

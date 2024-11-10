@@ -74,9 +74,6 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
         const result: IpcImportResult = await window.electron.ipcRenderer.invoke(IpcCall.ImportDirectory);
         if (!result.cancelled) {
             context.setRequestList(result.requests);
-            if (result.requests.length > 0) {
-                context.setActiveRequestById(0);
-            }
         }
     }, [context]);
 

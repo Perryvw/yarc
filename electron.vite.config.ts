@@ -24,7 +24,20 @@ export default defineConfig({
         },
     },
     renderer: {
-        plugins: [react()],
+        plugins: [
+            react({
+                babel: {
+                    plugins: [
+                        [
+                            "styled-components",
+                            {
+                                displayName: true,
+                            },
+                        ],
+                    ],
+                },
+            }),
+        ],
         build: {
             rollupOptions: {
                 input: {

@@ -1,8 +1,8 @@
-import { ChevronsLeftRight, CirclePlus, Download, Globe, Upload } from "lucide-react";
+import { ChevronsLeftRight, CirclePlus, Download, Folder, Globe, Upload } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
-import type { GrpcRequestData, HttpRequestData } from "../../common/request-types";
+import type { GrpcRequestData, HttpRequestData, RequestData, RequestGroup } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 
 const DirectoryButtonsContainer = styled.div`
@@ -124,7 +124,7 @@ export const DirectoryButtons = observer(
                 history: [],
             };
             context.addRequest(newRequest);
-            context.setActiveRequestById(context.requests.length - 1);
+            context.setActiveRequest(context.requests[context.requests.length - 1] as RequestData);
         }
 
         function newRequestGrpc() {
@@ -139,7 +139,18 @@ export const DirectoryButtons = observer(
                 history: [],
             };
             context.addRequest(newRequest);
-            context.setActiveRequestById(context.requests.length - 1);
+            context.setActiveRequest(context.requests[context.requests.length - 1] as RequestData);
+        }
+
+        function newGroup() {
+            const group: RequestGroup = {
+                type: "group",
+                id: uuidv7(),
+                name: "Group",
+                collapsed: false,
+                requests: [],
+            };
+            context.addRequest(group);
         }
 
         return (
@@ -152,6 +163,10 @@ export const DirectoryButtons = observer(
                     <NewRequestType onClick={newRequest}>
                         <Globe />
                         <span>HTTP</span>
+                    </NewRequestType>
+                    <NewRequestType onClick={newGroup}>
+                        <Folder />
+                        <span>Group</span>
                     </NewRequestType>
                 </NewRequestTypePopup>
                 <ImportButton title="Import" onClick={importDirectory}>

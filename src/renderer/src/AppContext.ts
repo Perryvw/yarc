@@ -23,18 +23,13 @@ import type {
     HttpResponseData,
     HttpResponseEvent,
     RequestData,
+    RequestDataOrGroup,
     RequestList,
 } from "../../common/request-types";
 
 export class AppContext {
     requests: RequestList = [];
-    selectedIndex: number | undefined = undefined;
-
-    get activeRequest() {
-        if (this.selectedIndex === undefined) return undefined;
-
-        return this.requests[this.selectedIndex];
-    }
+    activeRequest: RequestData | undefined;
 
     gridWidthDirectory = 20;
     gridWidthResponse = 50;
@@ -47,15 +42,12 @@ export class AppContext {
 
         makeObservable(this, {
             requests: observable,
-            selectedIndex: observable,
+            activeRequest: observable,
             gridWidthDirectory: observable,
             gridWidthResponse: observable,
             protoConfig: observable,
 
-            activeRequest: computed,
-
             setActiveRequest: action,
-            setActiveRequestById: action,
             addRequest: action,
             setRequestList: action,
             setResponse: action,
@@ -65,6 +57,7 @@ export class AppContext {
             persistState: action,
             loadPersistedState: action,
             restoreRequestData: action,
+            findRequestById: action,
 
             handleHttpResponse: action,
             handleGrpcStreamClose: action,
@@ -95,22 +88,12 @@ export class AppContext {
         );
     }
 
-    public addRequest(request: RequestData) {
+    public addRequest(request: RequestDataOrGroup) {
         this.requests.push(isObservable(request) ? request : request);
     }
 
-    public setActiveRequest(request: RequestData) {
-        const index = this.requests.indexOf(request);
-        this.setActiveRequestById(index);
-    }
-
-    public setActiveRequestById(index: number | undefined) {
-        if (index === undefined) {
-            this.selectedIndex = undefined;
-            return;
-        }
-
-        this.selectedIndex = index;
+    public setActiveRequest(request: RequestData | undefined) {
+        this.activeRequest = request;
     }
 
     public setRequestList(requests: RequestList) {
@@ -123,22 +106,17 @@ export class AppContext {
         }
     }
 
-    public deleteRequest(request: RequestData) {
+    public deleteRequest(request: RequestDataOrGroup) {
         const index = this.requests.indexOf(request);
         if (index >= 0) {
+            this.setActiveRequest(undefined);
+
             // Remove request from list
             const newRequests = [...this.requests];
             newRequests.splice(index, 1);
             this.setRequestList(newRequests);
             // Persist state
             this.persistState();
-
-            if (this.requests.length > 0) {
-                // Set active request to next event in the list
-                this.setActiveRequestById(Math.min(index, this.requests.length - 1));
-            } else {
-                this.setActiveRequestById(undefined);
-            }
         }
     }
 
@@ -155,40 +133,78 @@ export class AppContext {
         }
     }
 
-    public moveRequest(active: string, over: string) {
-        const oldIndex = this.requests.findIndex((item) => item.id === active);
-        const newIndex = this.requests.findIndex((item) => item.id === over);
+    public findRequestById(
+        id: string,
+        requests: RequestDataOrGroup[] = this.requests,
+    ): {
+        request: RequestDataOrGroup;
+        requests: RequestDataOrGroup[];
+        index: number;
+    } | null {
+        for (let i = 0; i < requests.length; i++) {
+            const request = requests[i];
 
-        if (oldIndex >= 0 && newIndex >= 0) {
-            const oldActiveRequest = this.activeRequest;
-            const newRequests = [...this.requests];
-            const [request] = newRequests.splice(oldIndex, 1);
-            newRequests.splice(newIndex, 0, request);
-            this.setRequestList(newRequests);
-
-            if (oldActiveRequest) {
-                this.setActiveRequest(oldActiveRequest);
+            if (request.id === id) {
+                return { request, requests, index: i };
             }
 
-            // Persist state
-            this.persistState();
+            if (request.type === "group") {
+                const found = this.findRequestById(id, request.requests);
+                if (found) {
+                    return found;
+                }
+            }
         }
+
+        return null;
     }
 
-    public restoreRequestData(request: RequestData) {
-        if (this.selectedIndex === undefined) {
+    public moveRequest(who: string, where: string) {
+        if (who === where) {
             return;
         }
 
-        request.history = this.requests[this.selectedIndex].history;
-        this.requests[this.selectedIndex] = request;
+        const oldIndex = this.findRequestById(who);
+
+        if (oldIndex === null) {
+            return;
+        }
+
+        const [request] = oldIndex.requests.splice(oldIndex.index, 1);
+
+        // Find the new index after removing the request so its placed in the correct place
+        const newIndex = this.findRequestById(where);
+
+        if (newIndex === null) {
+            oldIndex.requests.splice(oldIndex.index, 0, request); // insert back
+            return;
+        }
+
+        if (newIndex.request.type === "group") {
+            newIndex.request.requests.push(request);
+        } else {
+            newIndex.requests.splice(newIndex.index, 0, request);
+        }
+
+        // Persist state
+        //this.persistState();
+    }
+
+    public restoreRequestData(request: RequestData) {
+        if (this.activeRequest === undefined) {
+            return;
+        }
+
+        if (this.activeRequest) {
+            request.history = this.activeRequest.history;
+        }
     }
 
     public persistState(): void {
         const requestsWithoutResponse = this.requests.map((r) => {
             const req = toJS(r);
-            req.response = undefined;
-            req.history = [];
+            if (req.type !== "group") req.response = undefined;
+            if (req.type !== "group") req.history = [];
             return req;
         });
         const state: PersistedState = {
@@ -210,9 +226,6 @@ export class AppContext {
                     this.gridWidthResponse = state.layout.repsonseWidth;
 
                     this.setRequestList(state.requests);
-                    if (state.requests.length > 0) {
-                        this.setActiveRequestById(0);
-                    }
 
                     this.protoConfig.roots = observable<ProtoRoot>([]);
                     for (const protoRoot of state.protoRoots) {
