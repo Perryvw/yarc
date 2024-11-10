@@ -87,7 +87,7 @@ function fixPersistedData(
         }
         return {
             type: "http",
-            id: uuidv7(),
+            id: ri.id ?? uuidv7(),
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
             method: ri.method ?? "GET",
@@ -104,7 +104,7 @@ function fixPersistedData(
     function fixGrpcRequest(ri: DeepPartial<GrpcRequestData>): GrpcRequestData {
         return {
             type: "grpc",
-            id: uuidv7(),
+            id: ri.id ?? uuidv7(),
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
 
@@ -128,8 +128,9 @@ function fixPersistedData(
     function fixGroup(ri: DeepPartial<RequestGroup>): RequestGroup {
         return {
             type: "group",
-            id: uuidv7(),
+            id: ri.id ?? uuidv7(),
             name: ri.name ?? "Restored group",
+            collapsed: ri.collapsed ?? false,
             requests: ri.requests?.map(fixRequest).filter(notUndefined) ?? [],
         };
     }

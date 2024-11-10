@@ -46,6 +46,7 @@ export interface RequestGroup {
     type: "group";
     id: string;
     name: string;
+    collapsed: boolean;
     requests: RequestDataOrGroup[];
 }
 

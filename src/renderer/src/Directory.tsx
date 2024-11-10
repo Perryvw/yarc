@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { ChevronsLeftRight, CirclePlay, Copy, History, SquarePen, Trash } from "lucide-react";
+import { ChevronDown, ChevronsLeftRight, ChevronUp, CirclePlay, Copy, History, SquarePen, Trash } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
@@ -124,6 +124,7 @@ export const Directory = observer(
         function handleDragEnd() {
             setIsDragging(false);
             setDraggingOverRequestId(null);
+            console.log("drag end");
         }
 
         function handleDragEnter(request: RequestDataOrGroup) {
@@ -204,6 +205,19 @@ const RequestUrl = styled(RequestName)`
     height: 20px;
 `;
 
+const RequestGroupRoot = styled.div`
+    border: 1px solid transparent;
+    border-radius: 10px;
+    border-left: 1px solid red;
+    padding: 6px 14px;
+    padding-right: 0;
+    margin-left: 6px;
+
+    &.is-drag-over-group {
+        border: 1px dashed blue;
+    }
+`;
+
 const Request = styled.div`
     --method-color: #FFF;
     background: unset;
@@ -265,10 +279,6 @@ const Request = styled.div`
         background-color: blue;
         border-radius: 10px;
         pointer-events: none;
-    }
-
-    &.is-drag-over-group {
-        border: 1px dashed blue;
     }
 `;
 
@@ -416,6 +426,8 @@ const RequestEntry = observer(
             console.log("dropped", movedRequestId, "on", request.id);
 
             context.moveRequest(movedRequestId, request.id);
+
+            onDragEnd(); // Moving the request element causes dropend event to not fire
         };
 
         return (
@@ -522,9 +534,9 @@ const RequestGroupEntry = observer(
             e.stopPropagation();
         }
 
-        const selectHandler = useCallback(() => {
-            selectRequest(request);
-        }, [request, selectRequest]);
+        const handleNameClick = useCallback(() => {
+            request.collapsed = !request.collapsed;
+        }, [request]);
 
         const handleDragStart = (e: React.DragEvent) => {
             e.dataTransfer.setData("yarc/drag", request.id);
@@ -563,25 +575,28 @@ const RequestGroupEntry = observer(
             console.log("dropped", movedRequestId, "on group", request.id);
 
             context.moveRequest(movedRequestId, request.id);
+
+            onDragEnd(); // Moving the request element causes dropend event to not fire
         };
 
         return (
-            <Request
-                className={classNames({ active, "is-drag-over-group": isDragOver })}
-                onClick={selectHandler}
-                draggable="true"
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onDragEnter={handleDragEnter}
-                onDragLeave={handleDragLeave}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-            >
-                <RequestNameLine>
+            <RequestGroupRoot className={classNames({ active, "is-drag-over-group": isDragOver })}>
+                <RequestNameLine
+                    onClick={handleNameClick}
+                    draggable="true"
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragEnter={handleDragEnter}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                >
+                    {!request.collapsed && <ChevronDown size={20} />}
+                    {request.collapsed && <ChevronUp size={20} />}
                     <RequestName>{request.name}</RequestName>
                 </RequestNameLine>
 
-                {active && (
+                {!request.collapsed && (
                     <RequestActions>
                         <RenameButton onClick={renameHandler}>
                             <SquarePen size={16} />
@@ -592,22 +607,24 @@ const RequestGroupEntry = observer(
                     </RequestActions>
                 )}
 
-                <SortableRequests
-                    requests={request.requests}
-                    context={context}
-                    onDragStart={onDragStart}
-                    onDragEnd={onDragEnd}
-                    onDragEnter={onDragEnter}
-                    onDragLeave={onDragLeave}
-                    deleteRequest={deleteRequest}
-                    duplicateRequest={duplicateRequest}
-                    renameRequest={renameRequest}
-                    selectRequest={selectRequest}
-                    showActiveRequestHistory={showActiveRequestHistory}
-                    setShowActiveRequestHistory={setShowActiveRequestHistory}
-                    draggingOverRequestId={draggingOverRequestId}
-                />
-            </Request>
+                {!request.collapsed && (
+                    <SortableRequests
+                        requests={request.requests}
+                        context={context}
+                        onDragStart={onDragStart}
+                        onDragEnd={onDragEnd}
+                        onDragEnter={onDragEnter}
+                        onDragLeave={onDragLeave}
+                        deleteRequest={deleteRequest}
+                        duplicateRequest={duplicateRequest}
+                        renameRequest={renameRequest}
+                        selectRequest={selectRequest}
+                        showActiveRequestHistory={showActiveRequestHistory}
+                        setShowActiveRequestHistory={setShowActiveRequestHistory}
+                        draggingOverRequestId={draggingOverRequestId}
+                    />
+                )}
+            </RequestGroupRoot>
         );
     },
 );
