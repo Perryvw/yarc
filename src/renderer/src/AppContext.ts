@@ -5,6 +5,7 @@ import {
     action,
     computed,
     isObservable,
+    makeAutoObservable,
     makeObservable,
     observable,
     runInAction,
@@ -37,33 +38,9 @@ export class AppContext {
     protoConfig: ProtoConfig;
 
     constructor() {
-        this.requests = [];
         this.protoConfig = new ProtoConfig(this);
 
-        makeObservable(this, {
-            requests: observable,
-            activeRequest: observable,
-            gridWidthDirectory: observable,
-            gridWidthResponse: observable,
-            protoConfig: observable,
-
-            setActiveRequest: action,
-            addRequest: action,
-            setRequestList: action,
-            setResponse: action,
-            deleteRequest: action,
-            duplicateRequest: action,
-            moveRequest: action,
-            persistState: action,
-            loadPersistedState: action,
-            restoreRequestData: action,
-            findRequestById: action,
-
-            handleHttpResponse: action,
-            handleGrpcStreamClose: action,
-            handleGrpcStreamData: action,
-            handleGrpcStreamError: action,
-        } satisfies ObservableDefinition<AppContext>);
+        makeAutoObservable(this);
 
         this.loadPersistedState();
 
