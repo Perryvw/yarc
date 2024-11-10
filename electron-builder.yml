@@ -4,4 +4,6 @@ directories:
   output: "./dist"
 
 files:
+  - "!*.*"
+  - "!**/*"
   - "./out/**/*"

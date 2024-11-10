@@ -16,6 +16,11 @@
         "package:mac": "npm run build && electron-builder --mac -p never",
         "package:win": "npm run build && electron-builder --win -p never"
     },
+    "files": [
+        "!*.*",
+        "!**/*",
+        "out/**/*"
+    ],
     "dependencies": {
         "@codemirror/lang-html": "^6.4.9",
         "@codemirror/lang-json": "^6.0.1",
