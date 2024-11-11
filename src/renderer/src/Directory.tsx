@@ -1,5 +1,19 @@
 import classNames from "classnames";
-import { ChevronDown, ChevronUp, ChevronsLeftRight, CirclePlay, Copy, History, SquarePen, Trash } from "lucide-react";
+import {
+    ChevronDown,
+    ChevronRight,
+    ChevronUp,
+    ChevronsLeftRight,
+    CirclePlay,
+    Copy,
+    Folder,
+    FolderOpen,
+    History,
+    Package,
+    Package2,
+    SquarePen,
+    Trash,
+} from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
@@ -21,6 +35,7 @@ const DirectoryRoot = styled.div`
 
 const RequestContainer = styled.div`
     overflow-y: auto;
+    scrollbar-gutter: stable;
     width: 100%;
     height: 100%;
     display: flex;
@@ -158,6 +173,7 @@ export const Directory = observer(
                     })}
                 >
                     <SortableRequests
+                        depth={1}
                         requests={context.requests}
                         context={context}
                         onDragStart={handleDragStart}
@@ -217,55 +233,24 @@ const RequestActions = styled.div`
     height: 20px;
 `;
 
-const RequestGroupInner = styled.div`
-    margin-left: 15px;
-`;
-
-const RequestGroupArrow = styled.span`
-    display: flex;
-    color: var(--method-color);
-    width: 16px;
-    justify-content: flex-end;
-    flex-shrink: 0;
-`;
-
-const RequestGroupRoot = styled.div`
-    border: 1px solid transparent;
-    border-radius: 10px;
-    background: hsl(222deg 18% 30% / .1);
-    margin: 0 6px;
-
-    &.is-drag-over-group {
-        border: 1px dashed blue;
-    }
-
-    & > ${RequestNameLine} {
-        position: sticky;
-        top: 0;
-        padding: 6px 0;
-        z-index: 1;
-    }
-
-    .is-dragging & > ${RequestNameLine} * {
-        pointer-events: none;
-    }
-`;
-
 const Request = styled.div`
     --method-color: #FFF;
     background: unset;
     text-align: left;
-    padding: 6px 14px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
-    margin: 0 6px;
     position: relative;
     border-radius: 10px;
     position: relative;
-    border: 1px solid transparent;
     flex-shrink: 0;
     position: relative;
+
+    // :GroupMargins
+    // The following sizes add up to 16px + 5px (GroupArrow is 16px plus the 5px flex gap)
+    border: 1px solid transparent;
+    padding: 6px 14px;
+    margin: 0 6px;
 
     transform: translate(0, 0); // TODO: This is a fix for rounded corners while dragging
 
@@ -320,6 +305,53 @@ const Request = styled.div`
 
     &.is-drag-over-below:after {
         bottom: -3px;
+    }
+`;
+
+const RequestGroupArrow = styled.span`
+    display: flex;
+    color: var(--method-color);
+    width: 16px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+`;
+
+const RequestGroupRoot = styled.div`
+    &.is-drag-over-group {
+        border: 1px dashed blue;
+    }
+
+    & > ${RequestNameLine} {
+        background: var(--color-background);
+        position: sticky;
+        top: calc(36px * (var(--group-depth) - 1) - 5px); // height of this element, minus the padding on the scrollable container
+        z-index: 1;
+        padding: 6px 6px;
+        padding-left: calc(21px * (var(--group-depth) - 1)); // :GroupMargins
+
+        &:hover {
+            cursor: pointer;
+            background: blue;
+        }
+
+        & > ${RequestActions} {
+            opacity: .3;
+            gap: 5px;
+        }
+
+        &:hover > ${RequestActions} {
+            opacity: 1;
+        }
+    }
+
+    .is-dragging & > ${RequestNameLine} * {
+        pointer-events: none;
+    }
+`;
+
+const RequestGroupInner = styled.div`
+    & > ${Request} {
+        padding-left: calc(14px + 21px * var(--group-depth)); // :GroupMargins
     }
 `;
 
@@ -536,6 +568,7 @@ const RequestEntry = observer(
 
 const RequestGroupEntry = observer(
     ({
+        depth,
         isDragOver,
         context,
         request,
@@ -550,6 +583,7 @@ const RequestGroupEntry = observer(
         showActiveRequestHistory,
         setShowActiveRequestHistory,
     }: {
+        depth: number;
         isDragOver: boolean;
         context: AppContext;
         request: RequestGroup;
@@ -577,9 +611,13 @@ const RequestGroupEntry = observer(
             e.stopPropagation();
         }
 
-        const handleNameClick = useCallback(() => {
-            request.collapsed = !request.collapsed;
-        }, [request]);
+        function handleNameClick(e: React.MouseEvent) {
+            e.preventDefault();
+
+            runInAction(() => {
+                request.collapsed = !request.collapsed;
+            });
+        }
 
         const handleDragStart = (e: React.DragEvent) => {
             e.dataTransfer.setData("yarc/drag", request.id);
@@ -629,7 +667,14 @@ const RequestGroupEntry = observer(
         };
 
         return (
-            <RequestGroupRoot className={classNames({ "is-drag-over-group": isDragOver })}>
+            <RequestGroupRoot
+                className={classNames({ "is-drag-over-group": isDragOver })}
+                style={
+                    {
+                        "--group-depth": depth,
+                    } as React.CSSProperties
+                }
+            >
                 <RequestNameLine
                     onClick={handleNameClick}
                     draggable="true"
@@ -640,10 +685,13 @@ const RequestGroupEntry = observer(
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
                 >
+                    <RequestGroupArrow>
+                        {request.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                    </RequestGroupArrow>
                     <RequestName>
-                        <RequestGroupArrow>
-                            {request.collapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </RequestGroupArrow>
+                        <RequestMethod>
+                            {request.collapsed ? <Folder size={16} /> : <FolderOpen size={16} />}
+                        </RequestMethod>
                         {request.name}
                     </RequestName>
                     {!request.collapsed && (
@@ -661,6 +709,7 @@ const RequestGroupEntry = observer(
                 <RequestGroupInner>
                     {!request.collapsed && (
                         <SortableRequests
+                            depth={depth + 1}
                             requests={request.requests}
                             context={context}
                             onDragStart={onDragStart}
@@ -683,6 +732,7 @@ const RequestGroupEntry = observer(
 
 const SortableRequests = observer(
     ({
+        depth,
         requests,
         context,
         onDragStart,
@@ -696,6 +746,7 @@ const SortableRequests = observer(
         showActiveRequestHistory,
         setShowActiveRequestHistory,
     }: {
+        depth: number;
         requests: RequestList;
         context: AppContext;
         onDragStart: () => void;
@@ -775,6 +826,7 @@ const SortableRequests = observer(
                     <Fragment key={r.id}>
                         {r.type === "group" ? (
                             <RequestGroupEntry
+                                depth={depth}
                                 isDragOver={r.id === context.draggingOverRequestId}
                                 request={r}
                                 context={context}
