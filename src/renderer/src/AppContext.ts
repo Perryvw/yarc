@@ -218,13 +218,17 @@ export class AppContext {
     }
 
     public handleHttpResponse(event: HttpResponseEvent) {
-        const index = this.findRequestById(event.requestId);
+        let request = this.activeRequest as RequestDataOrGroup;
 
-        if (index === null) {
-            return;
+        if (!request || request.id !== event.requestId) {
+            const index = this.findRequestById(event.requestId);
+
+            if (index === null) {
+                return;
+            }
+
+            request = index.request;
         }
-
-        const { request } = index;
 
         if (request.type === "http") {
             request.response = event.response;
@@ -233,13 +237,17 @@ export class AppContext {
     }
 
     public handleGrpcStreamData(event: GrpcServerStreamDataEvent) {
-        const index = this.findRequestById(event.requestId);
+        let request = this.activeRequest as RequestDataOrGroup;
 
-        if (index === null) {
-            return;
+        if (!request || request.id !== event.requestId) {
+            const index = this.findRequestById(event.requestId);
+
+            if (index === null) {
+                return;
+            }
+
+            request = index.request;
         }
-
-        const { request } = index;
 
         if (request.type === "grpc" && request.response?.result === "stream") {
             request.response.responses.push(event.response);
@@ -247,13 +255,17 @@ export class AppContext {
     }
 
     public handleGrpcStreamClose(event: GrpcStreamClosedEvent) {
-        const index = this.findRequestById(event.requestId);
+        let request = this.activeRequest as RequestDataOrGroup;
 
-        if (index === null) {
-            return;
+        if (!request || request.id !== event.requestId) {
+            const index = this.findRequestById(event.requestId);
+
+            if (index === null) {
+                return;
+            }
+
+            request = index.request;
         }
-
-        const { request } = index;
 
         if (request.type !== "grpc") {
             return;
@@ -267,9 +279,19 @@ export class AppContext {
     }
 
     public handleGrpcStreamError(event: GrpcServerStreamErrorEvent) {
-        const request = this.requests.find((r) => r.id === event.requestId);
+        let request = this.activeRequest as RequestDataOrGroup;
 
-        if (request?.type !== "grpc") {
+        if (!request || request.id !== event.requestId) {
+            const index = this.findRequestById(event.requestId);
+
+            if (index === null) {
+                return;
+            }
+
+            request = index.request;
+        }
+
+        if (request.type !== "grpc") {
             return;
         }
 
