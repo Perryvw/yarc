@@ -10,6 +10,7 @@ import {
     runInAction,
     toJS,
 } from "mobx";
+import { v7 as uuidv7 } from "uuid";
 import type {
     GrpcServerStreamDataEvent,
     GrpcServerStreamErrorEvent,
@@ -25,7 +26,6 @@ import type {
     RequestDataOrGroup,
     RequestList,
 } from "../../common/request-types";
-import { v7 as uuidv7 } from "uuid";
 
 export class AppContext {
     requests: RequestList = [];
