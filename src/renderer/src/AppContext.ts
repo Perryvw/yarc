@@ -25,6 +25,7 @@ import type {
     RequestDataOrGroup,
     RequestList,
 } from "../../common/request-types";
+import { v7 as uuidv7 } from "uuid";
 
 export class AppContext {
     requests: RequestList = [];
@@ -77,10 +78,6 @@ export class AppContext {
         this.activeRequest = request;
     }
 
-    public setRequestList(requests: RequestList) {
-        this.requests = requests;
-    }
-
     public setResponse(response: HttpResponseData | undefined) {
         if (this.activeRequest) {
             this.activeRequest.response = response;
@@ -88,30 +85,31 @@ export class AppContext {
     }
 
     public deleteRequest(request: RequestDataOrGroup) {
-        const index = this.requests.indexOf(request); // TODO: fix
-        if (index >= 0) {
-            this.setActiveRequest(undefined);
+        const oldIndex = this.findRequestById(request.id);
 
-            // Remove request from list
-            const newRequests = [...this.requests];
-            newRequests.splice(index, 1);
-            this.setRequestList(newRequests);
-            // Persist state
-            this.persistState();
+        if (oldIndex === null) {
+            return;
         }
+
+        this.setActiveRequest(undefined);
+
+        oldIndex.requests.splice(oldIndex.index, 1);
+
+        this.persistState();
     }
 
     public duplicateRequest(request: RequestData) {
-        const index = this.requests.indexOf(request); // TODO: fix
-        if (index >= 0) {
-            // Remove request from list
-            const newRequests = [...this.requests];
-            const newRequest = { ...request, name: `${request.name} - Duplicate` };
-            newRequests.splice(index, 0, newRequest);
-            this.setRequestList(newRequests);
-            // Persist state
-            this.persistState();
+        const oldIndex = this.findRequestById(request.id);
+
+        if (oldIndex === null) {
+            return;
         }
+
+        const newRequest = { ...request, id: uuidv7(), name: `${request.name} - Duplicate` };
+
+        oldIndex.requests.splice(oldIndex.index + 1, 0, newRequest);
+
+        this.persistState();
     }
 
     public findRequestById(
@@ -206,8 +204,7 @@ export class AppContext {
                 if (state) {
                     this.gridWidthDirectory = state.layout.directoryWidth;
                     this.gridWidthResponse = state.layout.responseWidth;
-
-                    this.setRequestList(state.requests);
+                    this.requests = state.requests;
 
                     this.protoConfig.roots = observable<ProtoRoot>([]);
                     for (const protoRoot of state.protoRoots) {
@@ -221,23 +218,44 @@ export class AppContext {
     }
 
     public handleHttpResponse(event: HttpResponseEvent) {
-        const request = this.requests.find((r) => r.id === event.requestId); // TODO: fix
-        if (request?.type === "http") {
+        const index = this.findRequestById(event.requestId);
+
+        if (index === null) {
+            return;
+        }
+
+        const { request } = index;
+
+        if (request.type === "http") {
             request.response = event.response;
             request.isExecuting = false;
         }
     }
 
     public handleGrpcStreamData(event: GrpcServerStreamDataEvent) {
-        const request = this.requests.find((r) => r.id === event.requestId); // TODO: fix
-        if (request?.type === "grpc" && request.response?.result === "stream") {
+        const index = this.findRequestById(event.requestId);
+
+        if (index === null) {
+            return;
+        }
+
+        const { request } = index;
+
+        if (request.type === "grpc" && request.response?.result === "stream") {
             request.response.responses.push(event.response);
         }
     }
 
     public handleGrpcStreamClose(event: GrpcStreamClosedEvent) {
-        const request = this.requests.find((r) => r.id === event.requestId); // TODO: fix
-        if (request?.type !== "grpc") {
+        const index = this.findRequestById(event.requestId);
+
+        if (index === null) {
+            return;
+        }
+
+        const { request } = index;
+
+        if (request.type !== "grpc") {
             return;
         }
 

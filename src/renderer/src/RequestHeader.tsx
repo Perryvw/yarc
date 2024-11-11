@@ -103,19 +103,23 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
                 activeRequest.url = event.target.value;
 
                 if (activeRequest.type === "http") {
-                    const url = new URL(event.target.value);
+                    try {
+                        const url = new URL(event.target.value);
 
-                    const newParams = [] as KeyValue[];
+                        const newParams = [] as KeyValue[];
 
-                    for (const [key, value] of url.searchParams) {
-                        newParams.push({
-                            enabled: true,
-                            key,
-                            value,
-                        });
+                        for (const [key, value] of url.searchParams) {
+                            newParams.push({
+                                enabled: true,
+                                key,
+                                value,
+                            });
+                        }
+
+                        activeRequest.params = newParams;
+                    } catch (e) {
+                        // url does not parse
                     }
-
-                    activeRequest.params = newParams;
                 }
             });
         }
