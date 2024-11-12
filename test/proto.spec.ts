@@ -7,7 +7,7 @@ describe("myproto.proto", async () => {
 
     test("has expected service", () => {
         expect(content.services).toHaveLength(1);
-        expect(greeterService.name).toBe("Greeter");
+        expect(greeterService.name).toBe("greet.Greeter");
     });
 
     test("has expected methods", () => {
