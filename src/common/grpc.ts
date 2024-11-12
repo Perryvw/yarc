@@ -21,9 +21,10 @@ export interface ProtoService {
 
 export interface MethodInfo {
     name: string;
-    path: string;
     requestStream: boolean;
     serverStream: boolean;
+    requestType?: ProtoMessageDescriptor;
+    responseType?: ProtoMessageDescriptor;
 }
 
 export interface GrpcStreamClosedEvent {

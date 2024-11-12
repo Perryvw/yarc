@@ -11,6 +11,8 @@ service Greeter {
 
   rpc StreamHello(HelloRequest) returns (stream HelloReply);
   rpc BiDirectionalStream(stream HelloRequest) returns (stream HelloReply);
+
+  rpc TestNested(NestedRequest) returns (HelloReply);
 }
 
 // The request message containing the user's name.
@@ -21,4 +23,14 @@ message HelloRequest {
 // The response message containing the greetings.
 message HelloReply {
   string message = 1;
+}
+
+message NestedRequest {
+  HelloReply reply = 1;
+  optional HelloRequest request2 = 2;
+  oneof testoneof {
+    HelloReply reply3 = 3;
+    HelloRequest request4 = 4;
+  }
+  repeated HelloReply replies = 5;
 }

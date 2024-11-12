@@ -5,7 +5,7 @@ import * as proto from "@grpc/proto-loader";
 
 const SERVER_ADDRESS = "0.0.0.0:50051";
 
-const protoFile = `${__dirname}/myproto.proto`;
+const protoFile = `${__dirname}/protos/myproto.proto`;
 const packageDescriptor = proto.loadSync(protoFile);
 
 const descriptor = grpc.loadPackageDefinition(packageDescriptor);

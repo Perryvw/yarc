@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "myproto.proto";
+import "sibling2/nestedproto2.proto";
+
+message MessageUsingParent {
+    greet.HelloRequest helloRequest = 1;
+}
+
+message MessageUsingSibling {
+    SiblingMessage sibling = 1;
+}
+
+service NestedService {
+    rpc SayHello (MessageUsingParent) returns (MessageUsingSibling);
+  }

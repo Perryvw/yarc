@@ -1,0 +1,7 @@
+message SiblingMessage {
+    oneof oneofthese {
+        bool b = 1;
+        int32 i = 2;
+    }
+    repeated double doubles = 3;
+}

@@ -10,10 +10,11 @@ import type {
     HttpResponseData,
     RequestList,
 } from "../common/request-types";
-import { browseProtoRoot, findProtoFiles, makeGrpcRequest, parseProtoFile } from "./Communication/grpc";
+import { browseProtoRoot, findProtoFiles, makeGrpcRequest } from "./Communication/grpc";
 import { makeHttpRequest } from "./Communication/http";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
+import { parseProtoFile } from "./Communication/proto";
 
 app.whenReady().then(async () => {
     let persistedState = await getPersistedState();

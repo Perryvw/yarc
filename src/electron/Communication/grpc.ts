@@ -23,6 +23,7 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
 
     const parsedProto = await parseProtoPackageDescription(request.protoFile.protoPath, request.protoFile.rootDir);
     const service = parsedProto[request.rpc.service];
+
     if (service && isServiceDefinition(service)) {
         const method = service[request.rpc.method];
         if (method) {
@@ -153,31 +154,6 @@ export async function findProtoFiles(protoRoot: string): Promise<string[]> {
     await findInDir(protoRoot);
 
     return result;
-}
-
-export async function parseProtoFile(protoPath: string, protoRootDir: string): Promise<ProtoContent> {
-    const contents = await parseProtoPackageDescription(protoPath, protoRootDir);
-
-    const services = [];
-    for (const [serviceName, serviceDescription] of Object.entries(contents)) {
-        if (isServiceDefinition(serviceDescription)) {
-            const service: ProtoService = {
-                name: serviceName,
-                methods: [],
-            };
-            for (const [methodName, methodDescription] of Object.entries(serviceDescription)) {
-                service.methods.push({
-                    name: methodName,
-                    path: methodDescription.path,
-                    requestStream: methodDescription.requestStream,
-                    serverStream: methodDescription.responseStream,
-                });
-            }
-            services.push(service);
-        }
-    }
-
-    return { services };
 }
 
 function parseProtoPackageDescription(protoPath: string, protoRootDir: string): Promise<proto.PackageDefinition> {

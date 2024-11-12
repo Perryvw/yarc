@@ -4,7 +4,7 @@
     "description": "",
     "main": "./out/main/index.js",
     "scripts": {
-        "test": "biome check",
+        "test": "vitest run",
         "lint": "biome lint",
         "check:tsc": "tsc --noEmit",
         "fix:test": "biome check --write",
@@ -46,6 +46,7 @@
         "react": "^18.3.1",
         "styled-components": "^6.1.13",
         "typescript": "^5.6.3",
-        "uuid": "^11.0.2"
+        "uuid": "^11.0.2",
+        "vitest": "^2.1.4"
     }
 }
