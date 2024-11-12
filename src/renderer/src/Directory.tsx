@@ -36,13 +36,14 @@ const DirectoryRoot = styled.div`
 const RequestContainer = styled.div`
     overflow-y: auto;
     scrollbar-gutter: stable;
+    scrollbar-color: var(--color-border) var(--color-background);
+    scrollbar-width: thin;
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    scrollbar-width: thin;
     position: relative;
-    padding: 5px 0;
+    padding: 5px 6px;
 `;
 
 const RequestHistory = styled.div`
@@ -247,10 +248,8 @@ const Request = styled.div`
     position: relative;
 
     // :GroupMargins
-    // The following sizes add up to 16px + 5px (GroupArrow is 16px plus the 5px flex gap)
     border: 1px solid transparent;
-    padding: 6px 14px;
-    margin: 0 6px;
+    padding: 6px 16px;
 
     transform: translate(0, 0); // TODO: This is a fix for rounded corners while dragging
 
@@ -286,6 +285,11 @@ const Request = styled.div`
         opacity: 1;
     }
 
+    &.is-drag-over-above,
+    &.is-drag-over-below {
+        z-index: 2;
+    }
+
     &.is-drag-over-above:after,
     &.is-drag-over-below:after {
         content: "";
@@ -296,7 +300,6 @@ const Request = styled.div`
         background-color: blue;
         border-radius: 10px;
         pointer-events: none;
-        z-index: 100;
     }
 
     &.is-drag-over-above:after {
@@ -317,21 +320,20 @@ const RequestGroupArrow = styled.span`
 `;
 
 const RequestGroupRoot = styled.div`
-    &.is-drag-over-group {
-        border: 1px dashed blue;
-    }
-
     & > ${RequestNameLine} {
+        border: 1px solid transparent;
         background: var(--color-background);
         position: sticky;
         top: calc(36px * (var(--group-depth) - 1) - 5px); // height of this element, minus the padding on the scrollable container
         z-index: 1;
         padding: 6px 6px;
         padding-left: calc(21px * (var(--group-depth) - 1)); // :GroupMargins
+        border-radius: 10px;
+        cursor: pointer;
 
         &:hover {
-            cursor: pointer;
-            background: blue;
+            border-color: var(--color-border);
+            background-color: var(--color-background-contrast);
         }
 
         & > ${RequestActions} {
@@ -344,6 +346,10 @@ const RequestGroupRoot = styled.div`
         }
     }
 
+    &.is-drag-over-group > ${RequestNameLine} {
+        border: 1px dashed blue;
+    }
+
     .is-dragging & > ${RequestNameLine} * {
         pointer-events: none;
     }
@@ -351,7 +357,7 @@ const RequestGroupRoot = styled.div`
 
 const RequestGroupInner = styled.div`
     & > ${Request} {
-        padding-left: calc(14px + 21px * var(--group-depth)); // :GroupMargins
+        padding-left: calc(16px + 21px * var(--group-depth)); // :GroupMargins
     }
 `;
 
@@ -685,11 +691,11 @@ const RequestGroupEntry = observer(
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
                 >
-                    <RequestGroupArrow>
-                        {request.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
-                    </RequestGroupArrow>
                     <RequestName>
                         <RequestMethod>
+                            <RequestGroupArrow>
+                                {request.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
+                            </RequestGroupArrow>
                             {request.collapsed ? <Folder size={16} /> : <FolderOpen size={16} />}
                         </RequestMethod>
                         {request.name}
