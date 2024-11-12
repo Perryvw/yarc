@@ -190,6 +190,7 @@ export class AppContext {
         const state: PersistedState = {
             requests: requestsWithoutResponse,
             protoRoots: this.protoConfig.roots.map((r) => r.rootPath),
+            selectedRequest: this.activeRequest?.id ?? null,
             layout: {
                 directoryWidth: this.gridWidthDirectory,
                 responseWidth: this.gridWidthResponse,
@@ -205,6 +206,14 @@ export class AppContext {
                     this.gridWidthDirectory = state.layout.directoryWidth;
                     this.gridWidthResponse = state.layout.responseWidth;
                     this.requests = state.requests;
+
+                    if (state.selectedRequest) {
+                        const requestIndex = this.findRequestById(state.selectedRequest);
+
+                        if (requestIndex !== null && requestIndex.request.type !== "group") {
+                            this.setActiveRequest(requestIndex.request);
+                        }
+                    }
 
                     this.protoConfig.roots = observable<ProtoRoot>([]);
                     for (const protoRoot of state.protoRoots) {

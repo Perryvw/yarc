@@ -142,6 +142,7 @@ function fixPersistedData(
     return {
         requests: incoming.requests?.map(fixRequest).filter(notUndefined) ?? [],
         protoRoots: incoming.protoRoots?.filter(notUndefined) ?? [],
+        selectedRequest: incoming.selectedRequest ?? null,
         layout: {
             directoryWidth: incoming.layout?.directoryWidth ?? 20,
             responseWidth: incoming.layout?.responseWidth ?? 50,
