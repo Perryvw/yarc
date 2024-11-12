@@ -6,7 +6,8 @@
         "sourceMap": true,
         "jsx": "react-jsx",
         "strict": true,
-        "module": "CommonJS"
+        "module": "CommonJS",
+        "skipLibCheck": true
     },
     "include": ["src/**/*", "test/**/*"]
 }
