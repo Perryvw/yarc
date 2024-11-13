@@ -160,6 +160,29 @@ export const Directory = observer(
             });
         }
 
+        function getFilteredRequests(requests = context.requests) {
+            if (!search) {
+                return requests;
+            }
+
+            const str = search.toUpperCase();
+            return getFilteredRequestsInner(str, context.requests);
+        }
+
+        function getFilteredRequestsInner(str: string, requests: RequestList) {
+            const results: RequestList = [];
+
+            for (const request of requests) {
+                if (request.type === "group") {
+                    results.push(...getFilteredRequestsInner(str, request.requests));
+                } else if (request.name.toUpperCase().includes(str) || request.url.toUpperCase().includes(str)) {
+                    results.push(request);
+                }
+            }
+
+            return results;
+        }
+
         return (
             <DirectoryRoot>
                 <DirectoryButtons
@@ -175,7 +198,7 @@ export const Directory = observer(
                 >
                     <SortableRequests
                         depth={1}
-                        requests={context.requests}
+                        requests={getFilteredRequests()}
                         context={context}
                         onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
@@ -767,19 +790,6 @@ const SortableRequests = observer(
         showActiveRequestHistory: boolean;
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
-        // function getFilteredRequests() {
-        //     if (search) {
-        //         const str = search.toUpperCase();
-
-        //         return requests.filter(
-        //             (r) =>
-        //                 r.type !== "group" && (r.name.toUpperCase().includes(str) || r.url.toUpperCase().includes(str)),
-        //         );
-        //     }
-
-        //     return requests;
-        // }
-
         function restoreOldRequestFromHistory(request: RequestData) {
             context.restoreRequestData(request);
         }
