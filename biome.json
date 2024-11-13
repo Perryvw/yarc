@@ -24,7 +24,7 @@
                 "useExhaustiveDependencies": "off"
             },
             "style": {
-                "noNonNullAssertion": "info"
+                "noNonNullAssertion": "off"
             }
         }
     }

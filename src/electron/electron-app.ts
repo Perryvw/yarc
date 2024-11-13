@@ -12,9 +12,9 @@ import type {
 } from "../common/request-types";
 import { browseProtoRoot, findProtoFiles, makeGrpcRequest } from "./Communication/grpc";
 import { makeHttpRequest } from "./Communication/http";
+import { parseProtoFile } from "./Communication/proto";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
-import { parseProtoFile } from "./Communication/proto";
 
 app.whenReady().then(async () => {
     let persistedState = await getPersistedState();

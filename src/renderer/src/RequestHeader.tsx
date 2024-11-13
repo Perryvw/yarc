@@ -145,21 +145,22 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             return;
         }
 
-        runInAction(() => {
-            request.isExecuting = true;
-        });
-
-        setIsExecutionAnimating(true);
-
-        request.lastExecute = Date.now();
-
         const jsRequest = toJS(request);
         jsRequest.response = undefined;
         jsRequest.history = [];
 
+        runInAction(() => {
+            request.isExecuting = true;
+            request.lastExecute = Date.now();
+        });
+
+        setIsExecutionAnimating(true);
+
         if (request.type === "http") {
-            const requestForHistory = observable(jsRequest) as HttpRequestData;
-            request.history.push(requestForHistory);
+            runInAction(() => {
+                const requestForHistory = observable(jsRequest) as HttpRequestData;
+                request.history.push(requestForHistory);
+            });
 
             await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, jsRequest);
             // TODO: requestForHistory.response = response;

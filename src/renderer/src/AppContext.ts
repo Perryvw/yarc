@@ -170,13 +170,21 @@ export class AppContext {
         //this.persistState();
     }
 
-    public restoreRequestData(request: RequestData) {
-        if (this.activeRequest === undefined) {
+    public restoreRequestData(historicalRequest: RequestData) {
+        const index = this.findRequestById(historicalRequest.id);
+
+        if (index === null || index.request.type === "group") {
             return;
         }
 
-        if (this.activeRequest) {
-            request.history = this.activeRequest.history;
+        const newRequest = observable(toJS(historicalRequest));
+
+        const oldHistory = index.request.history;
+        newRequest.history = oldHistory;
+        index.requests[index.index] = newRequest;
+
+        if (this.activeRequest === index.request) {
+            this.activeRequest = newRequest;
         }
     }
 
@@ -242,6 +250,7 @@ export class AppContext {
         if (request.type === "http") {
             request.response = event.response;
             request.isExecuting = false;
+            request.history[request.history.length - 1].response = request.response;
         }
     }
 

@@ -2,19 +2,16 @@ import classNames from "classnames";
 import {
     ChevronDown,
     ChevronRight,
-    ChevronUp,
     ChevronsLeftRight,
     CirclePlay,
     Copy,
     Folder,
     FolderOpen,
     History,
-    Package,
-    Package2,
     SquarePen,
     Trash,
 } from "lucide-react";
-import { runInAction } from "mobx";
+import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
 import { Fragment, useCallback, useState } from "react";
@@ -794,12 +791,14 @@ const SortableRequests = observer(
             context.restoreRequestData(request);
         }
 
-        function getRequestDiff(newRequest: RequestData, oldRequest: RequestData) {
-            const diff = [];
+        function getRequestDiff(index: number, newRequest: RequestData, oldRequest: RequestData) {
+            const diff = [`#${index}`];
+
+            console.log(toJS(newRequest), toJS(oldRequest));
 
             if (newRequest.type === "http" && oldRequest.type === "http") {
                 if (newRequest.response) {
-                    diff.push(newRequest.response.statusCode);
+                    diff.push(newRequest.response.statusCode.toString());
                 }
 
                 if (newRequest.method !== oldRequest.method) {
@@ -827,10 +826,6 @@ const SortableRequests = observer(
                     diff.push("headers");
                 }
                 */
-            }
-
-            if (diff.length === 0) {
-                return "";
             }
 
             return diff.join(", ");
@@ -886,10 +881,12 @@ const SortableRequests = observer(
                                                 <RequestName>
                                                     {dateFormatter.format(oldRequest.lastExecute)}
                                                 </RequestName>
-                                                {i > 0 && (
+                                                {i > 0 ? (
                                                     <RequestUrl>
-                                                        {getRequestDiff(oldRequest, r.history[i - 1])}
+                                                        {getRequestDiff(i + 1, oldRequest, r.history[i - 1])}
                                                     </RequestUrl>
+                                                ) : (
+                                                    <RequestUrl>#1</RequestUrl>
                                                 )}
                                             </RequestHistoryButton>
                                         ))}
