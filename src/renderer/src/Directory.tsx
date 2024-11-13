@@ -324,7 +324,7 @@ const RequestGroupRoot = styled.div`
         border: 1px solid transparent;
         background: var(--color-background);
         position: sticky;
-        top: calc(36px * (var(--group-depth) - 1) - 5px); // height of this element, minus the padding on the scrollable container
+        top: -5px; // padding on the scrollable container
         z-index: 1;
         padding: 6px 6px;
         padding-left: calc(21px * (var(--group-depth) - 1)); // :GroupMargins
