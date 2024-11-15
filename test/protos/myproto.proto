@@ -13,6 +13,8 @@ service Greeter {
   rpc BiDirectionalStream(stream HelloRequest) returns (stream HelloReply);
 
   rpc TestNested(NestedRequest) returns (HelloReply);
+
+  rpc TestEnums(MessageWithEnums) returns (HelloReply);
 }
 
 // The request message containing the user's name.
@@ -33,4 +35,20 @@ message NestedRequest {
     HelloRequest request4 = 4;
   }
   repeated HelloReply replies = 5;
+}
+
+enum GlobalEnum {
+  A = 0;
+  B = 1;
+  C = 2;
+}
+
+message MessageWithEnums {
+  enum NestedEnum {
+    X = 0;
+    Y = 1;
+    Z = 2;
+  }
+  GlobalEnum globalEnum = 0;
+  optional NestedEnum nestedEnum = 1;
 }

@@ -2,6 +2,7 @@ type ProtoObject = ProtoMessageDescriptor | ProtoRepeated | ProtoOneOf | ProtoLi
 
 interface ProtoMessageDescriptor {
     type: "message";
+    name: string;
     fields: Record<string, ProtoObject | undefined>;
 }
 
@@ -27,4 +28,5 @@ interface ProtoOptional {
 
 interface ProtoEnum {
     type: "enum";
+    values: string[];
 }

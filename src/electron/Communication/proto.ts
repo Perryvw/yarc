@@ -3,7 +3,14 @@ import * as protobufjs from "../../../node_modules/protobufjs";
 import type { ProtoContent, ProtoService } from "../../common/grpc";
 
 export async function parseProtoFile(protoPath: string, protoRootDir: string): Promise<ProtoContent> {
-    const protoContent = protobufjs.loadSync(path.join(protoRootDir, protoPath));
+    // Override path resolution algorithm to resolve from protoRootDir
+    const root = new protobufjs.Root();
+    root.resolvePath = (_, target) => {
+        if (path.isAbsolute(target)) return target;
+        return path.join(protoRootDir, target);
+    };
+    const protoContent = protobufjs.loadSync(path.join(protoRootDir, protoPath), root);
+
     protoContent.resolveAll();
 
     const result: ProtoContent = { services: [] };
@@ -42,20 +49,56 @@ export async function parseProtoFile(protoPath: string, protoRootDir: string): P
 
     function mapType(type: protobufjs.Type | protobufjs.Enum): ProtoObject {
         if (type instanceof protobufjs.Enum) {
-            // idk what to do here
+            const values = Object.entries(type.values);
+            values.sort((a, b) => a[1] - b[1]);
+
             return {
                 type: "enum",
+                values: values.map(([name, _]) => name),
             };
         }
 
         // Else: Assume message
         const members: Record<string, ProtoObject | undefined> = {};
         for (const field of type.fieldsArray) {
-            members[field.name] = field.resolvedType ? mapType(field.resolvedType) : mapLiteralType(field.type);
+            const fieldType = field.resolvedType ? mapType(field.resolvedType) : mapLiteralType(field.type);
+
+            if (isOptionalField(field)) {
+                members[field.name] = fieldType ? { type: "optional", optionalType: fieldType } : undefined;
+                continue;
+            }
+
+            if (field.partOf instanceof protobufjs.OneOf) continue; // Skip oneofs for now
+
+            if (field.repeated && fieldType) {
+                members[field.name] = { type: "repeated", repeatedType: fieldType };
+            } else {
+                members[field.name] = fieldType;
+            }
+        }
+
+        // Add one-of properties
+        for (const oneof of type.oneofsArray) {
+            // Optionals generate a synchtetic oneof, filter those out
+            if (oneof.fieldsArray.length === 1 && isOptionalField(oneof.fieldsArray[0])) {
+                continue;
+            }
+
+            const oneOfMembers: Record<string, ProtoObject> = {};
+
+            for (const field of oneof.fieldsArray) {
+                const nestedFieldType = field.resolvedType ? mapType(field.resolvedType) : mapLiteralType(field.type);
+                if (nestedFieldType) {
+                    oneOfMembers[field.name] = nestedFieldType;
+                }
+            }
+
+            members[oneof.name] = { type: "oneof", fields: oneOfMembers };
         }
 
         return {
             type: "message",
+            name: type.name,
             fields: members,
         };
     }
@@ -66,6 +109,8 @@ export async function parseProtoFile(protoPath: string, protoRootDir: string): P
             case "string":
                 mappedType = type;
                 break;
+            default:
+                mappedType = type;
         }
 
         if (mappedType) {
@@ -91,4 +136,6 @@ function* iterateServices(parent: protobufjs.Namespace): Generator<protobufjs.Se
     }
 }
 
-//function protoFieldType(type: protoDescriptor.IFieldDescriptorProto): ProtoMessageDescriptor {}
+function isOptionalField(field: protobufjs.Field): boolean {
+    return field.options?.proto3_optional === true;
+}
