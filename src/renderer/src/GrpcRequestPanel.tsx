@@ -10,6 +10,7 @@ import { IpcCall } from "../../common/ipc";
 import type { GrpcRequestData } from "../../common/request-types";
 import type { ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
+import { defaultProtoObject, lintProtoJson } from "./proto-lint";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -124,29 +125,29 @@ export const GrpcRequestPanel = observer(
                     service: method.service,
                     method: method.method.name,
                 };
+                if (rpcs) {
+                    const rpc = rpcs.find(
+                        (rpc) =>
+                            rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
+                    );
+                    if (rpc?.method.requestType) {
+                        activeRequest.body = JSON.stringify(defaultProtoObject(rpc.method.requestType), null, 2);
+                    }
+                }
                 persist();
             },
             [activeRequest, rpcs],
         );
 
+        const activeRpc = rpcs?.find(
+            (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
+        );
+
         const linter = CodeMirrorLint.linter((view) => {
+            if (!activeRpc?.method.requestType) return [];
+
             const content = view.state.doc.toString();
-            const parsedJson = jsonLanguage.parser.parse(content);
-            const cursor = parsedJson.cursor();
-
-            console.log(cursor.node, cursor.node.type.name); // JsonText
-            console.log(cursor.firstChild());
-            console.log(cursor.node, cursor.node.type); // Object
-
-            const diagnostics: CodeMirrorLint.Diagnostic[] = [];
-            const d: CodeMirrorLint.Diagnostic = {
-                from: 3,
-                to: 10,
-                severity: "error",
-                message: "testerino",
-            };
-            //diagnostics.push(d);
-            return diagnostics;
+            return lintProtoJson(content, activeRpc.method.requestType);
         });
 
         return (
