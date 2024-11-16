@@ -41,8 +41,9 @@ app.whenReady().then(async () => {
     ipcMain.handle(IpcCall.GrpcRequest, async (_, request: GrpcRequestData): Promise<GrpcResponse> => {
         try {
             return await makeGrpcRequest(request, window.webContents);
-        } catch (err: unknown) {
-            return { result: "error", code: "EXCEPTION", detail: JSON.stringify(err), time: 0 };
+            // biome-ignore lint/suspicious/noExplicitAny:
+        } catch (err: any) {
+            return { result: "error", code: "EXCEPTION", detail: err.toString(), time: 0 };
         }
     });
 

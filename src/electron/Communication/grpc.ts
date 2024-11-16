@@ -3,15 +3,10 @@ import * as path from "node:path";
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
 import { dialog } from "electron";
-import type {
-    GrpcServerStreamDataEvent,
-    GrpcServerStreamErrorEvent,
-    GrpcStreamClosedEvent,
-    ProtoContent,
-    ProtoService,
-} from "../../common/grpc";
+import type { GrpcServerStreamDataEvent, GrpcServerStreamErrorEvent, GrpcStreamClosedEvent } from "../../common/grpc";
 import { type BrowseProtoResult, IpcEvent } from "../../common/ipc";
 import type { GrpcRequestData, GrpcResponse, GrpcServerStreamData } from "../../common/request-types";
+import JSON5 from "json5";
 
 export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.WebContents): Promise<GrpcResponse> {
     if (!request.protoFile || !request.rpc) {
@@ -55,7 +50,7 @@ function grpcUnaryRequest(
             method.path,
             method.requestSerialize,
             (r) => JSON.stringify(method.responseDeserialize(r)),
-            JSON.parse(request.body),
+            parseRequestBody(request.body),
             (err: grpc.ServiceError | null, value?: string) => {
                 if (err) {
                     resolve({
@@ -86,7 +81,7 @@ async function grpcServerStreamingRequest(
         method.path,
         method.requestSerialize,
         method.responseDeserialize,
-        JSON.parse(request.body),
+        parseRequestBody(request.body),
     );
 
     stream.on("data", (data) => {
@@ -118,6 +113,10 @@ async function grpcServerStreamingRequest(
     });
 
     return { result: "stream", streamOpen: true, responses: [] };
+}
+
+function parseRequestBody(body: string): object {
+    return JSON5.parse(body);
 }
 
 export async function browseProtoRoot(): Promise<BrowseProtoResult> {

@@ -1,4 +1,4 @@
-import { jsonLanguage } from "@codemirror/lang-json";
+import { javascriptLanguage } from "@codemirror/lang-javascript";
 import * as CodeMirrorLint from "@codemirror/lint";
 import CodeMirror from "@uiw/react-codemirror";
 import { runInAction } from "mobx";
@@ -10,7 +10,7 @@ import { IpcCall } from "../../common/ipc";
 import type { GrpcRequestData } from "../../common/request-types";
 import type { ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
-import { defaultProtoObject, lintProtoJson } from "./proto-lint";
+import { defaultProtoBody, lintProtoJson } from "./proto-lint";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -131,7 +131,7 @@ export const GrpcRequestPanel = observer(
                             rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
                     );
                     if (rpc?.method.requestType) {
-                        activeRequest.body = JSON.stringify(defaultProtoObject(rpc.method.requestType), null, 2);
+                        activeRequest.body = defaultProtoBody(rpc.method.requestType);
                     }
                 }
                 persist();
@@ -172,7 +172,7 @@ export const GrpcRequestPanel = observer(
                         }}
                         value={activeRequest.body}
                         onChange={onRequestBodyChanged}
-                        extensions={[linter, jsonLanguage]}
+                        extensions={[linter, javascriptLanguage]}
                         lang="json"
                     />
                 )}

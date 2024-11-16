@@ -15,18 +15,28 @@ interface HelloRequest {
     name: string;
 }
 
-interface HelloResponse {
+interface HelloReply {
     message: string;
+}
+interface NestedRequest {
+    reply: HelloReply;
+    request2?: HelloRequest; // optional
+
+    // oneof request3 reply4
+    request3?: HelloRequest;
+    reply4?: HelloReply;
+
+    replies?: HelloReply[];
 }
 
 const server = new grpc.Server();
 server.addService(greeterService.service, {
-    SayHello: (call: grpc.ServerWritableStream<HelloRequest, HelloResponse>) => {
+    SayHello: (call: grpc.ServerWritableStream<HelloRequest, HelloReply>) => {
         console.log("handling unary request");
         call.write({ message: `Hello ${call.request.name}!` });
         call.end();
     },
-    StreamHello: (call: grpc.ServerWritableStream<HelloRequest, HelloResponse>) => {
+    StreamHello: (call: grpc.ServerWritableStream<HelloRequest, HelloReply>) => {
         const maxCount = 10;
         let count = 0;
         console.log("handling streaming call");
@@ -47,6 +57,10 @@ server.addService(greeterService.service, {
             }
         }
         send();
+    },
+    TestNested: (call: grpc.ServerWritableStream<NestedRequest, HelloReply>) => {
+        call.write({ message: JSON.stringify(call.request) });
+        call.end();
     },
 });
 

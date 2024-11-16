@@ -1,36 +1,32 @@
-import { jsonLanguage } from "@codemirror/lang-json";
 import type * as CodeMirrorLint from "@codemirror/lint";
-import type * as tokenizer from "@lezer/common/dist";
+import * as fleece from "golden-fleece";
+import type * as fleeceAPI from "golden-fleece/types/interfaces";
 
 function assertNever(t: never) {}
 
 export function lintProtoJson(json: string, protoType: ProtoMessageDescriptor): CodeMirrorLint.Diagnostic[] {
-    const parsedJson = jsonLanguage.parser.parse(json);
-    const cursor = parsedJson.cursor(); // JsonText
+    const parsedJson = fleece.parse(json);
 
-    if (cursor.firstChild()) {
-        const diagnostics: CodeMirrorLint.Diagnostic[] = [];
-        lint(cursor.node, protoType, json, diagnostics);
-        return diagnostics;
-    }
+    const diagnostics: CodeMirrorLint.Diagnostic[] = [];
+    lint(parsedJson, protoType, json, diagnostics);
 
-    return [];
+    return diagnostics;
 }
 
 function lint(
-    node: tokenizer.SyntaxNode,
+    node: fleeceAPI.Value,
     protoDescriptor: ProtoObject,
     text: string,
     diagnostics: CodeMirrorLint.Diagnostic[],
 ): void {
     if (protoDescriptor.type === "message") {
-        if (node.type.name !== "Object") {
-            diagnostics.push(errorDiagnostic(node.node, `Expected a message but got ${node.type.name.toLowerCase()}`));
+        if (node.type !== "ObjectExpression") {
+            diagnostics.push(errorDiagnostic(node, `Expected a message but got ${node.type.toLowerCase()}`));
         } else {
-            lintMessage(node.node, protoDescriptor, text, diagnostics);
+            lintMessage(node, protoDescriptor, text, diagnostics);
         }
     } else if (protoDescriptor.type === "literal") {
-        lintLiteral(node.node, protoDescriptor, diagnostics);
+        lintLiteral(node, protoDescriptor, diagnostics);
     } else if (protoDescriptor.type === "repeated") {
         lintRepeated(node, protoDescriptor, text, diagnostics);
     } else if (protoDescriptor.type === "optional") {
@@ -48,7 +44,7 @@ function lint(
 }
 
 function lintMessage(
-    node: tokenizer.SyntaxNode,
+    node: fleeceAPI.ObjectExpression,
     protoDescriptor: ProtoMessageDescriptor,
     text: string,
     diagnostics: CodeMirrorLint.Diagnostic[],
@@ -60,7 +56,7 @@ function lintMessage(
             .filter(([name, field]) => field?.type !== "optional" && field?.type !== "oneof")
             .map(([name, field]) => name),
     );
-    const seenFields = new Map<string, tokenizer.SyntaxNode>();
+    const seenFields = new Map<string, fleeceAPI.Node>();
     const oneofs = protoFields.filter(([name, field]) => field?.type === "oneof") as Array<[string, ProtoOneOf]>;
     for (const [_, oneof] of oneofs) {
         for (const [name, type] of Object.entries(oneof.fields)) {
@@ -68,44 +64,22 @@ function lintMessage(
         }
     }
 
-    const members = node.getChildren("Property");
+    for (const property of node.properties) {
+        if (!property.key.name) continue;
 
-    for (const member of members) {
-        if (member.name === "Property") {
-            const cursor = member.cursor();
-            if (cursor.firstChild()) {
-                let nameNode: tokenizer.SyntaxNode | undefined;
-                let valueNode: tokenizer.SyntaxNode | undefined;
-                do {
-                    if (cursor.node.type) {
-                        if (cursor.node.name === "PropertyName") {
-                            nameNode = cursor.node;
-                        } else if (cursor.node.type) {
-                            valueNode = cursor.node;
-                            break;
-                        }
-                    }
-                } while (cursor.nextSibling());
-
-                if (nameNode && valueNode) {
-                    const fieldName = text.substring(nameNode.from + 1, nameNode.to - 1); // Remove quotes
-                    const protoFieldType = knownFields.get(fieldName);
-                    // Check required fields
-                    if (requiredFields.has(fieldName)) {
-                        requiredFields.delete(fieldName);
-                    } else if (!protoFieldType) {
-                        diagnostics.push(errorDiagnostic(member, `Unexpected field ${fieldName}`));
-                    }
-
-                    if (protoFieldType) {
-                        lint(valueNode, protoFieldType, text, diagnostics);
-                    }
-
-                    seenFields.set(fieldName, nameNode);
-                }
-                cursor.parent();
-            }
+        const protoFieldType = knownFields.get(property.key.name);
+        // Check required fields
+        if (requiredFields.has(property.key.name)) {
+            requiredFields.delete(property.key.name);
+        } else if (!protoFieldType) {
+            diagnostics.push(errorDiagnostic(property, `Unexpected field ${property.key.name}`));
         }
+
+        if (protoFieldType) {
+            lint(property.value, protoFieldType, text, diagnostics);
+        }
+
+        seenFields.set(property.key.name, property.key);
     }
 
     // If there are still expected fields left, add a diagnostic saying they are missing
@@ -149,50 +123,60 @@ function lintMessage(
 }
 
 function lintRepeated(
-    node: tokenizer.SyntaxNode,
+    node: fleeceAPI.Value,
     protoDescriptor: ProtoRepeated,
     text: string,
     diagnostics: CodeMirrorLint.Diagnostic[],
 ) {
-    if (node.type.name !== "Array") {
-        diagnostics.push(errorDiagnostic(node, `Expected array, but got ${node.type.name.toLowerCase()}`));
+    if (node.type !== "ArrayExpression") {
+        diagnostics.push(errorDiagnostic(node, `Expected array, but got ${node.type.toLowerCase()}`));
         return;
     }
 
-    const cursor = node.cursor();
-    if (cursor.firstChild()) {
-        do {
-            if (cursor.node.type.name !== "[" && cursor.node.type.name !== "]") {
-                // recursively lint children
-                lint(cursor.node, protoDescriptor.repeatedType, text, diagnostics);
-            }
-        } while (cursor.nextSibling());
+    for (const elem of node.elements) {
+        lint(elem, protoDescriptor.repeatedType, text, diagnostics);
     }
 }
 
 function lintLiteral(
-    node: tokenizer.SyntaxNode,
+    node: fleeceAPI.Value,
     protoDescriptor: ProtoLiteral,
     diagnostics: CodeMirrorLint.Diagnostic[],
 ): void {
-    let expectedJsonType: string | undefined;
+    if (node.type !== "Literal") {
+        diagnostics.push(errorDiagnostic(node, `Expected literal value, but got ${node.type.toLowerCase()}`));
+        return;
+    }
+
     switch (protoDescriptor.literalType) {
         case "string":
-            expectedJsonType = "String";
+            if (typeof node.value !== "string") {
+                diagnostics.push(errorDiagnostic(node, `Expected string but got ${typeof node.value}`));
+            }
             break;
-    }
-
-    if (!expectedJsonType) {
-        diagnostics.push(errorDiagnostic(node, `Unknown protobuf type ${protoDescriptor.literalType}`));
-    }
-
-    if (protoDescriptor.literalType === "string" && node.type.name !== "String") {
-        diagnostics.push(
-            errorDiagnostic(
-                node,
-                `Expected type ${protoDescriptor.literalType} but got ${node.type.name.toLowerCase()}`,
-            ),
-        );
+        case "double":
+        case "float":
+        case "int32":
+        case "int64":
+        case "uint32":
+        case "uint64":
+        case "sint32":
+        case "sint64":
+        case "fixed32":
+        case "fixed64":
+        case "sfixed32":
+        case "sfixed64":
+            if (typeof node.value !== "number") {
+                diagnostics.push(errorDiagnostic(node, `Expected number but got ${typeof node.value}`));
+            }
+            break;
+        case "bool":
+            if (typeof node.value !== "boolean") {
+                diagnostics.push(errorDiagnostic(node, `Expected boolean but got ${typeof node.value}`));
+            }
+            break;
+        default:
+            diagnostics.push(errorDiagnostic(node, `Unknown protobuf type ${protoDescriptor.literalType}`));
     }
 }
 
@@ -204,51 +188,57 @@ function commaOr(opts: string[]) {
     return `${opts.slice(0, -1).join(", ")} or ${opts[opts.length - 1]}`;
 }
 
-function errorDiagnostic(node: tokenizer.SyntaxNode, message: string): CodeMirrorLint.Diagnostic {
+function errorDiagnostic(node: fleeceAPI.Node, message: string): CodeMirrorLint.Diagnostic {
     return {
         severity: "error",
         message: message,
-        from: node.from,
-        to: node.to,
+        from: node.start,
+        to: node.end,
     };
 }
 
-export function defaultProtoObject(protoDescriptor: ProtoObject): unknown {
+export function defaultProtoBody(protoDescriptor: ProtoObject, indent = ""): string {
+    const INDENT_STEP = "  ";
     if (protoDescriptor.type === "message") {
-        const obj: Record<string, unknown> = {};
+        let result = "{\n";
         for (const [name, field] of Object.entries(protoDescriptor.fields)) {
             if (field) {
                 if (field.type === "oneof") {
                     // Only put in the first oneof
                     const options = Object.entries(field.fields);
                     const [optionName, optionType] = options[0];
-                    obj[optionName] = defaultProtoObject(optionType);
+                    const comment = `// oneof ${options.map(([name]) => name).join(", ")}`;
+                    result += `${indent}${INDENT_STEP}${optionName}: ${defaultProtoBody(optionType, indent + INDENT_STEP)}, ${comment}\n`;
+                } else if (field.type === "optional") {
+                    result += `${indent}${INDENT_STEP}${name}: ${defaultProtoBody(field.optionalType, indent + INDENT_STEP)}, // Optional\n`;
                 } else {
-                    obj[name] = defaultProtoObject(field);
+                    result += `${indent}${INDENT_STEP}${name}: ${defaultProtoBody(field, indent + INDENT_STEP)},\n`;
                 }
             }
         }
-        return obj;
+        result += `${indent}}`;
+        return result;
     }
 
     if (protoDescriptor.type === "literal") {
         if (protoDescriptor.literalType === "string") {
-            return "";
+            return `""`;
         }
-        return 0;
+        return "0";
     }
 
     if (protoDescriptor.type === "repeated") {
-        return [];
-    }
-    if (protoDescriptor.type === "optional") {
-        return defaultProtoObject(protoDescriptor.optionalType);
+        return "[]";
     }
     if (protoDescriptor.type === "enum") {
-        return 0;
+        return "0";
+    }
+    if (protoDescriptor.type === "optional") {
+        throw "unexpected request for getting optional result"; // Should be handled by the message type
     }
     if (protoDescriptor.type === "oneof") {
-        return "oneof";
+        throw "unexpected request for getting oneof result"; // Should be handled by the message type
     }
     assertNever(protoDescriptor);
+    return "";
 }
