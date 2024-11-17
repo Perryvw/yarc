@@ -108,13 +108,23 @@ describe("myproto.proto", async () => {
             fields: {
                 globalEnum: {
                     type: "enum",
-                    values: ["A", "B", "C"],
+                    name: "GlobalEnum",
+                    values: [
+                        { name: "A", value: 0 },
+                        { name: "B", value: 1 },
+                        { name: "C", value: 2 },
+                    ],
                 },
                 nestedEnum: {
                     type: "optional",
                     optionalType: {
                         type: "enum",
-                        values: ["X", "Y", "Z"],
+                        name: "NestedEnum",
+                        values: [
+                            { name: "X", value: 0 },
+                            { name: "Y", value: 1 },
+                            { name: "Z", value: 2 },
+                        ],
                     },
                 },
             },
