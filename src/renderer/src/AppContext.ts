@@ -7,6 +7,7 @@ import {
     makeAutoObservable,
     makeObservable,
     observable,
+    observe,
     runInAction,
     toJS,
 } from "mobx";
@@ -26,6 +27,7 @@ import type {
     RequestDataOrGroup,
     RequestList,
 } from "../../common/request-types";
+import { debounce } from "./util/debounce";
 
 export class AppContext {
     requests: RequestList = [];
@@ -40,6 +42,8 @@ export class AppContext {
     draggingStartClientY = 0;
 
     protoConfig: ProtoConfig;
+
+    activeRequestObserverDispose = () => {};
 
     constructor() {
         this.protoConfig = new ProtoConfig(this);
@@ -74,8 +78,22 @@ export class AppContext {
         this.persistState();
     }
 
+    // Persist if no new changes after 4 seconds
+    private debouncedPersist = debounce(() => {
+        this.persistState();
+    }, 4000);
+
     public setActiveRequest(request: RequestData | undefined) {
         this.activeRequest = request;
+
+        // Dispose previous observer
+        this.activeRequestObserverDispose();
+        if (this.activeRequest) {
+            // Set new observer
+            this.activeRequestObserverDispose = observe(this.activeRequest, () => {
+                this.debouncedPersist();
+            });
+        }
     }
 
     public setResponse(response: HttpResponseData | undefined) {
@@ -167,7 +185,7 @@ export class AppContext {
         }
 
         // Persist state
-        //this.persistState();
+        this.persistState();
     }
 
     public restoreRequestData(historicalRequest: RequestData) {
@@ -184,7 +202,7 @@ export class AppContext {
         index.requests[index.index] = newRequest;
 
         if (this.activeRequest === index.request) {
-            this.activeRequest = newRequest;
+            this.setActiveRequest(newRequest);
         }
     }
 

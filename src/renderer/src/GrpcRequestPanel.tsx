@@ -10,7 +10,8 @@ import { IpcCall } from "../../common/ipc";
 import type { GrpcRequestData } from "../../common/request-types";
 import type { ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
-import { defaultProtoBody, lintProtoJson } from "./proto-lint";
+import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
+import { debounce } from "./util/debounce";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -77,11 +78,7 @@ interface MethodDescriptor {
 }
 
 export const GrpcRequestPanel = observer(
-    ({
-        activeRequest,
-        protoConfig,
-        persist,
-    }: { activeRequest: GrpcRequestData; protoConfig: ProtoConfig; persist: () => void }) => {
+    ({ activeRequest, protoConfig }: { activeRequest: GrpcRequestData; protoConfig: ProtoConfig }) => {
         const [protoModalOpen, setProtoModalOpen] = useState(false);
 
         const openProtoModal = useCallback(() => setProtoModalOpen(true), []);
@@ -95,7 +92,6 @@ export const GrpcRequestPanel = observer(
                             rootDir: result.result.rootPath,
                         };
                     });
-                    persist();
                 }
             },
             [activeRequest],
@@ -130,7 +126,6 @@ export const GrpcRequestPanel = observer(
             (value: string) => {
                 runInAction(() => {
                     activeRequest.body = value;
-                    persist();
                 });
             },
             [activeRequest],
@@ -151,7 +146,6 @@ export const GrpcRequestPanel = observer(
                         activeRequest.body = defaultProtoBody(rpc.method.requestType).value;
                     }
                 }
-                persist();
             },
             [activeRequest, rpcs],
         );
