@@ -209,7 +209,7 @@ test("proto with not-existing import", async () => {
     }
 });
 
-function assertSuccess<T>(result: Result<T>): T {
+function assertSuccess<T, TErr>(result: Result<T, TErr>): T {
     if (result.success) {
         return result.value;
     }
