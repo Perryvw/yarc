@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import type { MethodInfo, ProtoContent } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
-import type { GrpcRequestData } from "../../common/request-types";
+import { GrpcRequestKind, type GrpcRequestData } from "../../common/request-types";
 import type { ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
 import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
@@ -142,6 +142,17 @@ export const GrpcRequestPanel = observer(
                         (rpc) =>
                             rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
                     );
+                    if (rpc?.method) {
+                        if (!rpc.method.requestStream && !rpc.method.serverStream) {
+                            activeRequest.kind = GrpcRequestKind.Unary;
+                        } else if (!rpc.method.requestStream && rpc.method.serverStream) {
+                            activeRequest.kind = GrpcRequestKind.ResponseStreaming;
+                        } else if (rpc.method.requestStream && !rpc.method.serverStream) {
+                            activeRequest.kind = GrpcRequestKind.RequestStreaming;
+                        } else if (rpc.method.requestStream && rpc.method.serverStream) {
+                            activeRequest.kind = GrpcRequestKind.Bidirectional;
+                        }
+                    }
                     if (rpc?.method.requestType) {
                         activeRequest.body = defaultProtoBody(rpc.method.requestType).value;
                     }

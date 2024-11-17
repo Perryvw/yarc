@@ -23,6 +23,13 @@ export interface HttpRequestData {
     response?: HttpResponseData;
 }
 
+export enum GrpcRequestKind {
+    Unary = 0,
+    RequestStreaming = 1,
+    ResponseStreaming = 2,
+    Bidirectional = 3,
+}
+
 export interface GrpcRequestData {
     type: "grpc";
     id: string;
@@ -32,6 +39,7 @@ export interface GrpcRequestData {
     isExecuting: boolean;
     history: GrpcRequestData[];
 
+    kind?: GrpcRequestKind;
     protoFile?: { protoPath: string; rootDir: string };
     rpc?: { service: string; method: string };
 

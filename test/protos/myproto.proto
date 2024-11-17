@@ -15,6 +15,11 @@ service Greeter {
   rpc TestNested(NestedRequest) returns (HelloReply);
 
   rpc TestEnums(MessageWithEnums) returns (HelloReply);
+
+  rpc Unary (HelloRequest) returns (HelloReply);
+  rpc ServerStream (HelloRequest) returns (stream HelloReply);
+  rpc RequestStream (stream HelloRequest) returns (HelloReply);
+  rpc Bidi (stream HelloRequest) returns (stream HelloReply);
 }
 
 // The request message containing the user's name.

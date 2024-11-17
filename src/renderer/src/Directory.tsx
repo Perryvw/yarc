@@ -2,7 +2,10 @@ import classNames from "classnames";
 import {
     ChevronDown,
     ChevronRight,
+    ChevronsDown,
+    ChevronsDownUp,
     ChevronsLeftRight,
+    ChevronsUp,
     CirclePlay,
     Copy,
     Folder,
@@ -16,7 +19,13 @@ import { observer } from "mobx-react-lite";
 import type React from "react";
 import { Fragment, useCallback, useState } from "react";
 import styled from "styled-components";
-import type { RequestData, RequestDataOrGroup, RequestGroup, RequestList } from "../../common/request-types";
+import {
+    GrpcRequestKind,
+    type RequestData,
+    type RequestDataOrGroup,
+    type RequestGroup,
+    type RequestList,
+} from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { DirectoryButtons } from "./DirectoryButtons";
 import { httpVerbColorPalette } from "./HttpVerb";
@@ -455,6 +464,10 @@ const RequestEntry = observer(
                 url = url.substring(protocol + 3);
             }
 
+            if (request.type === "grpc" && request.rpc) {
+                url += ` ${request.rpc.service} / ${request.rpc.method}`;
+            }
+
             return url;
         }
 
@@ -556,7 +569,19 @@ const RequestEntry = observer(
                     <RequestName>
                         {request.type === "grpc" && (
                             <RequestMethod>
-                                <ChevronsLeftRight size={16} />
+                                {request.kind === GrpcRequestKind.Unary && (
+                                    <ChevronsLeftRight style={{ color: httpVerbColorPalette.GET }} size={16} />
+                                )}
+                                {request.kind === GrpcRequestKind.RequestStreaming && (
+                                    <ChevronsUp style={{ color: httpVerbColorPalette.PUT }} size={16} />
+                                )}
+                                {request.kind === GrpcRequestKind.ResponseStreaming && (
+                                    <ChevronsDown style={{ color: httpVerbColorPalette.POST }} size={16} />
+                                )}
+                                {request.kind === GrpcRequestKind.Bidirectional && (
+                                    <ChevronsDownUp style={{ color: httpVerbColorPalette.PATCH }} size={16} />
+                                )}
+                                {request.kind === undefined && <ChevronsLeftRight size={16} />}
                             </RequestMethod>
                         )}
                         {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>} {request.name}
