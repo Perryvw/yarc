@@ -32,7 +32,7 @@ function lint(
     } else if (protoDescriptor.type === "optional") {
         lint(node, protoDescriptor.optionalType, text, diagnostics);
     } else if (protoDescriptor.type === "enum") {
-        // Not sure what to do here yet
+        lintEnumValue(node, protoDescriptor, diagnostics);
     } else if (protoDescriptor.type === "oneof") {
         const options = Object.keys(protoDescriptor.fields);
         diagnostics.push(
@@ -138,6 +138,29 @@ function lintRepeated(
     }
 }
 
+function lintEnumValue(
+    node: fleeceAPI.Value,
+    protoDescriptor: ProtoEnum,
+    diagnostics: CodeMirrorLint.Diagnostic[],
+): void {
+    const expectedValues = protoDescriptor.values.map((v) => `${v.value} (${v.name})`);
+
+    if (node.type !== "Literal" || typeof node.value !== "number") {
+        diagnostics.push(errorDiagnostic(node, `Expected enum value, options:\n${expectedValues.join("\n")}`));
+        return;
+    }
+
+    if (!protoDescriptor.values.some((v) => v.value === node.value)) {
+        diagnostics.push(
+            errorDiagnostic(
+                node,
+                `Value ${node.value} is not a valid value for enum ${protoDescriptor.name}. Options:\n${expectedValues.join("\n")}`,
+            ),
+        );
+        return;
+    }
+}
+
 function lintLiteral(
     node: fleeceAPI.Value,
     protoDescriptor: ProtoLiteral,
@@ -197,48 +220,63 @@ function errorDiagnostic(node: fleeceAPI.Node, message: string): CodeMirrorLint.
     };
 }
 
-export function defaultProtoBody(protoDescriptor: ProtoObject, indent = ""): string {
+export function defaultProtoBody(protoDescriptor: ProtoObject, indent = ""): { value: string; comments?: string[] } {
     const INDENT_STEP = "  ";
     if (protoDescriptor.type === "message") {
         let result = "{\n";
         for (const [name, field] of Object.entries(protoDescriptor.fields)) {
             if (field) {
                 if (field.type === "oneof") {
-                    // Only put in the first oneof
                     const options = Object.entries(field.fields);
-                    const [optionName, optionType] = options[0];
-                    const comment = `// oneof ${options.map(([name]) => name).join(", ")}`;
-                    result += `${indent}${INDENT_STEP}${optionName}: ${defaultProtoBody(optionType, indent + INDENT_STEP)}, ${comment}\n`;
-                } else if (field.type === "optional") {
-                    result += `${indent}${INDENT_STEP}${name}: ${defaultProtoBody(field.optionalType, indent + INDENT_STEP)}, // Optional\n`;
+                    if (options.length === 0) continue;
+
+                    const { value, comments } = defaultProtoBody(field, indent + INDENT_STEP);
+                    const comment = comments && comments.length > 0 ? ` // ${comments.join(", ")}` : "";
+                    result += `${indent}${INDENT_STEP}${options[0][0]}: ${value},${comment}\n`;
                 } else {
-                    result += `${indent}${INDENT_STEP}${name}: ${defaultProtoBody(field, indent + INDENT_STEP)},\n`;
+                    const { value, comments } = defaultProtoBody(field, indent + INDENT_STEP);
+                    const comment = comments && comments.length > 0 ? ` // ${comments.join(", ")}` : "";
+                    result += `${indent}${INDENT_STEP}${name}: ${value},${comment}\n`;
                 }
             }
         }
         result += `${indent}}`;
-        return result;
+        return { value: result };
     }
 
     if (protoDescriptor.type === "literal") {
         if (protoDescriptor.literalType === "string") {
-            return `""`;
+            return { value: `""` };
         }
-        return "0";
+        return { value: "0" };
     }
 
     if (protoDescriptor.type === "repeated") {
-        return "[]";
+        return { value: "[]" };
     }
     if (protoDescriptor.type === "enum") {
-        return "0";
+        if (protoDescriptor.values.length > 0) {
+            const value = protoDescriptor.values[0];
+            return { value: `${value.value}`, comments: [`${protoDescriptor.name}::${value.name}`] };
+        }
+        return { value: "0" };
     }
     if (protoDescriptor.type === "optional") {
-        throw "unexpected request for getting optional result"; // Should be handled by the message type
+        const { value, comments } = defaultProtoBody(protoDescriptor.optionalType, indent + INDENT_STEP);
+        return { value, comments: comments ? ["Optional", ...comments] : ["Optional"] };
     }
     if (protoDescriptor.type === "oneof") {
-        throw "unexpected request for getting oneof result"; // Should be handled by the message type
+        // Only put in the first oneof
+        const options = Object.entries(protoDescriptor.fields);
+        if (options.length > 0) {
+            const [optionName, optionType] = options[0];
+            const comment = `oneof ${options.map(([name]) => name).join(", ")}`;
+
+            const { value, comments } = defaultProtoBody(optionType, indent + INDENT_STEP);
+            return { value, comments: comments ? [comment, ...comments] : [comment] };
+        }
+        return { value: "{}", comments: ["Empty oneof"] };
     }
     assertNever(protoDescriptor);
-    return "";
+    return { value: "" };
 }

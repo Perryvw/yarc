@@ -28,5 +28,6 @@ interface ProtoOptional {
 
 interface ProtoEnum {
     type: "enum";
-    values: string[];
+    name: string;
+    values: Array<{ value: number; name: string }>;
 }

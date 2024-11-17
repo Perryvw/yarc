@@ -131,7 +131,7 @@ export const GrpcRequestPanel = observer(
                             rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
                     );
                     if (rpc?.method.requestType) {
-                        activeRequest.body = defaultProtoBody(rpc.method.requestType);
+                        activeRequest.body = defaultProtoBody(rpc.method.requestType).value;
                     }
                 }
                 persist();

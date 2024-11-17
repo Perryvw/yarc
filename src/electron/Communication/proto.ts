@@ -54,7 +54,8 @@ export async function parseProtoFile(protoPath: string, protoRootDir: string): P
 
             return {
                 type: "enum",
-                values: values.map(([name, _]) => name),
+                name: type.name,
+                values: values.map(([name, value]) => ({ name, value })),
             };
         }
 
