@@ -1,4 +1,4 @@
-import { javascriptLanguage } from "@codemirror/lang-javascript";
+import { json5 } from "codemirror-json5";
 import * as CodeMirrorLint from "@codemirror/lint";
 import CodeMirror from "@uiw/react-codemirror";
 import { runInAction } from "mobx";
@@ -172,7 +172,7 @@ export const GrpcRequestPanel = observer(
                         }}
                         value={activeRequest.body}
                         onChange={onRequestBodyChanged}
-                        extensions={[linter, javascriptLanguage]}
+                        extensions={[linter, json5()]}
                         lang="json"
                     />
                 )}
