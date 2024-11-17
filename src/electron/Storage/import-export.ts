@@ -17,7 +17,7 @@ export async function importDirectory(): Promise<IpcImportResult> {
         const data = await fs.readFile(result.filePaths[0]);
         const deserializedData = JSON.parse(data.toString());
         // TODO: Add validation
-        return { cancelled: false, requests: deserializedData };
+        return { cancelled: false, result: deserializedData };
     }
 
     return { cancelled: true };

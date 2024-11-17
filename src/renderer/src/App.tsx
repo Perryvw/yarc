@@ -73,7 +73,7 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
     const importDirectory = useCallback(async () => {
         const result: IpcImportResult = await window.electron.ipcRenderer.invoke(IpcCall.ImportDirectory);
         if (!result.cancelled) {
-            context.requests = result.requests;
+            context.requests = result.result;
         }
     }, [context]);
 

@@ -3,7 +3,7 @@ import * as CodeMirrorLint from "@codemirror/lint";
 import CodeMirror from "@uiw/react-codemirror";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import type { MethodInfo, ProtoContent } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
@@ -66,6 +66,11 @@ const GrpcMethodPopoverEntry = styled.button`
     }
 `;
 
+const ProtoErrorBox = styled.div`
+    background-color: darkred;
+    padding: 5px 10px;
+`;
+
 interface MethodDescriptor {
     service: string;
     method: MethodInfo;
@@ -86,8 +91,8 @@ export const GrpcRequestPanel = observer(
                 if (!result.cancelled) {
                     runInAction(() => {
                         activeRequest.protoFile = {
-                            protoPath: result.protoFile.protoPath,
-                            rootDir: result.protoFile.rootPath,
+                            protoPath: result.result.protoPath,
+                            rootDir: result.result.rootPath,
                         };
                     });
                     persist();
@@ -97,17 +102,29 @@ export const GrpcRequestPanel = observer(
         );
 
         const [rpcs, setRpcs] = useState<MethodDescriptor[] | undefined>(undefined);
+        const [protoError, setError] = useState<string | undefined>(undefined);
 
-        if (activeRequest.protoFile && !rpcs) {
-            window.electron.ipcRenderer
-                .invoke(IpcCall.ReadProtoContent, activeRequest.protoFile.protoPath, activeRequest.protoFile.rootDir)
-                .then((protoContent: ProtoContent) => {
-                    const rpcs = protoContent.services.flatMap((service) =>
-                        service.methods.map((rpc) => ({ service: service.name, method: rpc })),
-                    );
-                    setRpcs(rpcs);
-                });
-        }
+        useEffect(() => {
+            if (activeRequest.protoFile) {
+                window.electron.ipcRenderer
+                    .invoke(
+                        IpcCall.ReadProtoContent,
+                        activeRequest.protoFile.protoPath,
+                        activeRequest.protoFile.rootDir,
+                    )
+                    .then((result: Result<ProtoContent, string>) => {
+                        if (result.success) {
+                            const rpcs = result.value.services.flatMap((service) =>
+                                service.methods.map((rpc) => ({ service: service.name, method: rpc })),
+                            );
+                            setRpcs(rpcs);
+                            setError(undefined);
+                        } else {
+                            setError(`Error while reading ${activeRequest.protoFile?.protoPath}: ${result.error}`);
+                        }
+                    });
+            }
+        }, [activeRequest.protoFile]);
 
         const onRequestBodyChanged = useCallback(
             (value: string) => {
@@ -162,6 +179,7 @@ export const GrpcRequestPanel = observer(
                 <ProtoMethodBox popovertarget="grpc-method-popover" disabled={activeRequest.protoFile === undefined}>
                     {activeRequest.rpc ? activeRequest.rpc.method : "Select method..."}
                 </ProtoMethodBox>
+                {protoError && <ProtoErrorBox>{protoError}</ProtoErrorBox>}
                 {activeRequest.rpc !== undefined && (
                     <CodeMirror
                         theme="dark"

@@ -81,7 +81,7 @@ app.whenReady().then(async () => {
 
     ipcMain.handle(
         IpcCall.ReadProtoContent,
-        async (_, protoPath: string, protoRootDir: string): Promise<ProtoContent> => {
+        async (_, protoPath: string, protoRootDir: string): Promise<Result<ProtoContent, string>> => {
             return await parseProtoFile(protoPath, protoRootDir);
         },
     );

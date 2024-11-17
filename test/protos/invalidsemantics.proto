@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package greet;
+
+service SemanticallyInvalid {
+  // not-existing request and response type
+  rpc SayHello (NotExistingRequest) returns (NotExistingResponse);
+}

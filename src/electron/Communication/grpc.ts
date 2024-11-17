@@ -130,7 +130,7 @@ export async function browseProtoRoot(): Promise<BrowseProtoResult> {
 
     return {
         cancelled: false,
-        protoRoot: { rootPath: result.filePaths[0], protoFiles: await findProtoFiles(result.filePaths[0]) },
+        result: { rootPath: result.filePaths[0], protoFiles: await findProtoFiles(result.filePaths[0]) },
     };
 }
 

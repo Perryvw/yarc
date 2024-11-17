@@ -118,7 +118,7 @@ const SelectProtoButton = styled.div`
     float: right;
 `;
 
-export type SelectProtoModalResult = { cancelled: true } | { cancelled: false; protoFile: ProtoFileDescriptor };
+export type SelectProtoModalResult = Cancellable<ProtoFileDescriptor>;
 
 export const SelectProtosModal = observer(
     ({
@@ -143,7 +143,7 @@ export const SelectProtosModal = observer(
         const addRoot = useCallback(async () => {
             const result: BrowseProtoResult = await window.electron.ipcRenderer.invoke(IpcCall.BrowseProtoDirectory);
             if (!result.cancelled) {
-                protoConfig.addProtoRoot(result.protoRoot);
+                protoConfig.addProtoRoot(result.result);
             }
         }, [protoConfig]);
 
@@ -183,7 +183,7 @@ export const SelectProtosModal = observer(
                                                 onClick={() =>
                                                     close({
                                                         cancelled: false,
-                                                        protoFile: {
+                                                        result: {
                                                             protoPath: f,
                                                             rootPath: root.rootPath,
                                                         },

@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { parseProtoFile } from "../src/electron/Communication/proto";
 
 describe("myproto.proto", async () => {
-    const content = await parseProtoFile("myproto.proto", `${__dirname}/protos`);
+    const content = assertSuccess(await parseProtoFile("myproto.proto", `${__dirname}/protos`));
     const greeterService = content.services[0];
 
     test("has expected service", () => {
@@ -133,7 +133,7 @@ describe("myproto.proto", async () => {
 });
 
 describe("sibling1/nestedproto1.proto", async () => {
-    const content = await parseProtoFile("sibling1/nestedproto1.proto", `${__dirname}/protos`);
+    const content = assertSuccess(await parseProtoFile("sibling1/nestedproto1.proto", `${__dirname}/protos`));
     const nestedService = content.services[0];
 
     test("has expected service", () => {
@@ -180,3 +180,39 @@ describe("sibling1/nestedproto1.proto", async () => {
         });
     });
 });
+
+test("proto with invalid syntax", async () => {
+    const result = await parseProtoFile("invalidsyntax.proto", `${__dirname}/protos`);
+    if (result.success) {
+        expect(result.success).toBe(false);
+    } else {
+        expect(result.error).toContain("illegal token");
+    }
+});
+
+test("proto with missing types", async () => {
+    const result = await parseProtoFile("invalidsemantics.proto", `${__dirname}/protos`);
+    if (result.success) {
+        expect(result.success).toBe(false);
+    } else {
+        expect(result.error).toContain("Error: no such type: NotExistingRequest");
+    }
+});
+
+test("proto with not-existing import", async () => {
+    const result = await parseProtoFile("non-existing-import.proto", `${__dirname}/protos`);
+    if (result.success) {
+        expect(result.success).toBe(false);
+    } else {
+        expect(result.error).toContain("no such file or directory");
+        expect(result.error).toContain("this-proto-does-not-exist.proto");
+    }
+});
+
+function assertSuccess<T>(result: Result<T>): T {
+    if (result.success) {
+        return result.value;
+    }
+    expect(result.success).toBe(true);
+    throw "Failed";
+}

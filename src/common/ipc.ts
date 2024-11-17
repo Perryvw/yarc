@@ -23,5 +23,5 @@ export enum IpcEvent {
     GrpcServerStreamError = "grpc-server-stream-error",
 }
 
-export type IpcImportResult = { cancelled: true } | { cancelled: false; requests: RequestList };
-export type BrowseProtoResult = { cancelled: true } | { cancelled: false; protoRoot: ProtoRoot };
+export type IpcImportResult = Cancellable<RequestList>;
+export type BrowseProtoResult = Cancellable<ProtoRoot>;

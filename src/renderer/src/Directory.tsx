@@ -98,8 +98,8 @@ export const Directory = observer(
         function finishRename(result: RenameResult) {
             renameModal(undefined);
             runInAction(() => {
-                if (!result.cancelled && result.request) {
-                    result.request.name = result.name;
+                if (!result.cancelled && result.result.request) {
+                    result.result.request.name = result.result.name;
                     context.persistState();
                 }
             });

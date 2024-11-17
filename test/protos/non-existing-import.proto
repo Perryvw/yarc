@@ -1,0 +1,6 @@
+syntax = "proto3";
+
+import "this-proto-does-not-exist.proto";
+
+service Greeter {
+}

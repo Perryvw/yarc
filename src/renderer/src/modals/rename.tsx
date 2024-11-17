@@ -17,7 +17,7 @@ const RenameOkButton = styled(RenameCancelButton)`
     background-color: blue;
 `;
 
-export type RenameResult = { cancelled: true } | { cancelled: false; request?: RequestDataOrGroup; name: string };
+export type RenameResult = Cancellable<{ request?: RequestDataOrGroup; name: string }>;
 
 export function RenameModal({
     request,
@@ -45,7 +45,7 @@ export function RenameModal({
             return;
         }
 
-        close({ cancelled: false, request, name: newName });
+        close({ cancelled: false, result: { request, name: newName } });
     }
 
     return (
