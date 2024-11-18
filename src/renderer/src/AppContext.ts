@@ -25,6 +25,7 @@ import type {
     HttpResponseEvent,
     RequestData,
     RequestDataOrGroup,
+    RequestGroup,
     RequestList,
 } from "../../common/request-types";
 import { debounce } from "./util/debounce";
@@ -127,9 +128,14 @@ export class AppContext {
         }
 
         let requestSelected = false;
+        let isDeletingRequestActive = request === this.activeRequest;
 
-        // TODO: Also support selecting another request when active request is nested in a group that is being deleted
-        if (request === this.activeRequest) {
+        // When deleting a group, check if current active request is in the group
+        if (!isDeletingRequestActive && request.type === "group") {
+            isDeletingRequestActive = this.isActiveRequestInGroup(request);
+        }
+
+        if (isDeletingRequestActive) {
             // First try selecting a request above current
             if (oldIndex.index > 0) {
                 for (let i = oldIndex.index - 1; i >= 0; i--) {
@@ -155,6 +161,8 @@ export class AppContext {
                     }
                 }
             }
+
+            // TODO: if we still have no request selected, select closest request from the closest groups?
         }
 
         // TODO: Select some other closest request
@@ -179,6 +187,23 @@ export class AppContext {
         oldIndex.requests.splice(oldIndex.index + 1, 0, newRequest);
 
         this.persistState();
+    }
+
+    public isActiveRequestInGroup(group: RequestGroup): boolean {
+        for (const request of group.requests) {
+            if (request === this.activeRequest) {
+                return true;
+            }
+
+            if (request.type === "group") {
+                const found = this.isActiveRequestInGroup(request);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+
+        return false;
     }
 
     public findRequestById(
