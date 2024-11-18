@@ -126,7 +126,41 @@ export class AppContext {
             return;
         }
 
-        this.setActiveRequest(undefined);
+        let requestSelected = false;
+
+        // TODO: Also support selecting another request when active request is nested in a group that is being deleted
+        if (request === this.activeRequest) {
+            // First try selecting a request above current
+            if (oldIndex.index > 0) {
+                for (let i = oldIndex.index - 1; i >= 0; i--) {
+                    const requestAbove = oldIndex.requests[i];
+
+                    if (requestAbove.type !== "group") {
+                        requestSelected = true;
+                        this.setActiveRequest(requestAbove);
+                        break;
+                    }
+                }
+            }
+
+            // If we can't, try selecting a request below current
+            if (!requestSelected && oldIndex.index + 1 < oldIndex.requests.length) {
+                for (let i = oldIndex.index + 1; i < oldIndex.requests.length; i++) {
+                    const requestBelow = oldIndex.requests[i];
+
+                    if (requestBelow.type !== "group") {
+                        requestSelected = true;
+                        this.setActiveRequest(requestBelow);
+                        break;
+                    }
+                }
+            }
+        }
+
+        // TODO: Select some other closest request
+        if (!requestSelected) {
+            this.setActiveRequest(undefined);
+        }
 
         oldIndex.requests.splice(oldIndex.index, 1);
 
