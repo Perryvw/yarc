@@ -47,6 +47,9 @@ export class AppContext {
     lastDeletedRequestForUndo: RequestWithPositionContext | undefined;
     substitutionVariables: SubstitutionVariable[] = [];
 
+    historyActiveRequestIds: string[] = [];
+    historyCurrentIndex = 0;
+
     gridWidthDirectory = 20;
     gridWidthResponse = 50;
 
@@ -114,16 +117,45 @@ export class AppContext {
         this.persistState();
     }, 4000);
 
-    public setActiveRequest(request: RequestData | undefined) {
+    public setActiveRequest(request: RequestData | undefined, addToHistory = true) {
         this.activeRequest = request;
+
+        if (request && addToHistory) {
+            this.historyCurrentIndex = this.historyActiveRequestIds.length; // TODO: should this insert at current index instead?
+            this.historyActiveRequestIds.push(request.id);
+        }
 
         // Dispose previous observer
         this.activeRequestObserverDispose();
+
         if (this.activeRequest) {
             // Set new observer
             this.activeRequestObserverDispose = observe(this.activeRequest, () => {
                 this.debouncedPersist();
             });
+        }
+    }
+
+    public navigateInHistory(forward: boolean) {
+        let requestId: string | null = null;
+
+        if (forward) {
+            if (this.historyCurrentIndex + 1 < this.historyActiveRequestIds.length) {
+                this.historyCurrentIndex++;
+                requestId = this.historyActiveRequestIds[this.historyCurrentIndex];
+            }
+        } else if (this.historyCurrentIndex > 0) {
+            this.historyCurrentIndex--;
+            requestId = this.historyActiveRequestIds[this.historyCurrentIndex];
+        }
+
+        if (requestId !== null) {
+            const index = this.findRequestById(requestId);
+
+            // TODO: Skip over deleted requests and try next one
+            if (index !== null && index.request.type !== "group") {
+                this.setActiveRequest(index.request, false);
+            }
         }
     }
 

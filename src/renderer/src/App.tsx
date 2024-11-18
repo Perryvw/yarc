@@ -1,6 +1,6 @@
 import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
-import { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { IpcCall, type IpcImportResult } from "../../common/ipc";
 import { AppContext } from "./AppContext";
@@ -80,6 +80,27 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
 
     const exportDirectory = useCallback(async () => {
         await window.electron.ipcRenderer.invoke(IpcCall.ExportDirectory, toJS(context.requests));
+    }, [context]);
+
+    useEffect(() => {
+        function handleMouseButton(e: MouseEvent) {
+            switch (e.button) {
+                case 3:
+                    e.preventDefault();
+                    context.navigateInHistory(false);
+                    break;
+                case 4:
+                    e.preventDefault();
+                    context.navigateInHistory(true);
+                    break;
+            }
+        }
+
+        window.addEventListener("mouseup", handleMouseButton);
+
+        return () => {
+            window.removeEventListener("mouseup", handleMouseButton);
+        };
     }, [context]);
 
     const [search, setSearch] = useState("");
