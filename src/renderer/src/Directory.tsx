@@ -745,8 +745,8 @@ const RequestGroupEntry = observer(
                     )}
                 </RequestNameLine>
 
-                <RequestGroupInner>
-                    {!request.collapsed && (
+                {!request.collapsed && (
+                    <RequestGroupInner>
                         <SortableRequests
                             depth={depth + 1}
                             requests={request.requests}
@@ -762,8 +762,8 @@ const RequestGroupEntry = observer(
                             showActiveRequestHistory={showActiveRequestHistory}
                             setShowActiveRequestHistory={setShowActiveRequestHistory}
                         />
-                    )}
-                </RequestGroupInner>
+                    </RequestGroupInner>
+                )}
             </RequestGroupRoot>
         );
     },
