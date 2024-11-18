@@ -8,6 +8,7 @@ import type { GrpcRequestData, GrpcResponse, HttpRequestData, KeyValue } from ".
 import type { AppContext } from "./AppContext";
 import { httpVerbColorPalette } from "./palette";
 import { debounce } from "./util/debounce";
+import { substituteVariables } from "./util/substitute-variables";
 
 const RequestHeaderContainer = styled.div`
     padding: 15px;
@@ -141,6 +142,7 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
         }
 
         const jsRequest = toJS(request);
+        jsRequest.url = substituteVariables(request.url, context.substitutionVariables);
         jsRequest.response = undefined;
         jsRequest.history = [];
 

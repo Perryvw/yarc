@@ -33,6 +33,7 @@ import {
 import type { AppContext } from "./AppContext";
 import { DirectoryButtons } from "./DirectoryButtons";
 import { httpVerbColorPalette } from "./palette";
+import { substituteVariables } from "./util/substitute-variables";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -484,7 +485,7 @@ const RequestEntry = observer(
         const [isRenaming, setIsRenaming] = useState(false);
 
         function getCleanerRequestUrl() {
-            let url = request.url;
+            let url = substituteVariables(request.url, context.substitutionVariables);
             const protocol = url.indexOf("://");
 
             if (protocol > -1) {
