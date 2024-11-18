@@ -10,6 +10,7 @@ import {
     Copy,
     Folder,
     FolderOpen,
+    FolderX,
     History,
     SquarePen,
     Trash,
@@ -255,6 +256,7 @@ const RequestUrl = styled(RequestName)`
 
 const RequestActions = styled.div`
     display: flex;
+    align-items: center;
     gap: 15px;
     height: 20px;
 `;
@@ -729,7 +731,15 @@ const RequestGroupEntry = observer(
                             <RequestGroupArrow>
                                 {request.collapsed ? <ChevronRight size={14} /> : <ChevronDown size={14} />}
                             </RequestGroupArrow>
-                            {request.collapsed ? <Folder size={16} /> : <FolderOpen size={16} />}
+                            {request.collapsed ? (
+                                request.requests.length > 0 ? (
+                                    <Folder size={16} />
+                                ) : (
+                                    <FolderX size={16} />
+                                )
+                            ) : (
+                                <FolderOpen size={16} />
+                            )}
                         </RequestMethod>
                         {request.name}
                     </RequestName>
