@@ -3,10 +3,10 @@ import * as path from "node:path";
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
 import { dialog } from "electron";
+import JSON5 from "json5";
 import type { GrpcServerStreamDataEvent, GrpcServerStreamErrorEvent, GrpcStreamClosedEvent } from "../../common/grpc";
 import { type BrowseProtoResult, IpcEvent } from "../../common/ipc";
 import type { GrpcRequestData, GrpcResponse, GrpcServerStreamData } from "../../common/request-types";
-import JSON5 from "json5";
 
 export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.WebContents): Promise<GrpcResponse> {
     if (!request.protoFile || !request.rpc) {

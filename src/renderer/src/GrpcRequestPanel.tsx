@@ -1,17 +1,17 @@
-import { json5 } from "codemirror-json5";
 import * as CodeMirrorLint from "@codemirror/lint";
 import CodeMirror from "@uiw/react-codemirror";
+import { json5 } from "codemirror-json5";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import type { MethodInfo, ProtoContent } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
-import { GrpcRequestKind, type GrpcRequestData } from "../../common/request-types";
+import { type GrpcRequestData, GrpcRequestKind } from "../../common/request-types";
 import type { ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
-import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
 import { debounce } from "./util/debounce";
+import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
 
 const RequestPanelRoot = styled.div`
     display: flex;

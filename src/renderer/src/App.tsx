@@ -107,17 +107,23 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                 importDirectory={importDirectory}
                 exportDirectory={exportDirectory}
             />
-            <MainContent>
-                {context.activeRequest?.type === "grpc" && (
-                    <GrpcRequestPanel activeRequest={context.activeRequest} protoConfig={context.protoConfig} />
-                )}
-                {context.activeRequest?.type === "http" && <RequestPanel activeRequest={context.activeRequest} />}
-                <SplitSlider width={context.gridWidthDirectory} setWidth={setResponseWidth} />
-                {context.activeRequest?.type === "http" && <ResponsePanel activeRequest={context.activeRequest} />}
-                {context.activeRequest?.type === "grpc" && (
-                    <GrpcResponsePanel response={context.activeRequest?.response} />
-                )}
-            </MainContent>
+            {context.activeRequest === undefined ? (
+                <MainContent>
+                    <div>Hello!</div>
+                </MainContent>
+            ) : (
+                <MainContent>
+                    {context.activeRequest.type === "grpc" && (
+                        <GrpcRequestPanel activeRequest={context.activeRequest} protoConfig={context.protoConfig} />
+                    )}
+                    {context.activeRequest.type === "http" && <RequestPanel activeRequest={context.activeRequest} />}
+                    <SplitSlider width={context.gridWidthDirectory} setWidth={setResponseWidth} />
+                    {context.activeRequest.type === "http" && <ResponsePanel activeRequest={context.activeRequest} />}
+                    {context.activeRequest.type === "grpc" && (
+                        <GrpcResponsePanel response={context.activeRequest?.response} />
+                    )}
+                </MainContent>
+            )}
         </AppRoot>
     );
 });
