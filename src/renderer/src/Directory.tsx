@@ -92,8 +92,6 @@ export const Directory = observer(
         importDirectory: () => void;
         exportDirectory: () => void;
     }) => {
-        console.log("rendering directory");
-
         const [showActiveRequestHistory, setShowActiveRequestHistory] = useState(false);
         const [renamingRequest, renameModal] = useState<RequestDataOrGroup | undefined>(undefined);
 
@@ -151,14 +149,12 @@ export const Directory = observer(
         }
 
         function handleDragEnter(request: RequestDataOrGroup) {
-            console.log("enter", request.id);
             runInAction(() => {
                 context.draggingOverRequestId = request.id;
             });
         }
 
         function handleDragLeave(request: RequestDataOrGroup) {
-            console.log("leave", request.id);
             runInAction(() => {
                 if (context.draggingOverRequestId === request.id) {
                     context.draggingOverRequestId = null;
@@ -454,8 +450,6 @@ const RequestEntry = observer(
         showActiveRequestHistory: boolean;
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
-        console.log("Rendering request entry");
-
         function getCleanerRequestUrl() {
             let url = request.url;
             const protocol = url.indexOf("://");
@@ -536,8 +530,6 @@ const RequestEntry = observer(
             if (!movedRequestId) {
                 return;
             }
-
-            console.log("dropped", movedRequestId, "on", request.id);
 
             context.moveRequest(movedRequestId, request.id, context.draggingInsertPosition);
 
@@ -650,8 +642,6 @@ const RequestGroupEntry = observer(
         showActiveRequestHistory: boolean;
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
-        console.log("Rendering request group entry");
-
         function renameHandler(e: React.MouseEvent) {
             renameRequest(request);
             e.stopPropagation();
@@ -709,8 +699,6 @@ const RequestGroupEntry = observer(
             if (!movedRequestId) {
                 return;
             }
-
-            console.log("dropped", movedRequestId, "on group", request.id);
 
             context.moveRequest(movedRequestId, request.id, "group");
 
@@ -818,8 +806,6 @@ const SortableRequests = observer(
 
         function getRequestDiff(index: number, newRequest: RequestData, oldRequest: RequestData) {
             const diff = [`#${index}`];
-
-            console.log(toJS(newRequest), toJS(oldRequest));
 
             if (newRequest.type === "http" && oldRequest.type === "http") {
                 if (newRequest.response) {

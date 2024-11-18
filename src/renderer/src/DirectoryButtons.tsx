@@ -124,7 +124,6 @@ export const DirectoryButtons = observer(
                 history: [],
             };
             context.addRequest(newRequest);
-            context.setActiveRequest(context.requests[context.requests.length - 1] as RequestData);
         }
 
         function newRequestGrpc() {
@@ -139,7 +138,6 @@ export const DirectoryButtons = observer(
                 history: [],
             };
             context.addRequest(newRequest);
-            context.setActiveRequest(context.requests[context.requests.length - 1] as RequestData);
         }
 
         function newGroup() {

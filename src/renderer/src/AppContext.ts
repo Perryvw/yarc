@@ -74,7 +74,24 @@ export class AppContext {
     }
 
     public addRequest(request: RequestDataOrGroup) {
-        this.requests.push(isObservable(request) ? request : request);
+        let newRequest: RequestDataOrGroup | null = null;
+
+        if (this.activeRequest) {
+            const activeIndex = this.findRequestById(this.activeRequest.id);
+
+            if (activeIndex !== null) {
+                activeIndex.requests.splice(activeIndex.index + 1, 0, request);
+                newRequest = activeIndex.requests[activeIndex.index + 1];
+            }
+        } else {
+            this.requests.push(request);
+            newRequest = this.requests[this.requests.length - 1];
+        }
+
+        if (newRequest !== null && newRequest.type !== "group") {
+            this.setActiveRequest(newRequest);
+        }
+
         this.persistState();
     }
 
