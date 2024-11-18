@@ -1,5 +1,6 @@
 import classNames from "classnames";
 import {
+    Check,
     ChevronDown,
     ChevronRight,
     ChevronsDown,
@@ -18,7 +19,7 @@ import {
 import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
-import { Fragment, useCallback, useState } from "react";
+import { ChangeEvent, Fragment, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
     GrpcRequestKind,
@@ -368,6 +369,7 @@ const RequestGroupRoot = styled.div`
             gap: 5px;
         }
 
+        &.is-renaming > ${RequestActions},
         &:hover > ${RequestActions} {
             opacity: 1;
         }
@@ -611,6 +613,13 @@ const RequestEntry = observer(
     },
 );
 
+const RenameInputTextual = styled.input`
+    all: unset;
+    min-width: 0;
+    box-shadow: inset 0px -1px 0px blue;
+    cursor: text;
+`;
+
 const RequestGroupEntry = observer(
     ({
         depth,
@@ -644,10 +653,8 @@ const RequestGroupEntry = observer(
         showActiveRequestHistory: boolean;
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
-        function renameHandler(e: React.MouseEvent) {
-            renameRequest(request);
-            e.stopPropagation();
-        }
+        const [isRenaming, setIsRenaming] = useState(false);
+        const renameInputRef = useRef<HTMLInputElement>(null);
 
         function deleteHandler(e: React.MouseEvent) {
             deleteRequest(request);
@@ -707,6 +714,39 @@ const RequestGroupEntry = observer(
             onDragEnd(); // Moving the request element causes dropend event to not fire
         };
 
+        useEffect(() => {
+            if (isRenaming) {
+                renameInputRef.current?.focus();
+            }
+        }, [isRenaming]);
+
+        function onRenameStart(e: React.MouseEvent) {
+            e.stopPropagation();
+            setIsRenaming(true);
+        }
+
+        function onRenameSave(e: React.MouseEvent) {
+            e.stopPropagation();
+            setIsRenaming(false);
+        }
+
+        function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                setIsRenaming(false);
+            }
+        }
+
+        function onInputClick(e: React.MouseEvent) {
+            e.stopPropagation();
+        }
+
+        function onNameChange(event: ChangeEvent<HTMLInputElement>) {
+            runInAction(() => {
+                request.name = event.target.value;
+            });
+        }
+
         return (
             <RequestGroupRoot
                 className={classNames({ "is-drag-over-group": isDragOver })}
@@ -717,8 +757,9 @@ const RequestGroupEntry = observer(
                 }
             >
                 <RequestNameLine
+                    className={classNames({ "is-renaming": isRenaming })}
                     onClick={handleNameClick}
-                    draggable="true"
+                    draggable={!isRenaming}
                     onDragStart={handleDragStart}
                     onDragEnd={handleDragEnd}
                     onDragEnter={handleDragEnter}
@@ -741,13 +782,32 @@ const RequestGroupEntry = observer(
                                 <FolderOpen size={16} />
                             )}
                         </RequestMethod>
-                        {request.name}
+                        {isRenaming ? (
+                            <RenameInputTextual
+                                type="text"
+                                ref={renameInputRef}
+                                value={request.name}
+                                onClick={onInputClick}
+                                onChange={onNameChange}
+                                onKeyDown={onKeyDown}
+                            />
+                        ) : request.name.length > 0 ? (
+                            request.name
+                        ) : (
+                            <i>unnamed</i>
+                        )}
                     </RequestName>
                     {!request.collapsed && (
                         <RequestActions>
-                            <RenameButton onClick={renameHandler}>
-                                <SquarePen size={16} />
-                            </RenameButton>
+                            {isRenaming ? (
+                                <RenameButton onClick={onRenameSave}>
+                                    <Check size={16} />
+                                </RenameButton>
+                            ) : (
+                                <RenameButton onClick={onRenameStart}>
+                                    <SquarePen size={16} />
+                                </RenameButton>
+                            )}
                             <DeleteButton onClick={deleteHandler}>
                                 <Trash size={16} />
                             </DeleteButton>
