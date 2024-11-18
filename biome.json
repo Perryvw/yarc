@@ -20,8 +20,7 @@
         "rules": {
             "recommended": true,
             "correctness": {
-                "noUnusedImports": "off",
-                "useExhaustiveDependencies": "off"
+                "noUnusedImports": "off"
             },
             "style": {
                 "noNonNullAssertion": "off"

@@ -32,7 +32,7 @@ import {
 } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { DirectoryButtons } from "./DirectoryButtons";
-import { httpVerbColorPalette } from "./HttpVerb";
+import { httpVerbColorPalette } from "./palette";
 
 const DirectoryRoot = styled.div`
     display: flex;

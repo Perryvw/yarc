@@ -6,7 +6,7 @@ import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
 import type { GrpcRequestData, GrpcResponse, HttpRequestData, KeyValue } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
-import { httpVerbColorPalette } from "./HttpVerb";
+import { httpVerbColorPalette } from "./palette";
 import { debounce } from "./util/debounce";
 
 const RequestHeaderContainer = styled.div`

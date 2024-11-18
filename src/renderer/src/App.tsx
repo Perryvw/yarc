@@ -1,8 +1,8 @@
 import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { IpcCall, IpcEvent, type IpcImportResult } from "../../common/ipc";
+import { IpcCall, type IpcImportResult } from "../../common/ipc";
 import { AppContext } from "./AppContext";
 import { Directory } from "./Directory";
 import DirectoryHeader from "./DirectoryHeader";
@@ -12,6 +12,7 @@ import RequestHeader from "./RequestHeader";
 import { RequestPanel } from "./RequestPanel";
 import { ResponsePanel } from "./ResponsePanel";
 import SplitSlider from "./SplitSlider";
+import * as palette from "./palette";
 
 const AppRoot = styled.div`
     --grid-width-directory: 10%;
@@ -32,9 +33,9 @@ const AppRoot = styled.div`
     --font-monospace: "Consolas", monospace;
 
     --color-text: #fff;
-    --color-background: #0c0c0c;
-    --color-background-contrast: #161920;
-    --color-border: #2b2b2b;
+    --color-background: ${palette.backgroundColor};
+    --color-background-contrast: ${palette.backgroundContrastColor};
+    --color-border: ${palette.borderColor};
 `;
 
 const MainContent = styled.div`

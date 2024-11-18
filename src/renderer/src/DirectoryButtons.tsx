@@ -1,9 +1,12 @@
-import { ChevronsLeftRight, CirclePlus, Download, Folder, Globe, Upload } from "lucide-react";
+import { ChevronsLeftRight, CirclePlus, Download, Folder, Globe, Settings, Upload } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
 import type { GrpcRequestData, HttpRequestData, RequestData, RequestGroup } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
+import { backgroundHoverColor } from "./palette";
+import { SubstitutionVariablesModal } from "./modals/substitution-variables";
+import { useCallback, useState } from "react";
 
 const DirectoryButtonsContainer = styled.div`
     display: flex;
@@ -28,7 +31,7 @@ const Button = styled.button`
     }
 
     &:hover {
-        background-color: blue;
+        background-color: ${backgroundHoverColor};
     }
 `;
 
@@ -40,6 +43,7 @@ const NewButton = styled(Button)`
 
 const ExportButton = styled(Button)``;
 const ImportButton = styled(Button)``;
+const SettingsButton = styled(Button)``;
 
 const NewRequestType = styled.button`
     border: unset;
@@ -151,8 +155,21 @@ export const DirectoryButtons = observer(
             context.addRequest(group);
         }
 
+        const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+        const openSettingsModal = useCallback(() => setSettingsModalOpen(true), []);
+        const closeSettingsModal = useCallback(() => {
+            setSettingsModalOpen(false);
+            context.persistState();
+        }, [context]);
+
         return (
             <DirectoryButtonsContainer>
+                <SubstitutionVariablesModal
+                    substitutionVariables={context.substitutionVariables}
+                    open={settingsModalOpen}
+                    close={closeSettingsModal}
+                    context={context}
+                />
                 <NewRequestTypePopup id="new-request-popover" popover="auto">
                     <NewRequestType onClick={newRequestGrpc}>
                         <ChevronsLeftRight />
@@ -173,6 +190,9 @@ export const DirectoryButtons = observer(
                 <ExportButton title="Export" onClick={exportDirectory}>
                     <Upload />
                 </ExportButton>
+                <SettingsButton title="Settings" onClick={openSettingsModal}>
+                    <Settings />
+                </SettingsButton>
                 <NewButton type="button" popovertarget="new-request-popover">
                     <CirclePlus />
                     New

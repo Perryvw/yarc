@@ -107,6 +107,7 @@ function fixPersistedData(
             id: ri.id ?? uuidv7(),
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
+            kind: ri.kind,
 
             protoFile: ri.protoFile
                 ? {
@@ -139,10 +140,21 @@ function fixPersistedData(
         };
     }
 
+    function fixSubstitutionVariable(vi: DeepPartial<{ name: string; value: string }>): {
+        name: string;
+        value: string;
+    } {
+        return {
+            name: vi.name ?? "restored-variable",
+            value: vi.value ?? "",
+        };
+    }
+
     return {
         requests: incoming.requests?.map(fixRequest).filter(notUndefined) ?? [],
         protoRoots: incoming.protoRoots?.filter(notUndefined) ?? [],
         selectedRequest: incoming.selectedRequest ?? null,
+        substitutionVariables: incoming.substitutionVariables?.filter(notUndefined)?.map(fixSubstitutionVariable) ?? [],
         layout: {
             directoryWidth: incoming.layout?.directoryWidth ?? 20,
             responseWidth: incoming.layout?.responseWidth ?? 50,

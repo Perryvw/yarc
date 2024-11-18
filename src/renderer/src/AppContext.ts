@@ -36,10 +36,16 @@ interface RequestWithPositionContext {
     index: number;
 }
 
+export interface SubstitutionVariable {
+    name: string;
+    value: string;
+}
+
 export class AppContext {
     requests: RequestList = [];
     activeRequest: RequestData | undefined;
     lastDeletedRequestForUndo: RequestWithPositionContext | undefined;
+    substitutionVariables: SubstitutionVariable[] = [];
 
     gridWidthDirectory = 20;
     gridWidthResponse = 50;
@@ -315,6 +321,7 @@ export class AppContext {
             requests: requestsWithoutResponse,
             protoRoots: this.protoConfig.roots.map((r) => r.rootPath),
             selectedRequest: this.activeRequest?.id ?? null,
+            substitutionVariables: toJS(this.substitutionVariables),
             layout: {
                 directoryWidth: this.gridWidthDirectory,
                 responseWidth: this.gridWidthResponse,
@@ -345,6 +352,8 @@ export class AppContext {
                         // Only the root path is persisted, discover proto files from the root on disk
                         this.protoConfig.refreshProtoRoot(root);
                     }
+
+                    this.substitutionVariables = observable(state.substitutionVariables);
                 }
             }),
         );

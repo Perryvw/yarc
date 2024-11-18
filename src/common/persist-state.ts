@@ -4,6 +4,7 @@ export interface PersistedState {
     requests: RequestList;
     protoRoots: string[];
     selectedRequest: string | null;
+    substitutionVariables: Array<{ name: string; value: string }>;
     layout: {
         directoryWidth: number;
         responseWidth: number;

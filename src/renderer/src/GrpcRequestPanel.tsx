@@ -12,6 +12,7 @@ import type { ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
 import { debounce } from "./util/debounce";
 import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
+import { backgroundHoverColor, errorColor } from "./palette";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -29,7 +30,7 @@ const ProtoFileBox = styled.div`
     cursor: pointer;
 
     &:hover {
-        background-color: blue;
+        background-color: ${backgroundHoverColor};
     }
 `;
 
@@ -43,7 +44,7 @@ const ProtoMethodBox = styled.button`
     font-size: 12pt;
 
     &:hover {
-        background-color: blue;
+        background-color: ${backgroundHoverColor};
     }
 `;
 
@@ -63,12 +64,12 @@ const GrpcMethodPopoverEntry = styled.button`
     cursor: pointer;
 
     &:hover {
-        background-color: blue;
+        background-color: ${backgroundHoverColor};
     }
 `;
 
 const ProtoErrorBox = styled.div`
-    background-color: darkred;
+    background-color: ${errorColor};
     padding: 5px 10px;
 `;
 
