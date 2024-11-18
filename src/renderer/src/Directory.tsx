@@ -369,8 +369,17 @@ const RequestGroupRoot = styled.div`
             gap: 5px;
         }
 
-        &.is-renaming > ${RequestActions},
         &:hover > ${RequestActions} {
+            opacity: 1;
+        }
+    }
+
+    &.is-renaming > ${RequestNameLine} {
+        border-style: dashed;
+        border-color: blue;
+        background-color: var(--color-background-contrast);
+
+        & > ${RequestActions} {
             opacity: 1;
         }
     }
@@ -616,7 +625,6 @@ const RequestEntry = observer(
 const RenameInputTextual = styled.input`
     all: unset;
     min-width: 0;
-    box-shadow: inset 0px -1px 0px blue;
     cursor: text;
 `;
 
@@ -749,7 +757,7 @@ const RequestGroupEntry = observer(
 
         return (
             <RequestGroupRoot
-                className={classNames({ "is-drag-over-group": isDragOver })}
+                className={classNames({ "is-drag-over-group": isDragOver, "is-renaming": isRenaming })}
                 style={
                     {
                         "--group-depth": depth,
@@ -757,7 +765,6 @@ const RequestGroupEntry = observer(
                 }
             >
                 <RequestNameLine
-                    className={classNames({ "is-renaming": isRenaming })}
                     onClick={handleNameClick}
                     draggable={!isRenaming}
                     onDragStart={handleDragStart}
