@@ -19,7 +19,7 @@ import {
 import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
 import type React from "react";
-import { ChangeEvent, Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, Fragment, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
     GrpcRequestKind,
@@ -31,7 +31,6 @@ import {
 import type { AppContext } from "./AppContext";
 import { DirectoryButtons } from "./DirectoryButtons";
 import { httpVerbColorPalette } from "./HttpVerb";
-import { RenameModal, type RenameResult } from "./modals/rename";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -95,24 +94,6 @@ export const Directory = observer(
         exportDirectory: () => void;
     }) => {
         const [showActiveRequestHistory, setShowActiveRequestHistory] = useState(false);
-        const [renamingRequest, renameModal] = useState<RequestDataOrGroup | undefined>(undefined);
-
-        const renameRequest = useCallback(
-            (request: RequestDataOrGroup) => {
-                renameModal(request);
-            },
-            [context],
-        );
-
-        function finishRename(result: RenameResult) {
-            renameModal(undefined);
-            runInAction(() => {
-                if (!result.cancelled && result.result.request) {
-                    result.result.request.name = result.result.name;
-                    context.persistState();
-                }
-            });
-        }
 
         const selectRequest = useCallback(
             (request: RequestData) => {
@@ -210,13 +191,11 @@ export const Directory = observer(
                         onDragLeave={handleDragLeave}
                         deleteRequest={deleteRequest}
                         duplicateRequest={duplicateRequest}
-                        renameRequest={renameRequest}
                         selectRequest={selectRequest}
                         showActiveRequestHistory={showActiveRequestHistory}
                         setShowActiveRequestHistory={setShowActiveRequestHistory}
                     />
                 </RequestContainer>
-                <RenameModal request={renamingRequest} close={finishRename} />
             </DirectoryRoot>
         );
     },
@@ -440,7 +419,6 @@ const RequestEntry = observer(
         onDragEnd,
         onDragEnter,
         onDragLeave,
-        renameRequest,
         selectRequest,
         deleteRequest,
         duplicateRequest,
@@ -455,7 +433,6 @@ const RequestEntry = observer(
         onDragEnd: () => void;
         onDragEnter: (r: RequestData) => void;
         onDragLeave: (r: RequestData) => void;
-        renameRequest: (r: RequestData) => void;
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestData) => void;
         duplicateRequest: (r: RequestData) => void;
@@ -463,6 +440,8 @@ const RequestEntry = observer(
         showActiveRequestHistory: boolean;
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
+        const [isRenaming, setIsRenaming] = useState(false);
+
         function getCleanerRequestUrl() {
             let url = request.url;
             const protocol = url.indexOf("://");
@@ -480,11 +459,6 @@ const RequestEntry = observer(
 
         function duplicateHandler(e: React.MouseEvent) {
             duplicateRequest(request);
-            e.stopPropagation();
-        }
-
-        function renameHandler(e: React.MouseEvent) {
-            renameRequest(request);
             e.stopPropagation();
         }
 
@@ -549,6 +523,21 @@ const RequestEntry = observer(
             onDragEnd(); // Moving the request element causes dropend event to not fire
         };
 
+        function finishRename() {
+            setIsRenaming(false);
+            context.persistState();
+        }
+
+        function onRenameStart(e: React.MouseEvent) {
+            e.stopPropagation();
+            setIsRenaming(true);
+        }
+
+        function onRenameSave(e: React.MouseEvent) {
+            e.stopPropagation();
+            finishRename();
+        }
+
         return (
             <Request
                 onClick={selectHandler}
@@ -589,7 +578,14 @@ const RequestEntry = observer(
                                 {request.kind === undefined && <ChevronsLeftRight size={16} />}
                             </RequestMethod>
                         )}
-                        {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>} {request.name}
+                        {request.type === "http" && <RequestMethod>{request.method}</RequestMethod>}
+                        {isRenaming ? (
+                            <RenameInput request={request} finishRename={finishRename} />
+                        ) : request.name.length > 0 ? (
+                            request.name
+                        ) : (
+                            <i>unnamed</i>
+                        )}
                     </RequestName>
                     {!active && request.isExecuting && (
                         <RequestExecuting>
@@ -599,12 +595,19 @@ const RequestEntry = observer(
                 </RequestNameLine>
                 {active && (
                     <RequestActions>
+                        {isRenaming ? (
+                            <RenameButton onClick={onRenameSave}>
+                                <Check size={16} />
+                            </RenameButton>
+                        ) : (
+                            <RenameButton onClick={onRenameStart}>
+                                <SquarePen size={16} />
+                            </RenameButton>
+                        )}
+
                         <DuplicateButton onClick={duplicateHandler}>
                             <Copy size={16} />
                         </DuplicateButton>
-                        <RenameButton onClick={renameHandler}>
-                            <SquarePen size={16} />
-                        </RenameButton>
                         <DeleteButton onClick={deleteHandler}>
                             <Trash size={16} />
                         </DeleteButton>
@@ -628,6 +631,50 @@ const RenameInputTextual = styled.input`
     cursor: text;
 `;
 
+export const RenameInput = observer(
+    ({
+        request,
+        finishRename,
+    }: {
+        request: RequestDataOrGroup;
+        finishRename: () => void;
+    }) => {
+        const renameInputRef = useRef<HTMLInputElement>(null);
+
+        useEffect(() => {
+            renameInputRef.current?.focus();
+        }, []);
+
+        function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                finishRename();
+            }
+        }
+
+        function onInputClick(e: React.MouseEvent) {
+            e.stopPropagation();
+        }
+
+        function onNameChange(event: ChangeEvent<HTMLInputElement>) {
+            runInAction(() => {
+                request.name = event.target.value;
+            });
+        }
+
+        return (
+            <RenameInputTextual
+                type="text"
+                ref={renameInputRef}
+                value={request.name}
+                onClick={onInputClick}
+                onChange={onNameChange}
+                onKeyDown={onKeyDown}
+            />
+        );
+    },
+);
+
 const RequestGroupEntry = observer(
     ({
         depth,
@@ -638,7 +685,6 @@ const RequestGroupEntry = observer(
         onDragEnd,
         onDragEnter,
         onDragLeave,
-        renameRequest,
         selectRequest,
         deleteRequest,
         duplicateRequest,
@@ -653,7 +699,6 @@ const RequestGroupEntry = observer(
         onDragEnd: () => void;
         onDragEnter: (r: RequestDataOrGroup) => void;
         onDragLeave: (r: RequestDataOrGroup) => void;
-        renameRequest: (r: RequestDataOrGroup) => void;
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestDataOrGroup) => void;
         duplicateRequest: (r: RequestData) => void;
@@ -662,7 +707,6 @@ const RequestGroupEntry = observer(
         setShowActiveRequestHistory: (v: boolean) => void;
     }) => {
         const [isRenaming, setIsRenaming] = useState(false);
-        const renameInputRef = useRef<HTMLInputElement>(null);
 
         function deleteHandler(e: React.MouseEvent) {
             deleteRequest(request);
@@ -722,11 +766,10 @@ const RequestGroupEntry = observer(
             onDragEnd(); // Moving the request element causes dropend event to not fire
         };
 
-        useEffect(() => {
-            if (isRenaming) {
-                renameInputRef.current?.focus();
-            }
-        }, [isRenaming]);
+        function finishRename() {
+            setIsRenaming(false);
+            context.persistState();
+        }
 
         function onRenameStart(e: React.MouseEvent) {
             e.stopPropagation();
@@ -735,24 +778,7 @@ const RequestGroupEntry = observer(
 
         function onRenameSave(e: React.MouseEvent) {
             e.stopPropagation();
-            setIsRenaming(false);
-        }
-
-        function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                setIsRenaming(false);
-            }
-        }
-
-        function onInputClick(e: React.MouseEvent) {
-            e.stopPropagation();
-        }
-
-        function onNameChange(event: ChangeEvent<HTMLInputElement>) {
-            runInAction(() => {
-                request.name = event.target.value;
-            });
+            finishRename();
         }
 
         return (
@@ -790,14 +816,7 @@ const RequestGroupEntry = observer(
                             )}
                         </RequestMethod>
                         {isRenaming ? (
-                            <RenameInputTextual
-                                type="text"
-                                ref={renameInputRef}
-                                value={request.name}
-                                onClick={onInputClick}
-                                onChange={onNameChange}
-                                onKeyDown={onKeyDown}
-                            />
+                            <RenameInput request={request} finishRename={finishRename} />
                         ) : request.name.length > 0 ? (
                             request.name
                         ) : (
@@ -834,7 +853,6 @@ const RequestGroupEntry = observer(
                             onDragLeave={onDragLeave}
                             deleteRequest={deleteRequest}
                             duplicateRequest={duplicateRequest}
-                            renameRequest={renameRequest}
                             selectRequest={selectRequest}
                             showActiveRequestHistory={showActiveRequestHistory}
                             setShowActiveRequestHistory={setShowActiveRequestHistory}
@@ -855,7 +873,6 @@ const SortableRequests = observer(
         onDragEnd,
         onDragEnter,
         onDragLeave,
-        renameRequest,
         selectRequest,
         deleteRequest,
         duplicateRequest,
@@ -869,7 +886,6 @@ const SortableRequests = observer(
         onDragEnd: () => void;
         onDragEnter: (r: RequestDataOrGroup) => void;
         onDragLeave: (r: RequestDataOrGroup) => void;
-        renameRequest: (r: RequestDataOrGroup) => void;
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestDataOrGroup) => void;
         duplicateRequest: (r: RequestData) => void;
@@ -933,7 +949,6 @@ const SortableRequests = observer(
                                 onDragEnd={onDragEnd}
                                 onDragEnter={onDragEnter}
                                 onDragLeave={onDragLeave}
-                                renameRequest={renameRequest}
                                 selectRequest={selectRequest}
                                 deleteRequest={deleteRequest}
                                 duplicateRequest={duplicateRequest}
@@ -951,7 +966,6 @@ const SortableRequests = observer(
                                     onDragEnd={onDragEnd}
                                     onDragEnter={onDragEnter}
                                     onDragLeave={onDragLeave}
-                                    renameRequest={renameRequest}
                                     selectRequest={selectRequest}
                                     deleteRequest={deleteRequest}
                                     duplicateRequest={duplicateRequest}
