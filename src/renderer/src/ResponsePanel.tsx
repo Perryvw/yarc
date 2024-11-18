@@ -1,6 +1,6 @@
 import { html } from "@codemirror/lang-html";
 import { json } from "@codemirror/lang-json";
-import CodeMirror, { EditorView } from "@uiw/react-codemirror";
+import CodeMirror, { EditorState, EditorView } from "@uiw/react-codemirror";
 import { CircleSlash2 } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
@@ -178,10 +178,29 @@ export const ResponsePanel = observer(({ activeRequest }: { activeRequest: Reque
     }
 
     const response = activeRequest.response;
-    const extensions = [codemirrorTheme, json(), html()];
+
+    // TODO: Load extensions based on content-type
+    const extensions = [codemirrorTheme, json(), html(), EditorState.tabSize.of(2)];
 
     if (lineWrap) {
         extensions.push(EditorView.lineWrapping);
+    }
+
+    function getResponseBody() {
+        if (prettyPrint) {
+            // TODO: Check for response content-type
+            try {
+                const obj = JSON.parse(response.body);
+
+                if (obj) {
+                    return JSON.stringify(obj, null, "\t");
+                }
+            } catch {
+                // failed
+            }
+        }
+
+        return response.body;
     }
 
     return (
@@ -226,7 +245,7 @@ export const ResponsePanel = observer(({ activeRequest }: { activeRequest: Reque
                     <CodeMirror
                         readOnly
                         theme="dark"
-                        value={response.body}
+                        value={getResponseBody()}
                         basicSetup={{ foldGutter: true }}
                         extensions={extensions}
                         style={{
