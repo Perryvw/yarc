@@ -15,6 +15,8 @@ import {
     History,
     SquarePen,
     Trash,
+    Undo,
+    X,
 } from "lucide-react";
 import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
@@ -74,6 +76,12 @@ const RequestHistoryButton = styled.button`
     &:hover {
         background: blue;
     }
+`;
+
+const DeletedRequestAlert = styled.div`
+    background: darkblue;
+    padding: 10px;
+
 `;
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
@@ -168,6 +176,22 @@ export const Directory = observer(
             return results;
         }
 
+        function onPerformUndo(e: React.MouseEvent) {
+            e.stopPropagation();
+
+            runInAction(() => {
+                context.restoreDeletedRequest();
+            });
+        }
+
+        function onForgetUndo(e: React.MouseEvent) {
+            e.stopPropagation();
+
+            runInAction(() => {
+                context.lastDeletedRequestForUndo = undefined;
+            });
+        }
+
         return (
             <DirectoryRoot>
                 <DirectoryButtons
@@ -196,6 +220,23 @@ export const Directory = observer(
                         setShowActiveRequestHistory={setShowActiveRequestHistory}
                     />
                 </RequestContainer>
+                {context.lastDeletedRequestForUndo !== undefined && (
+                    <DeletedRequestAlert>
+                        <RequestNameLine>
+                            <RequestName>
+                                Deleted <b>{context.lastDeletedRequestForUndo.request.name}</b>
+                            </RequestName>
+                            <RequestActions>
+                                <RenameButton onClick={onPerformUndo}>
+                                    <Undo size={16} />
+                                </RenameButton>
+                                <DeleteButton onClick={onForgetUndo}>
+                                    <X size={16} />
+                                </DeleteButton>
+                            </RequestActions>
+                        </RequestNameLine>
+                    </DeletedRequestAlert>
+                )}
             </DirectoryRoot>
         );
     },
@@ -551,7 +592,7 @@ const RequestEntry = observer(
                         "--method-color": request.type === "http" && httpVerbColorPalette[request.method],
                     } as React.CSSProperties
                 }
-                draggable="true"
+                draggable={!isRenaming}
                 onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
                 onDragEnter={handleDragEnter}

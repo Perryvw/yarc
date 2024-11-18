@@ -30,9 +30,16 @@ import type {
 } from "../../common/request-types";
 import { debounce } from "./util/debounce";
 
+interface RequestWithPositionContext {
+    request: RequestDataOrGroup;
+    requests: RequestDataOrGroup[];
+    index: number;
+}
+
 export class AppContext {
     requests: RequestList = [];
     activeRequest: RequestData | undefined;
+    lastDeletedRequestForUndo: RequestWithPositionContext | undefined;
 
     gridWidthDirectory = 20;
     gridWidthResponse = 50;
@@ -128,14 +135,14 @@ export class AppContext {
         }
 
         let requestSelected = false;
-        let isDeletingRequestActive = request === this.activeRequest;
+        let isDeletingActiveRequest = request === this.activeRequest;
 
         // When deleting a group, check if current active request is in the group
-        if (!isDeletingRequestActive && request.type === "group") {
-            isDeletingRequestActive = this.isActiveRequestInGroup(request);
+        if (!isDeletingActiveRequest && request.type === "group") {
+            isDeletingActiveRequest = this.isActiveRequestInGroup(request);
         }
 
-        if (isDeletingRequestActive) {
+        if (isDeletingActiveRequest) {
             // First try selecting a request above current
             if (oldIndex.index > 0) {
                 for (let i = oldIndex.index - 1; i >= 0; i--) {
@@ -170,9 +177,28 @@ export class AppContext {
             this.setActiveRequest(undefined);
         }
 
-        oldIndex.requests.splice(oldIndex.index, 1);
+        const deleted = oldIndex.requests.splice(oldIndex.index, 1);
+
+        if (deleted.length > 0) {
+            this.lastDeletedRequestForUndo = oldIndex;
+            // TODO: Delete lastDeletedRequestForUndo after like 10 seconds?
+        }
 
         this.persistState();
+    }
+
+    public restoreDeletedRequest() {
+        const requestIndex = this.lastDeletedRequestForUndo;
+        if (requestIndex === undefined) {
+            return;
+        }
+
+        requestIndex.requests.splice(requestIndex.index, 0, requestIndex.request);
+        this.lastDeletedRequestForUndo = undefined;
+
+        if (requestIndex.request.type !== "group") {
+            this.activeRequest = requestIndex.request;
+        }
     }
 
     public duplicateRequest(request: RequestData) {
@@ -209,11 +235,7 @@ export class AppContext {
     public findRequestById(
         id: string,
         requests: RequestDataOrGroup[] = this.requests,
-    ): {
-        request: RequestDataOrGroup;
-        requests: RequestDataOrGroup[];
-        index: number;
-    } | null {
+    ): RequestWithPositionContext | null {
         for (let i = 0; i < requests.length; i++) {
             const request = requests[i];
 
