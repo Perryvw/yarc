@@ -1,10 +1,11 @@
 import { Plus } from "lucide-react";
-import { runInAction } from "mobx";
+import { autorun, observable, runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
 import type { AppContext, SubstitutionVariable } from "../AppContext";
 import { backgroundHoverColorAlternate } from "../palette";
+import { KeyValuesPanel } from "../KeyValuesPanel";
 
 const Modal = styled.dialog`
     width: 95%;
@@ -83,7 +84,7 @@ export const SubstitutionVariablesModal = observer(
 
         const addVariable = useCallback(() => {
             runInAction(() => {
-                context.substitutionVariables.push({ name: "", value: "" });
+                context.substitutionVariables.push({ key: "", value: "" });
             });
         }, [context.substitutionVariables]);
 
@@ -99,12 +100,7 @@ export const SubstitutionVariablesModal = observer(
         return (
             <Modal ref={ref} onClose={close}>
                 These variables will be replaced in request URLs:
-                {substitutionVariables.map((v, i) => (
-                    <VariableEntry key={i.toString()} variable={v} remove={() => removeVariable(i)} />
-                ))}
-                <AddButton onClick={addVariable}>
-                    <Plus />
-                </AddButton>
+                <KeyValuesPanel name="Substitution variables" params={substitutionVariables} />
                 <CloseButton onClick={close}>Close</CloseButton>
             </Modal>
         );
@@ -116,7 +112,7 @@ export const VariableEntry = observer(
         const onNameChange = useCallback(
             (value: ChangeEvent<HTMLInputElement>) => {
                 runInAction(() => {
-                    variable.name = value.target.value;
+                    variable.key = value.target.value;
                 });
             },
             [variable],
@@ -132,7 +128,7 @@ export const VariableEntry = observer(
 
         return (
             <div>
-                <input type="text" value={variable.name} onChange={onNameChange} />
+                <input type="text" value={variable.key} onChange={onNameChange} />
                 <input type="text" value={variable.value} onChange={onValueChange} />
                 <RemoveButton onClick={remove}>X</RemoveButton>
             </div>

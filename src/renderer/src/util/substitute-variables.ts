@@ -12,7 +12,7 @@ export function substituteVariables(str: string, variables: SubstitutionVariable
     for (const match of matches) {
         const variableName = match[1];
         if (variableName) {
-            const subsVariable = variables.find((v) => v.name === variableName);
+            const subsVariable = variables.find((v) => v.key === variableName);
             if (subsVariable) {
                 result.push(str.slice(offset, match.index));
                 result.push(subsVariable.value);

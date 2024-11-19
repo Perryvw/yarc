@@ -140,12 +140,12 @@ function fixPersistedData(
         };
     }
 
-    function fixSubstitutionVariable(vi: DeepPartial<{ name: string; value: string }>): {
-        name: string;
+    function fixSubstitutionVariable(vi: DeepPartial<{ key: string; value: string }>): {
+        key: string;
         value: string;
     } {
         return {
-            name: vi.name ?? "restored-variable",
+            key: vi.key ?? "restored-variable",
             value: vi.value ?? "",
         };
     }
@@ -155,6 +155,10 @@ function fixPersistedData(
         protoRoots: incoming.protoRoots?.filter(notUndefined) ?? [],
         selectedRequest: incoming.selectedRequest ?? null,
         substitutionVariables: incoming.substitutionVariables?.filter(notUndefined)?.map(fixSubstitutionVariable) ?? [],
+        response: {
+            prettyPrint: incoming.response?.lineWrap ?? true,
+            lineWrap: incoming.response?.lineWrap ?? true,
+        },
         layout: {
             directoryWidth: incoming.layout?.directoryWidth ?? 20,
             responseWidth: incoming.layout?.responseWidth ?? 50,

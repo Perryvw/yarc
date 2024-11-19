@@ -37,7 +37,7 @@ interface RequestWithPositionContext {
 }
 
 export interface SubstitutionVariable {
-    name: string;
+    key: string;
     value: string;
 }
 
@@ -510,13 +510,7 @@ export class ProtoConfig {
     roots: ProtoRoot[] = [];
 
     constructor(private context: AppContext) {
-        makeObservable(this, {
-            roots: observable,
-
-            addProtoRoot: action,
-            deleteProtoRoot: action,
-            refreshProtoRoot: action,
-        } satisfies ObservableDefinition<ProtoConfig>);
+        makeAutoObservable(this);
     }
 
     addProtoRoot(protoRoot: ProtoRoot) {
@@ -538,7 +532,9 @@ export class ProtoConfig {
             IpcCall.RefreshProtoDirectory,
             protoRoot.rootPath,
         );
-        protoRoot.protoFiles = refreshedRoot.protoFiles;
+        runInAction(() => {
+            protoRoot.protoFiles = refreshedRoot.protoFiles;
+        });
     }
 }
 

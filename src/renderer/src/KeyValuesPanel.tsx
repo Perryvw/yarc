@@ -76,17 +76,25 @@ const QueryParameterDelete = styled.button`
     margin-top: 10px;
 `;
 
+interface KeyValuesPanelKV {
+    enabled?: boolean;
+    key: string;
+    value: string;
+}
+
 export const KeyValuesPanel = observer(
     ({
         name,
         params,
     }: {
         name: string;
-        params: KeyValue[];
+        params: KeyValuesPanelKV[];
     }) => {
         function onToggleEnabled(index: number, enabled: boolean) {
             runInAction(() => {
-                params[index].enabled = enabled;
+                if (params[index].enabled !== undefined) {
+                    params[index].enabled = enabled;
+                }
             });
         }
 
@@ -130,7 +138,7 @@ export const KeyValuesPanel = observer(
             });
         }
 
-        function QueryParameter(index: number, kv: KeyValue) {
+        function QueryParameter(index: number, kv: KeyValuesPanelKV) {
             return (
                 <tr key={index}>
                     <td>

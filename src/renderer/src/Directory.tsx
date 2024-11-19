@@ -32,7 +32,7 @@ import {
 } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { DirectoryButtons } from "./DirectoryButtons";
-import { httpVerbColorPalette } from "./palette";
+import { backgroundHoverColor, httpVerbColorPalette } from "./palette";
 import { substituteVariables } from "./util/substitute-variables";
 
 const DirectoryRoot = styled.div`
@@ -80,7 +80,7 @@ const RequestHistoryButton = styled.button`
 `;
 
 const DeletedRequestAlert = styled.div`
-    background: darkblue;
+    background: ${backgroundHoverColor};
     padding: 10px;
 
 `;

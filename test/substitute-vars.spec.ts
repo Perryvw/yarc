@@ -6,25 +6,25 @@ test("no variables", () => {
 });
 
 test("all variable", () => {
-    expect(substituteVariables("{hello}", [{ name: "hello", value: "world" }])).toBe("world");
+    expect(substituteVariables("{hello}", [{ key: "hello", value: "world" }])).toBe("world");
 });
 
 test("substitute multiple variables", () => {
     const substitutions = [
-        { name: "abc", value: "hello" },
-        { name: "def", value: "world" },
+        { key: "abc", value: "hello" },
+        { key: "def", value: "world" },
     ];
     expect(substituteVariables("{abc}, {def}!", substitutions)).toBe("hello, world!");
 });
 
 test("does not replace unknown variables", () => {
-    expect(substituteVariables("{blabla}", [{ name: "hello", value: "world" }])).toBe("{blabla}");
+    expect(substituteVariables("{blabla}", [{ key: "hello", value: "world" }])).toBe("{blabla}");
 });
 
 test("works in the middle of a string", () => {
     const substitutions = [
-        { name: "host", value: "127.0.0.1" },
-        { name: "port", value: "8080" },
+        { key: "host", value: "127.0.0.1" },
+        { key: "port", value: "8080" },
     ];
     expect(substituteVariables("https://{host}:{port}/path", substitutions)).toBe("https://127.0.0.1:8080/path");
 });
