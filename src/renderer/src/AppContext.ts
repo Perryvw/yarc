@@ -53,6 +53,9 @@ export class AppContext {
     gridWidthDirectory = 20;
     gridWidthResponse = 50;
 
+    responsePrettyPrint = true;
+    responseLineWrap = true;
+
     isDragging = false;
     draggingOverRequestId: string | null = null;
     draggingInsertPosition: "above" | "below" | "group" = "above";
@@ -366,6 +369,10 @@ export class AppContext {
                 directoryWidth: this.gridWidthDirectory,
                 responseWidth: this.gridWidthResponse,
             },
+            response: {
+                prettyPrint: this.responsePrettyPrint,
+                lineWrap: this.responseLineWrap,
+            },
         };
         window.electron.ipcRenderer.invoke(IpcCall.PersistState, toJS(state));
     }
@@ -374,8 +381,16 @@ export class AppContext {
         window.electron.ipcRenderer.invoke(IpcCall.LoadPersistedState).then((state: PersistedState | undefined) =>
             runInAction(() => {
                 if (state) {
-                    this.gridWidthDirectory = state.layout.directoryWidth;
-                    this.gridWidthResponse = state.layout.responseWidth;
+                    if (state.layout) {
+                        this.gridWidthDirectory = state.layout.directoryWidth;
+                        this.gridWidthResponse = state.layout.responseWidth;
+                    }
+
+                    if (state.response) {
+                        this.responsePrettyPrint = state.response.prettyPrint;
+                        this.responseLineWrap = state.response.lineWrap;
+                    }
+
                     this.requests = state.requests;
 
                     if (state.selectedRequest) {

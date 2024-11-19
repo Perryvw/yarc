@@ -9,6 +9,10 @@ export interface PersistedState {
         directoryWidth: number;
         responseWidth: number;
     };
+    response: {
+        prettyPrint: boolean;
+        lineWrap: boolean;
+    };
 }
 
 export type PersistedStateWithWindow = PersistedState & {

@@ -2,10 +2,10 @@ import CodeMirror from "@uiw/react-codemirror";
 import { ChevronUp } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
+import { useEffect } from "react";
 import styled from "styled-components";
 import type { HttpRequestData, KeyValue } from "../../common/request-types";
 import { KeyValuesPanel } from "./KeyValuesPanel";
-import { useEffect } from "react";
 
 const RequestPanelRoot = styled.div`
     display: flex;

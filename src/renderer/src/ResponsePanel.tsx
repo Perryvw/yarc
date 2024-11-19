@@ -2,10 +2,12 @@ import { html } from "@codemirror/lang-html";
 import { json } from "@codemirror/lang-json";
 import CodeMirror, { EditorState, EditorView } from "@uiw/react-codemirror";
 import { CircleSlash2 } from "lucide-react";
+import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import type { RequestData } from "../../common/request-types";
+import type { AppContext } from "./AppContext";
 import { Tab, Tabs } from "./Tabs";
 
 export const ResponsePanelRoot = styled.div`
@@ -118,188 +120,211 @@ const codemirrorTheme = EditorView.theme({
     },
 });
 
-export const ResponsePanel = observer(({ activeRequest }: { activeRequest: RequestData }) => {
-    const [tab, setTab] = useState<"body" | "headers">("body");
-    const [prettyPrint, setPrettyPrint] = useState(true);
-    const [lineWrap, setlineWrap] = useState(true);
-    const [runningRequestTime, setRunningRequestTime] = useState(-1);
+export const ResponsePanel = observer(
+    ({
+        activeRequest,
+        context,
+    }: {
+        activeRequest: RequestData;
+        context: AppContext;
+    }) => {
+        const [tab, setTab] = useState<"body" | "headers">("body");
+        const [runningRequestTime, setRunningRequestTime] = useState(-1);
 
-    function formatHeader(value: string | string[]) {
-        if (!Array.isArray(value)) {
-            return <ResponseHeaderValue readOnly value={value} />;
-        }
-
-        return (
-            <>
-                {value.map((v) => (
-                    <ResponseHeaderValue readOnly key={v} value={v} />
-                ))}
-            </>
-        );
-    }
-
-    useEffect(() => {
-        if (!activeRequest.isExecuting) {
-            return;
-        }
-
-        setRunningRequestTime(Date.now() - activeRequest.lastExecute);
-
-        const intervalId = setInterval(() => {
-            setRunningRequestTime(Date.now() - activeRequest.lastExecute);
-        }, 100);
-
-        return () => {
-            clearInterval(intervalId);
-            setRunningRequestTime(-1);
-        };
-    }, [activeRequest, activeRequest.isExecuting]);
-
-    if (runningRequestTime >= 0) {
-        return (
-            <ResponsePanelRoot>
-                <ResponsePanelEmpty>
-                    <i>
-                        Executing… <b>{(runningRequestTime / 1000).toFixed(2)}s</b>
-                    </i>
-                </ResponsePanelEmpty>
-            </ResponsePanelRoot>
-        );
-    }
-
-    if (activeRequest.type !== "http" || !activeRequest.response) {
-        return (
-            <ResponsePanelRoot>
-                <ResponsePanelEmpty>
-                    <CircleSlash2 />
-                    <i>Send a request to view the response here.</i>
-                </ResponsePanelEmpty>
-            </ResponsePanelRoot>
-        );
-    }
-
-    const response = activeRequest.response;
-
-    function getContentType() {
-        const typeRaw = response.headers["content-type"];
-
-        if (!typeRaw) {
-            return null;
-        }
-
-        let type = "";
-
-        if (Array.isArray(typeRaw)) {
-            type = typeRaw[0];
-        } else {
-            type = typeRaw;
-        }
-
-        const contentType = type.split(";", 1);
-        return contentType[0];
-    }
-
-    const contentType = getContentType();
-    const isHtml = contentType === "text/html";
-    // TODO: Check for more json responses like application/vnd.github+json
-    const isJson = contentType === "application/json";
-
-    function getResponseBody() {
-        if (prettyPrint) {
-            try {
-                if (isJson) {
-                    const obj = JSON.parse(response.body);
-
-                    if (obj) {
-                        return JSON.stringify(obj, null, "\t");
-                    }
-                }
-            } catch {
-                // failed
+        function formatHeader(value: string | string[]) {
+            if (!Array.isArray(value)) {
+                return <ResponseHeaderValue readOnly value={value} />;
             }
+
+            return (
+                <>
+                    {value.map((v) => (
+                        <ResponseHeaderValue readOnly key={v} value={v} />
+                    ))}
+                </>
+            );
         }
 
-        return response.body;
-    }
+        useEffect(() => {
+            if (!activeRequest.isExecuting) {
+                return;
+            }
 
-    const extensions = [codemirrorTheme, EditorState.tabSize.of(2)];
+            setRunningRequestTime(Date.now() - activeRequest.lastExecute);
 
-    if (lineWrap) {
-        extensions.push(EditorView.lineWrapping);
-    }
+            const intervalId = setInterval(() => {
+                setRunningRequestTime(Date.now() - activeRequest.lastExecute);
+            }, 100);
 
-    if (isJson) {
-        extensions.push(json());
-    } else if (isHtml) {
-        extensions.push(html());
-    }
+            return () => {
+                clearInterval(intervalId);
+                setRunningRequestTime(-1);
+            };
+        }, [activeRequest, activeRequest.isExecuting]);
 
-    return (
-        <ResponsePanelRoot>
-            <Status>
-                <div>
-                    Status: <StatusCode className={statusColor(response.statusCode)}>{response.statusCode}</StatusCode>
-                </div>
-                <div>
-                    Size: <b>{bytesToSize1024(response.body.length)}</b>
-                </div>
-                <div>
-                    Time: <b>{(response.time / 1000).toFixed(2)}s</b>
-                </div>
-            </Status>
+        if (runningRequestTime >= 0) {
+            return (
+                <ResponsePanelRoot>
+                    <ResponsePanelEmpty>
+                        <i>
+                            Executing… <b>{(runningRequestTime / 1000).toFixed(2)}s</b>
+                        </i>
+                    </ResponsePanelEmpty>
+                </ResponsePanelRoot>
+            );
+        }
 
-            <Tabs>
-                <Tab type="button" className={tab === "body" ? "active" : ""} onClick={() => setTab("body")}>
-                    Response
-                </Tab>
-                <Tab type="button" className={tab === "headers" ? "active" : ""} onClick={() => setTab("headers")}>
-                    Headers
-                </Tab>
-            </Tabs>
+        if (activeRequest.type !== "http" || !activeRequest.response) {
+            return (
+                <ResponsePanelRoot>
+                    <ResponsePanelEmpty>
+                        <CircleSlash2 />
+                        <i>Send a request to view the response here.</i>
+                    </ResponsePanelEmpty>
+                </ResponsePanelRoot>
+            );
+        }
 
-            {tab === "body" && (
-                <ResponseBody>
+        const response = activeRequest.response;
+
+        function getContentType() {
+            const typeRaw = response.headers["content-type"];
+
+            if (!typeRaw) {
+                return null;
+            }
+
+            let type = "";
+
+            if (Array.isArray(typeRaw)) {
+                type = typeRaw[0];
+            } else {
+                type = typeRaw;
+            }
+
+            const contentType = type.split(";", 1);
+            return contentType[0];
+        }
+
+        const contentType = getContentType();
+        const isHtml = contentType === "text/html";
+        // TODO: Check for more json responses like application/vnd.github+json
+        const isJson = contentType === "application/json";
+
+        function getResponseBody() {
+            if (context.responsePrettyPrint) {
+                try {
+                    if (isJson) {
+                        const obj = JSON.parse(response.body);
+
+                        if (obj) {
+                            return JSON.stringify(obj, null, "\t");
+                        }
+                    }
+                } catch {
+                    // failed
+                }
+            }
+
+            return response.body;
+        }
+
+        const extensions = [codemirrorTheme, EditorState.tabSize.of(2)];
+
+        if (context.responseLineWrap) {
+            extensions.push(EditorView.lineWrapping);
+        }
+
+        if (isJson) {
+            extensions.push(json());
+        } else if (isHtml) {
+            extensions.push(html());
+        }
+
+        function onChangePrettyPrint() {
+            runInAction(() => {
+                context.responsePrettyPrint = !context.responsePrettyPrint;
+            });
+        }
+
+        function onChangeLineWrap() {
+            runInAction(() => {
+                context.responseLineWrap = !context.responseLineWrap;
+            });
+        }
+
+        return (
+            <ResponsePanelRoot>
+                <Status>
                     <div>
-                        <label>
-                            <input
-                                type="checkbox"
-                                onClick={() => setPrettyPrint(!prettyPrint)}
-                                defaultChecked={prettyPrint}
-                            />
-                            Pretty print
-                        </label>
-                        <label>
-                            <input type="checkbox" onClick={() => setlineWrap(!lineWrap)} defaultChecked={lineWrap} />
-                            Wrap lines
-                        </label>
+                        Status:{" "}
+                        <StatusCode className={statusColor(response.statusCode)}>{response.statusCode}</StatusCode>
                     </div>
-                    <CodeMirror
-                        readOnly
-                        theme="dark"
-                        value={getResponseBody()}
-                        basicSetup={{ foldGutter: true }}
-                        extensions={extensions}
-                        style={{
-                            flexBasis: "100%",
-                            overflow: "hidden",
-                        }}
-                    />
-                </ResponseBody>
-            )}
+                    <div>
+                        Size: <b>{bytesToSize1024(response.body.length)}</b>
+                    </div>
+                    <div>
+                        Time: <b>{(response.time / 1000).toFixed(2)}s</b>
+                    </div>
+                </Status>
 
-            {tab === "headers" && (
-                <ResponseHeaders>
-                    {Object.keys(response.headers).map((key) => (
-                        <ResponseHeader key={key}>
-                            <ResponseHeaderKey>{key}</ResponseHeaderKey>
-                            {formatHeader(response.headers[key])}
-                        </ResponseHeader>
-                    ))}
-                </ResponseHeaders>
-            )}
-        </ResponsePanelRoot>
-    );
-});
+                <Tabs>
+                    <Tab type="button" className={tab === "body" ? "active" : ""} onClick={() => setTab("body")}>
+                        Response
+                    </Tab>
+                    <Tab type="button" className={tab === "headers" ? "active" : ""} onClick={() => setTab("headers")}>
+                        Headers
+                    </Tab>
+                </Tabs>
+
+                {tab === "body" && (
+                    <ResponseBody>
+                        <div>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    onChange={onChangePrettyPrint}
+                                    defaultChecked={context.responsePrettyPrint}
+                                />
+                                Pretty print
+                            </label>
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    onClick={onChangeLineWrap}
+                                    defaultChecked={context.responseLineWrap}
+                                />
+                                Wrap lines
+                            </label>
+                        </div>
+                        <CodeMirror
+                            readOnly
+                            theme="dark"
+                            value={getResponseBody()}
+                            basicSetup={{ foldGutter: true }}
+                            extensions={extensions}
+                            style={{
+                                flexBasis: "100%",
+                                overflow: "hidden",
+                            }}
+                        />
+                    </ResponseBody>
+                )}
+
+                {tab === "headers" && (
+                    <ResponseHeaders>
+                        {Object.keys(response.headers).map((key) => (
+                            <ResponseHeader key={key}>
+                                <ResponseHeaderKey>{key}</ResponseHeaderKey>
+                                {formatHeader(response.headers[key])}
+                            </ResponseHeader>
+                        ))}
+                    </ResponseHeaders>
+                )}
+            </ResponsePanelRoot>
+        );
+    },
+);
 
 function statusColor(statusCode: number) {
     if (statusCode >= 500) return "status-500";

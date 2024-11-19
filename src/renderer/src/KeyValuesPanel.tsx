@@ -1,9 +1,9 @@
 import { Plus, Trash, Trash2 } from "lucide-react";
+import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import { commonHeaders } from "../../common/common-headers";
 import type { KeyValue } from "../../common/request-types";
-import { runInAction } from "mobx";
 
 const QueryParameters = styled.table`
     width: 100%;
