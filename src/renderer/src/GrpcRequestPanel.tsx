@@ -10,9 +10,9 @@ import { IpcCall } from "../../common/ipc";
 import { type GrpcRequestData, GrpcRequestKind } from "../../common/request-types";
 import type { ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
+import { backgroundHoverColor, errorColor } from "./palette";
 import { debounce } from "./util/debounce";
 import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
-import { backgroundHoverColor, errorColor } from "./palette";
 
 const RequestPanelRoot = styled.div`
     display: flex;

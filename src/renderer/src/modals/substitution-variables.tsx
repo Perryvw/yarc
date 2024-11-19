@@ -1,10 +1,10 @@
+import { Plus } from "lucide-react";
+import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
 import type { AppContext, SubstitutionVariable } from "../AppContext";
 import { backgroundHoverColorAlternate } from "../palette";
-import { Plus } from "lucide-react";
-import { runInAction } from "mobx";
 
 const Modal = styled.dialog`
     width: 95%;

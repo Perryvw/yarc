@@ -1,12 +1,12 @@
 import { ChevronsLeftRight, CirclePlus, Download, Folder, Globe, Settings, Upload } from "lucide-react";
 import { observer } from "mobx-react-lite";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
 import type { GrpcRequestData, HttpRequestData, RequestData, RequestGroup } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
-import { backgroundHoverColor } from "./palette";
 import { SubstitutionVariablesModal } from "./modals/substitution-variables";
-import { useCallback, useState } from "react";
+import { backgroundHoverColor } from "./palette";
 
 const DirectoryButtonsContainer = styled.div`
     display: flex;

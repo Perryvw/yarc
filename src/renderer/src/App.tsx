@@ -1,6 +1,7 @@
 import { runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
-import React, { useCallback, useEffect, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { IpcCall, type IpcImportResult } from "../../common/ipc";
 import { AppContext } from "./AppContext";

@@ -1,7 +1,7 @@
 import { CircleStop, Play } from "lucide-react";
 import { observable, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
-import { type ChangeEvent, useCallback, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
 import type { GrpcRequestData, GrpcResponse, HttpRequestData, KeyValue } from "../../common/request-types";
@@ -160,11 +160,8 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             });
 
             await window.electron.ipcRenderer.invoke(IpcCall.HttpRequest, jsRequest);
-            // TODO: requestForHistory.response = response;
         } else if (request.type === "grpc") {
             const requestForHistory = observable(jsRequest) as GrpcRequestData;
-
-            // TODO
             const response: GrpcResponse = await window.electron.ipcRenderer.invoke(IpcCall.GrpcRequest, jsRequest);
             runInAction(() => {
                 request.isExecuting = false;
@@ -173,6 +170,32 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             });
         }
     }
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies(onClick): onClick changes every re-render
+    useEffect(() => {
+        async function handleKeydown(e: KeyboardEvent) {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+
+                if (
+                    e.target !== null &&
+                    ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes((e.target as HTMLElement).tagName)
+                ) {
+                    return;
+                }
+
+                if (activeRequest) {
+                    await onClick();
+                }
+            }
+        }
+
+        window.addEventListener("keydown", handleKeydown);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeydown);
+        };
+    }, [activeRequest]);
 
     function onButtonAnimationIteration() {
         if (!activeRequest?.isExecuting) {
