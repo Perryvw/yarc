@@ -34,6 +34,11 @@ app.whenReady().then(async () => {
         window.maximize();
     }
 
+    // Do not let dragged links onto the app to open new window
+    window.webContents.setWindowOpenHandler(() => {
+        return { action: "deny" };
+    });
+
     ipcMain.handle(IpcCall.HttpRequest, (_, request: HttpRequestData) => {
         return makeHttpRequest(request, window.webContents);
     });
