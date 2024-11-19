@@ -53,6 +53,25 @@ const MainContent = styled.div`
     background-color: var(--color-background-contrast);
 `;
 
+const AlphaLabel = styled.div`
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #e53935;
+    color: #fff;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    padding: 5px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 1;
+    z-index: 1000;
+    display: inline-block;
+    text-transform: uppercase;
+`;
+
 const AppContainer = observer(({ context }: { context: AppContext }) => {
     const setDirectoryWidth = useCallback(
         (w: number) => {
@@ -147,6 +166,7 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
                     )}
                 </MainContent>
             )}
+            <AlphaLabel>alpha software • design not final • expect bugs</AlphaLabel>
         </AppRoot>
     );
 });
