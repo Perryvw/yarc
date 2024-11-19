@@ -1,13 +1,15 @@
-export const backgroundColor = "#0c0c0c";
-export const backgroundContrastColor = "#161920";
-export const backgroundHoverColor = "#304674";
-export const backgroundHoverColorAlternate = "#8f3535";
+import type * as CSS from "csstype";
 
-export const borderColor = "#2b2b2b";
+export const backgroundColor: CSS.DataType.Color = "#0c0c0c";
+export const backgroundContrastColor: CSS.DataType.Color = "#161920";
+export const backgroundHoverColor: CSS.DataType.Color = "#304674";
+export const backgroundHoverColorAlternate: CSS.DataType.Color = "#8f3535";
 
-export const errorColor = "darkred";
+export const borderColor: CSS.DataType.Color = "#2b2b2b";
 
-export const httpVerbColorPalette: Record<string, string> = {
+export const errorColor: CSS.DataType.Color = "darkred";
+
+export const httpVerbColorPalette: Record<string, CSS.DataType.Color> = {
     GET: "#51cf66",
     POST: "#4dabf7",
     PUT: "#ffa94d",
