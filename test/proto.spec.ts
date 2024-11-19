@@ -212,7 +212,7 @@ test("proto with not-existing import", async () => {
 test("using well-known types", async () => {
     const result = assertSuccess(await parseProtoFile("using-well-known-types.proto", `${__dirname}/protos`));
     expect(result.services).toHaveLength(1);
-    expect(result.services[0].methods[0].name).toBe("MyMethod");
+    expect(result.services[0].methods[0].name).toBe("Empty");
 });
 
 function assertSuccess<T, TErr>(result: Result<T, TErr>): T {
