@@ -29,9 +29,9 @@ const AppRoot = styled.div`
     width: 100%;
     background-color: var(--color-background);
     color: var(--color-text);
-    font: 16px/1.5 Inter, system-ui;
+    font: 16px/1.5 "Inter Variable", system-ui;
 
-    --font-monospace: "Consolas", monospace;
+    --font-monospace: "JetBrains Mono Variable", "Consolas", monospace;
 
     --color-text: #fff;
     --color-background: ${palette.backgroundColor};

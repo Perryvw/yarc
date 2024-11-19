@@ -24,6 +24,7 @@ export const ResponsePanelEmpty = styled.div`
     color: #999;
     padding: 10px;
     margin-top: 100px;
+    font-variant-numeric: tabular-nums;
 `;
 
 export const Status = styled.div`
