@@ -5,6 +5,7 @@ import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import type { HttpRequestData, KeyValue } from "../../common/request-types";
 import { KeyValuesPanel } from "./KeyValuesPanel";
+import { useEffect } from "react";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -56,33 +57,24 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: HttpRe
         });
     }
 
-    function setRequestParams(params: KeyValue[]) {
-        runInAction(() => {
-            activeRequest.params = params;
+    // biome-ignore lint/correctness/useExhaustiveDependencies: only change url when params change, but this is still buggy.
+    useEffect(() => {
+        // :UrlHasDirtyQueryString
+        if (!activeRequest.url.includes("?")) {
+            return;
+        }
 
-            // :UrlHasDirtyQueryString
-            if (!activeRequest.url.includes("?")) {
-                return;
-            }
-
+        try {
             const url = new URL(activeRequest.url);
             url.search = "";
-            activeRequest.url = url.toString();
-        });
-    }
 
-    function setRequestHeaders(headers: KeyValue[]) {
-        runInAction(() => {
-            activeRequest.headers = headers;
-        });
-    }
-
-    function setRequestBodyForm(form: KeyValue[]) {
-        runInAction(() => {
-            // TODO: add the missing content-type header when setting form
-            activeRequest.bodyForm = form;
-        });
-    }
+            runInAction(() => {
+                activeRequest.url = url.toString();
+            });
+        } catch (e) {
+            //
+        }
+    }, [activeRequest.params]);
 
     function setRequestBodyType(contentType: string) {
         runInAction(() => {
@@ -117,7 +109,7 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: HttpRe
                     </RequestSectionHeaderName>
                     <ChevronUp size={20} className="chevron" />
                 </RequestSectionHeader>
-                <KeyValuesPanel name="query-parameters" params={activeRequest.params} setParams={setRequestParams} />
+                <KeyValuesPanel name="query-parameters" params={activeRequest.params} />
             </RequestSection>
 
             <RequestSection open>
@@ -140,11 +132,7 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: HttpRe
                 </div>
 
                 {isKeyValuesBodyForm() ? (
-                    <KeyValuesPanel
-                        name="form-parameters"
-                        params={activeRequest.bodyForm}
-                        setParams={setRequestBodyForm}
-                    />
+                    <KeyValuesPanel name="form-parameters" params={activeRequest.bodyForm} />
                 ) : (
                     <CodeMirror
                         theme="dark"
@@ -166,7 +154,7 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: HttpRe
                     </RequestSectionHeaderName>
                     <ChevronUp size={20} className="chevron" />
                 </RequestSectionHeader>
-                <KeyValuesPanel name="headers" params={activeRequest.headers} setParams={setRequestHeaders} />
+                <KeyValuesPanel name="headers" params={activeRequest.headers} />
             </RequestSection>
         </RequestPanelRoot>
     );

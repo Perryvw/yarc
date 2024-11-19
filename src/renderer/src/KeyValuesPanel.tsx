@@ -3,6 +3,7 @@ import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import { commonHeaders } from "../../common/common-headers";
 import type { KeyValue } from "../../common/request-types";
+import { runInAction } from "mobx";
 
 const QueryParameters = styled.table`
     width: 100%;
@@ -79,51 +80,54 @@ export const KeyValuesPanel = observer(
     ({
         name,
         params,
-        setParams,
     }: {
         name: string;
         params: KeyValue[];
-        setParams: (params: KeyValue[]) => void;
     }) => {
         function onToggleEnabled(index: number, enabled: boolean) {
-            const updatedParams = params.map((param, i) => (i === index ? { ...param, enabled } : param));
-            setParams(updatedParams);
+            runInAction(() => {
+                params[index].enabled = enabled;
+            });
         }
 
         function onUpdateKey(index: number, key: string) {
             // If we're updating the virtual empty row, create a new parameter
             if (index === params.length) {
-                const updatedParams = [...params, { enabled: true, key, value: "" }];
-                setParams(updatedParams);
-            } else {
-                const updatedParams = params.map((param, i) => (i === index ? { ...param, key } : param));
-                setParams(updatedParams);
+                createNewParam();
             }
+
+            runInAction(() => {
+                params[index].key = key;
+            });
         }
 
         function onUpdateValue(index: number, value: string) {
             // If we're updating the virtual empty row, create a new parameter
             if (index === params.length) {
-                const updatedParams = [...params, { enabled: true, key: "", value }];
-                setParams(updatedParams);
-            } else {
-                const updatedParams = params.map((param, i) => (i === index ? { ...param, value } : param));
-                setParams(updatedParams);
+                createNewParam();
             }
+
+            runInAction(() => {
+                params[index].value = value;
+            });
         }
 
         function onDeleteParam(index: number) {
-            const updatedParams = params.filter((_, i) => i !== index);
-            setParams(updatedParams);
+            runInAction(() => {
+                params.splice(index, 1);
+            });
         }
 
         function createNewParam() {
-            const updatedParams = [...params, { enabled: true, key: "", value: "" }];
-            setParams(updatedParams);
+            runInAction(() => {
+                params.push({ enabled: true, key: "", value: "" });
+            });
         }
 
         function clearParams() {
-            setParams([]);
+            runInAction(() => {
+                params.length = 0;
+            });
         }
 
         function QueryParameter(index: number, kv: KeyValue) {
