@@ -121,7 +121,15 @@ export class AppContext {
         this.activeRequest = request;
 
         if (request && addToHistory) {
-            this.historyCurrentIndex = this.historyActiveRequestIds.length; // TODO: should this insert at current index instead?
+            if (this.historyCurrentIndex === this.historyActiveRequestIds.length - 1) {
+                // Move pointer forward if it already was at the end
+                this.historyCurrentIndex = this.historyActiveRequestIds.length;
+            } else if (this.historyActiveRequestIds.length > 0) {
+                // Truncate history if clicking on new request after going back in history
+                this.historyCurrentIndex++;
+                this.historyActiveRequestIds.length = this.historyCurrentIndex;
+            }
+
             this.historyActiveRequestIds.push(request.id);
         }
 
