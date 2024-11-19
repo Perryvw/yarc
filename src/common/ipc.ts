@@ -12,6 +12,8 @@ export enum IpcCall {
 
     HttpRequest = "http-request",
     GrpcRequest = "grpc-request",
+
+    AbortRequest = "abort-request",
 }
 
 export enum IpcEvent {

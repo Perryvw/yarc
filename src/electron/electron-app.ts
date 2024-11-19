@@ -52,6 +52,14 @@ app.whenReady().then(async () => {
         }
     });
 
+    ipcMain.handle(IpcCall.AbortRequest, (_, requestType: "http" | "grpc", requestId: string) => {
+        if (requestType === "http") {
+            console.log("abort http request!");
+        } else {
+            console.log("abort grpc request!");
+        }
+    });
+
     ipcMain.handle(IpcCall.LoadPersistedState, async () => {
         return persistedState;
     });

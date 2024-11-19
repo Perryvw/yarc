@@ -1,6 +1,13 @@
+syntax = "proto3";
+
 import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";
 
+message MessageWithDuration {
+    google.protobuf.Duration Duration = 1;
+}
+
 service MyService {
-    rpc MyMethod (google.protobuf.Empty) returns (google.Duration) {}
+    rpc Empty (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+    rpc Duration (MessageWithDuration) returns (MessageWithDuration) {}
 }

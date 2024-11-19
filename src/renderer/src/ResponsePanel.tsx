@@ -66,6 +66,7 @@ export const ResponseBody = styled.div`
     flex-direction: column;
     height: 100%;
     min-height: 0;
+    overflow: auto;
 `;
 
 const ResponseHeaders = styled.div`

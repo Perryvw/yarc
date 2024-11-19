@@ -109,7 +109,7 @@ async function grpcServerStreamingRequest(
             code: err.code !== undefined ? grpc.status[err.code] : undefined,
             detail: err.details,
         };
-        ipc.send(IpcEvent.GrpcServerStreamEnded, eventData);
+        ipc.send(IpcEvent.GrpcServerStreamError, eventData);
     });
 
     return { result: "stream", streamOpen: true, responses: [] };

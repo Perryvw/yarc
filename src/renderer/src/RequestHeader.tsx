@@ -137,7 +137,7 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
         }
 
         if (request.isExecuting) {
-            alert("abort request!");
+            await window.electron.ipcRenderer.invoke(IpcCall.AbortRequest, request.type, request.id);
             return;
         }
 
@@ -164,7 +164,9 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             const requestForHistory = observable(jsRequest) as GrpcRequestData;
             const response: GrpcResponse = await window.electron.ipcRenderer.invoke(IpcCall.GrpcRequest, jsRequest);
             runInAction(() => {
-                request.isExecuting = false;
+                if (response.result !== "stream") {
+                    request.isExecuting = false;
+                }
                 request.response = response;
                 requestForHistory.response = response;
             });

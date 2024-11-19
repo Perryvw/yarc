@@ -496,6 +496,7 @@ export class AppContext {
         request.isExecuting = false;
 
         if (request.response?.result === "stream") {
+            request.response.streamOpen = false;
             request.response.error = {
                 result: "error",
                 code: event.code ?? "<unknown>",

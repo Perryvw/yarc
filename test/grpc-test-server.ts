@@ -37,7 +37,7 @@ server.addService(greeterService.service, {
         call.end();
     },
     StreamHello: (call: grpc.ServerWritableStream<HelloRequest, HelloReply>) => {
-        const maxCount = 10;
+        const maxCount = 20;
         let count = 0;
         console.log("handling streaming call");
         function send() {
@@ -56,7 +56,7 @@ server.addService(greeterService.service, {
                 console.log("stream closed from client side");
             }
         }
-        send();
+        setTimeout(send, 3000);
     },
     TestNested: (call: grpc.ServerWritableStream<NestedRequest, HelloReply>) => {
         call.write({ message: JSON.stringify(call.request) });
