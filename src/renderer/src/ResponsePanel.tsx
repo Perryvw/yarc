@@ -180,21 +180,39 @@ export const ResponsePanel = observer(({ activeRequest }: { activeRequest: Reque
 
     const response = activeRequest.response;
 
-    // TODO: Load extensions based on content-type
-    const extensions = [codemirrorTheme, json(), html(), EditorState.tabSize.of(2)];
+    function getContentType() {
+        const typeRaw = response.headers["content-type"];
 
-    if (lineWrap) {
-        extensions.push(EditorView.lineWrapping);
+        if (!typeRaw) {
+            return null;
+        }
+
+        let type = "";
+
+        if (Array.isArray(typeRaw)) {
+            type = typeRaw[0];
+        } else {
+            type = typeRaw;
+        }
+
+        const contentType = type.split(";", 1);
+        return contentType[0];
     }
+
+    const contentType = getContentType();
+    const isHtml = contentType === "text/html";
+    // TODO: Check for more json responses like application/vnd.github+json
+    const isJson = contentType === "application/json";
 
     function getResponseBody() {
         if (prettyPrint) {
-            // TODO: Check for response content-type
             try {
-                const obj = JSON.parse(response.body);
+                if (isJson) {
+                    const obj = JSON.parse(response.body);
 
-                if (obj) {
-                    return JSON.stringify(obj, null, "\t");
+                    if (obj) {
+                        return JSON.stringify(obj, null, "\t");
+                    }
                 }
             } catch {
                 // failed
@@ -202,6 +220,18 @@ export const ResponsePanel = observer(({ activeRequest }: { activeRequest: Reque
         }
 
         return response.body;
+    }
+
+    const extensions = [codemirrorTheme, EditorState.tabSize.of(2)];
+
+    if (lineWrap) {
+        extensions.push(EditorView.lineWrapping);
+    }
+
+    if (isJson) {
+        extensions.push(json());
+    } else if (isHtml) {
+        extensions.push(html());
     }
 
     return (
