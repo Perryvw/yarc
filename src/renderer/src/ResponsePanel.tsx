@@ -9,6 +9,7 @@ import styled from "styled-components";
 import type { RequestData } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { Tab, Tabs } from "./Tabs";
+import { statusCodeColor } from "./util/status-code";
 
 export const ResponsePanelRoot = styled.div`
     display: flex;
@@ -37,28 +38,12 @@ export const Status = styled.div`
     border-bottom: 1px solid var(--color-border);
 `;
 
-export const StatusCode = styled.b`
+export const StatusCode = styled.b<{ $statusCode: number }>`
     border-radius: 16px;
-    background: rgb(107 114 128);
+    background: ${(props) => statusCodeColor(props.$statusCode)};
     color: #fff;
     padding: 0 10px;
     display: inline-flex;
-
-    &.status-500 {
-        background: rgb(220 38 38);
-    }
-
-    &.status-400 {
-        background: rgb(249 115 22);
-    }
-
-    &.status-300 {
-        background: rgb(59 130 246);
-    }
-
-    &.status-200 {
-        background: rgb(22 163 74);
-    }
 `;
 
 export const ResponseBody = styled.div`
@@ -259,8 +244,7 @@ export const ResponsePanel = observer(
             <ResponsePanelRoot>
                 <Status>
                     <div>
-                        Status:{" "}
-                        <StatusCode className={statusColor(response.statusCode)}>{response.statusCode}</StatusCode>
+                        Status: <StatusCode $statusCode={response.statusCode}>{response.statusCode}</StatusCode>
                     </div>
                     <div>
                         Size: <b>{bytesToSize1024(response.body.length)}</b>
@@ -327,14 +311,6 @@ export const ResponsePanel = observer(
         );
     },
 );
-
-function statusColor(statusCode: number) {
-    if (statusCode >= 500) return "status-500";
-    if (statusCode >= 400) return "status-400";
-    if (statusCode >= 300) return "status-300";
-    if (statusCode >= 200) return "status-200";
-    return "";
-}
 
 function bytesToSize1024(bytes: number) {
     if (bytes < 1024) {

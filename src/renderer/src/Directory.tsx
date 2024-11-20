@@ -939,39 +939,41 @@ const SortableRequests = observer(
             context.restoreRequestData(request);
         }
 
-        function getRequestDiff(index: number, newRequest: RequestData, oldRequest: RequestData) {
+        function getRequestDiff(index: number, newRequest: RequestData, oldRequest: RequestData | null) {
             const diff = [`#${index}`];
 
-            if (newRequest.type === "http" && oldRequest.type === "http") {
+            if (newRequest.type === "http") {
                 if (newRequest.response) {
                     diff.push(newRequest.response.statusCode.toString());
                 }
 
-                if (newRequest.method !== oldRequest.method) {
-                    diff.push(`${oldRequest.method} » ${newRequest.method}`);
-                }
+                if (oldRequest?.type === "http") {
+                    if (newRequest.method !== oldRequest.method) {
+                        diff.push(`${oldRequest.method} » ${newRequest.method}`);
+                    }
 
-                if (newRequest.url !== oldRequest.url) {
-                    diff.push("url");
-                }
+                    if (newRequest.url !== oldRequest.url) {
+                        diff.push("url");
+                    }
 
-                if (newRequest.body !== oldRequest.body) {
-                    diff.push("body");
-                }
+                    if (newRequest.body !== oldRequest.body) {
+                        diff.push("body");
+                    }
 
-                /*
-                if (newRequest.bodyForm !== oldRequest.bodyForm) {
-                    diff.push("body");
-                }
+                    /*
+                    if (newRequest.bodyForm !== oldRequest.bodyForm) {
+                        diff.push("body");
+                    }
 
-                if (newRequest.params !== oldRequest.params) {
-                    diff.push("params");
-                }
+                    if (newRequest.params !== oldRequest.params) {
+                        diff.push("params");
+                    }
 
-                if (newRequest.headers !== oldRequest.headers) {
-                    diff.push("headers");
+                    if (newRequest.headers !== oldRequest.headers) {
+                        diff.push("headers");
+                    }
+                    */
                 }
-                */
             }
 
             return diff.join(", ");
@@ -1025,13 +1027,9 @@ const SortableRequests = observer(
                                                 <RequestName>
                                                     {dateFormatter.format(oldRequest.lastExecute)}
                                                 </RequestName>
-                                                {i > 0 ? (
-                                                    <RequestUrl>
-                                                        {getRequestDiff(i + 1, oldRequest, r.history[i - 1])}
-                                                    </RequestUrl>
-                                                ) : (
-                                                    <RequestUrl>#1</RequestUrl>
-                                                )}
+                                                <RequestUrl>
+                                                    {getRequestDiff(i + 1, oldRequest, i > 0 ? r.history[i - 1] : null)}
+                                                </RequestUrl>
                                             </RequestHistoryButton>
                                         ))}
                                     </RequestHistory>

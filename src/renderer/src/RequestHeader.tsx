@@ -141,15 +141,16 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             return;
         }
 
-        const jsRequest = toJS(request);
-        jsRequest.url = substituteVariables(request.url, context.substitutionVariables);
-        jsRequest.response = undefined;
-        jsRequest.history = [];
-
         runInAction(() => {
             request.isExecuting = true;
             request.lastExecute = Date.now();
         });
+
+        const jsRequest = toJS(request);
+        jsRequest.url = substituteVariables(request.url, context.substitutionVariables);
+        jsRequest.isExecuting = false;
+        jsRequest.response = undefined;
+        jsRequest.history = [];
 
         setIsExecutionAnimating(true);
 
