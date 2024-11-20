@@ -4,7 +4,7 @@ import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useEffect } from "react";
 import styled from "styled-components";
-import type { HttpRequestData, KeyValue } from "../../common/request-types";
+import type { HttpRequestData } from "../../common/request-types";
 import { KeyValuesPanel } from "./KeyValuesPanel";
 
 const RequestPanelRoot = styled.div`

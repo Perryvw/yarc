@@ -19,6 +19,7 @@ import type {
     ProtoRoot,
 } from "../../common/grpc";
 import { IpcCall, IpcEvent } from "../../common/ipc";
+import type { KeyValue } from "../../common/key-values";
 import type { PersistedState } from "../../common/persist-state";
 import type {
     HttpResponseData,
@@ -36,16 +37,11 @@ interface RequestWithPositionContext {
     index: number;
 }
 
-export interface SubstitutionVariable {
-    key: string;
-    value: string;
-}
-
 export class AppContext {
     requests: RequestList = [];
     activeRequest: RequestData | undefined;
     lastDeletedRequestForUndo: RequestWithPositionContext | undefined;
-    substitutionVariables: SubstitutionVariable[] = [];
+    substitutionVariables: KeyValue[] = [];
 
     historyActiveRequestIds: string[] = [];
     historyCurrentIndex = 0;

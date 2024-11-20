@@ -1,8 +1,4 @@
-export interface KeyValue {
-    enabled: boolean;
-    key: string;
-    value: string;
-}
+import type { KeyValue } from "./key-values";
 
 export type HttpMethodVerb = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 

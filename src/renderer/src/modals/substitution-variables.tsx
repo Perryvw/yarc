@@ -1,11 +1,11 @@
-import { Plus } from "lucide-react";
-import { autorun, observable, runInAction } from "mobx";
+import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useCallback, useEffect, useRef } from "react";
 import styled from "styled-components";
-import type { AppContext, SubstitutionVariable } from "../AppContext";
-import { backgroundHoverColorAlternate } from "../palette";
+import type { KeyValue } from "../../../common/key-values";
+import type { AppContext } from "../AppContext";
 import { KeyValuesPanel } from "../KeyValuesPanel";
+import { backgroundHoverColorAlternate } from "../palette";
 
 const Modal = styled.dialog`
     width: 95%;
@@ -68,7 +68,7 @@ export const SubstitutionVariablesModal = observer(
         close,
     }: {
         context: AppContext;
-        substitutionVariables: SubstitutionVariable[];
+        substitutionVariables: KeyValue[];
         open: boolean;
         close: () => void;
     }) => {
@@ -84,7 +84,7 @@ export const SubstitutionVariablesModal = observer(
 
         const addVariable = useCallback(() => {
             runInAction(() => {
-                context.substitutionVariables.push({ key: "", value: "" });
+                context.substitutionVariables.push({ enabled: true, key: "", value: "" });
             });
         }, [context.substitutionVariables]);
 
@@ -107,31 +107,29 @@ export const SubstitutionVariablesModal = observer(
     },
 );
 
-export const VariableEntry = observer(
-    ({ variable, remove }: { variable: SubstitutionVariable; remove: () => void }) => {
-        const onNameChange = useCallback(
-            (value: ChangeEvent<HTMLInputElement>) => {
-                runInAction(() => {
-                    variable.key = value.target.value;
-                });
-            },
-            [variable],
-        );
-        const onValueChange = useCallback(
-            (value: ChangeEvent<HTMLInputElement>) => {
-                runInAction(() => {
-                    variable.value = value.target.value;
-                });
-            },
-            [variable],
-        );
+export const VariableEntry = observer(({ variable, remove }: { variable: KeyValue; remove: () => void }) => {
+    const onNameChange = useCallback(
+        (value: ChangeEvent<HTMLInputElement>) => {
+            runInAction(() => {
+                variable.key = value.target.value;
+            });
+        },
+        [variable],
+    );
+    const onValueChange = useCallback(
+        (value: ChangeEvent<HTMLInputElement>) => {
+            runInAction(() => {
+                variable.value = value.target.value;
+            });
+        },
+        [variable],
+    );
 
-        return (
-            <div>
-                <input type="text" value={variable.key} onChange={onNameChange} />
-                <input type="text" value={variable.value} onChange={onValueChange} />
-                <RemoveButton onClick={remove}>X</RemoveButton>
-            </div>
-        );
-    },
-);
+    return (
+        <div>
+            <input type="text" value={variable.key} onChange={onNameChange} />
+            <input type="text" value={variable.value} onChange={onValueChange} />
+            <RemoveButton onClick={remove}>X</RemoveButton>
+        </div>
+    );
+});

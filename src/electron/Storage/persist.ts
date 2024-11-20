@@ -3,13 +3,8 @@ import * as path from "node:path";
 import { type BaseWindow, app } from "electron";
 import { v7 as uuidv7 } from "uuid";
 import type { PersistedState, PersistedStateWithWindow } from "../../common/persist-state";
-import type {
-    GrpcRequestData,
-    HttpRequestData,
-    KeyValue,
-    RequestDataOrGroup,
-    RequestGroup,
-} from "../../common/request-types";
+import type { GrpcRequestData, HttpRequestData, RequestDataOrGroup, RequestGroup } from "../../common/request-types";
+import type { KeyValue } from "../../common/key-values";
 
 const storagePath = app.getPath("sessionData");
 const storageFile = path.join(storagePath, "localStorage.json");
@@ -140,11 +135,9 @@ function fixPersistedData(
         };
     }
 
-    function fixSubstitutionVariable(vi: DeepPartial<{ key: string; value: string }>): {
-        key: string;
-        value: string;
-    } {
+    function fixSubstitutionVariable(vi: DeepPartial<KeyValue>): KeyValue {
         return {
+            enabled: vi.enabled ?? true,
             key: vi.key ?? "restored-variable",
             value: vi.value ?? "",
         };

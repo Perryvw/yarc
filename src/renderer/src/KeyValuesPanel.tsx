@@ -3,7 +3,7 @@ import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import { commonHeaders } from "../../common/common-headers";
-import type { KeyValue } from "../../common/request-types";
+import type { KeyValue } from "../../common/key-values";
 
 const QueryParameters = styled.table`
     width: 100%;
@@ -76,25 +76,17 @@ const QueryParameterDelete = styled.button`
     margin-top: 10px;
 `;
 
-interface KeyValuesPanelKV {
-    enabled?: boolean;
-    key: string;
-    value: string;
-}
-
 export const KeyValuesPanel = observer(
     ({
         name,
         params,
     }: {
         name: string;
-        params: KeyValuesPanelKV[];
+        params: KeyValue[];
     }) => {
         function onToggleEnabled(index: number, enabled: boolean) {
             runInAction(() => {
-                if (params[index].enabled !== undefined) {
-                    params[index].enabled = enabled;
-                }
+                params[index].enabled = enabled;
             });
         }
 
@@ -138,7 +130,7 @@ export const KeyValuesPanel = observer(
             });
         }
 
-        function QueryParameter(index: number, kv: KeyValuesPanelKV) {
+        function QueryParameter(index: number, kv: KeyValue) {
             return (
                 <tr key={index}>
                     <td>

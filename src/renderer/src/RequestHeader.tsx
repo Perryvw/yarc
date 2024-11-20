@@ -1,14 +1,14 @@
 import { CircleStop, Play } from "lucide-react";
 import { observable, runInAction, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
-import { type ChangeEvent, useCallback, useEffect, useState } from "react";
+import { type ChangeEvent, useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
-import type { GrpcRequestData, GrpcResponse, HttpRequestData, KeyValue } from "../../common/request-types";
+import type { GrpcRequestData, GrpcResponse, HttpRequestData } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { httpVerbColorPalette } from "./palette";
-import { debounce } from "./util/debounce";
 import { substituteVariables } from "./util/substitute-variables";
+import type { KeyValue } from "../../common/key-values";
 
 const RequestHeaderContainer = styled.div`
     padding: 15px;

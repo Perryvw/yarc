@@ -1,8 +1,8 @@
-import type { SubstitutionVariable } from "../AppContext";
+import type { KeyValue } from "../../../common/key-values";
 
 const patternRegex = /\{([^\}]*)\}/g;
 
-export function substituteVariables(str: string, variables: SubstitutionVariable[]): string {
+export function substituteVariables(str: string, variables: KeyValue[]): string {
     // Find variable pattern
     const matches = str.matchAll(patternRegex);
 
@@ -12,7 +12,7 @@ export function substituteVariables(str: string, variables: SubstitutionVariable
     for (const match of matches) {
         const variableName = match[1];
         if (variableName) {
-            const subsVariable = variables.find((v) => v.key === variableName);
+            const subsVariable = variables.find((v) => v.enabled && v.key === variableName);
             if (subsVariable) {
                 result.push(str.slice(offset, match.index));
                 result.push(subsVariable.value);
