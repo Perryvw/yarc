@@ -1,7 +1,7 @@
 import { html } from "@codemirror/lang-html";
 import { json } from "@codemirror/lang-json";
 import CodeMirror, { EditorState, EditorView } from "@uiw/react-codemirror";
-import { CircleSlash2 } from "lucide-react";
+import { CircleSlash2, Loader } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useEffect, useState } from "react";
@@ -167,6 +167,7 @@ export const ResponsePanel = observer(
             return (
                 <ResponsePanelRoot>
                     <ResponsePanelEmpty>
+                        <Loader />
                         <i>
                             Executing… <b>{(runningRequestTime / 1000).toFixed(2)}s</b>
                         </i>
