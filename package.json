@@ -4,7 +4,7 @@
     "description": "",
     "main": "./out/main/index.js",
     "scripts": {
-        "test": "vitest run",
+        "test": "npm run check:tsc && vitest run",
         "lint": "biome lint",
         "check:tsc": "tsc --noEmit",
         "fix:test": "biome check --write",

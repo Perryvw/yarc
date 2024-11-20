@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import type { GrpcResponse, GrpcResponseData, GrpcServerStreamData } from "../../common/request-types";
 import { ResponseBody, ResponsePanelEmpty, ResponsePanelRoot, Status, StatusCode } from "./ResponsePanel";
 import styled from "styled-components";
-import { backgroundColor, backgroundContrastColor, borderColor } from "./palette";
+import { backgroundColor, borderColor } from "./palette";
 
 const codemirrorTheme = EditorView.theme({
     "&.cm-editor": {
@@ -33,7 +33,7 @@ export const GrpcResponsePanel = observer(({ response }: { response: GrpcRespons
             <ResponsePanelRoot>
                 <Status>
                     <div>
-                        <StatusCode className={statusColor(500)}>{response.code}</StatusCode>
+                        <StatusCode $statusCode={500}>{response.code}</StatusCode>
                     </div>
                     <div>
                         Time: <b>{(response.time / 1000).toFixed(2)}s</b>
@@ -61,7 +61,7 @@ const UnaryResponsePanel = observer(({ response }: { response: GrpcResponseData 
         <ResponsePanelRoot>
             <Status>
                 <div>
-                    <StatusCode className={statusColor(200)}>OK</StatusCode>
+                    <StatusCode $statusCode={200}>OK</StatusCode>
                 </div>
                 <div>
                     Time: <b>{(response.time / 1000).toFixed(2)}s</b>
@@ -116,7 +116,7 @@ const StreamingHeader = styled(Status)`
 `;
 
 const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStreamData }) => {
-    const statusColor = response.error ? "status-500" : "status-200";
+    const responseStatus = response.error ? 500 : 200;
     const statusMessage = response.error ? "ERROR" : "FINISHED";
 
     if (response.error) {
@@ -124,7 +124,7 @@ const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStr
             <ResponsePanelRoot>
                 <Status>
                     <div>
-                        <StatusCode className={statusColor}>{response.error.code}</StatusCode>
+                        <StatusCode $statusCode={responseStatus}>{response.error.code}</StatusCode>
                     </div>
                 </Status>
                 <ResponseBody>{response.error.detail}</ResponseBody>
@@ -148,7 +148,7 @@ const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStr
             ) : (
                 <Status>
                     <div>
-                        <StatusCode className={statusColor}>{statusMessage}</StatusCode>
+                        <StatusCode $statusCode={responseStatus}>{statusMessage}</StatusCode>
                     </div>
                 </Status>
             )}
