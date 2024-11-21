@@ -707,6 +707,7 @@ export const RenameInput = observer(
         return (
             <RenameInputTextual
                 type="text"
+                placeholder="unnamed"
                 ref={renameInputRef}
                 value={request.name}
                 onClick={onInputClick}

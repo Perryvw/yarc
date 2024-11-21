@@ -11,6 +11,12 @@ import styled from "styled-components";
 import { backgroundColor, borderColor } from "./palette";
 
 const codemirrorTheme = EditorView.theme({
+    "&": {
+        fontFamily: "var(--font-monospace)",
+    },
+    ".cm-scroller": {
+        fontFamily: "inherit",
+    },
     "&.cm-editor": {
         height: "100%",
     },

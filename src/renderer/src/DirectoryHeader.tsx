@@ -22,6 +22,7 @@ const SearchInput = styled.input`
     outline: 0;
     background: unset;
     min-width: 0;
+    font: inherit;
 `;
 
 export default function DirectoryHeader({

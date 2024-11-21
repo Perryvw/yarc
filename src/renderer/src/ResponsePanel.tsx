@@ -77,6 +77,7 @@ const ResponseHeaderKey = styled.div`
 `;
 
 const ResponseHeaderValue = styled.textarea`
+    font: inherit;
     border: unset;
     background: unset;
     field-sizing: content;
@@ -101,6 +102,12 @@ const ResponseTextarea = styled.textarea`
 `;
 
 const codemirrorTheme = EditorView.theme({
+    "&": {
+        fontFamily: "var(--font-monospace)",
+    },
+    ".cm-scroller": {
+        fontFamily: "inherit",
+    },
     "&.cm-editor": {
         height: "100%",
     },

@@ -1,5 +1,5 @@
 import * as CodeMirrorLint from "@codemirror/lint";
-import CodeMirror from "@uiw/react-codemirror";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { json5 } from "codemirror-json5";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
@@ -41,7 +41,7 @@ const ProtoMethodBox = styled.button`
     background-color: var(--color-background);
     anchor-name: --proto-method-box;
     cursor: pointer;
-    font-size: 12pt;
+    font: inherit;
 
     &:hover {
         background-color: ${backgroundHoverColor};
@@ -58,6 +58,7 @@ const GrpcMethodPopoverRoot = styled.div`
 `;
 
 const GrpcMethodPopoverEntry = styled.button`
+    font: inherit;
     border: unset;
     width: 100%;
 
@@ -77,6 +78,15 @@ interface MethodDescriptor {
     service: string;
     method: MethodInfo;
 }
+
+const codemirrorTheme = EditorView.theme({
+    "&": {
+        fontFamily: "var(--font-monospace)",
+    },
+    ".cm-scroller": {
+        fontFamily: "inherit",
+    },
+});
 
 export const GrpcRequestPanel = observer(
     ({ activeRequest, protoConfig }: { activeRequest: GrpcRequestData; protoConfig: ProtoConfig }) => {
@@ -196,7 +206,7 @@ export const GrpcRequestPanel = observer(
                         }}
                         value={activeRequest.body}
                         onChange={onRequestBodyChanged}
-                        extensions={[linter, json5()]}
+                        extensions={[codemirrorTheme, linter, json5()]}
                         lang="json"
                     />
                 )}

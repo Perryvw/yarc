@@ -1,4 +1,4 @@
-import CodeMirror from "@uiw/react-codemirror";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { ChevronUp } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
@@ -49,6 +49,15 @@ const RequestSectionHeaderName = styled.div`
         content: "";
     }
 `;
+
+const codemirrorTheme = EditorView.theme({
+    "&": {
+        fontFamily: "var(--font-monospace)",
+    },
+    ".cm-scroller": {
+        fontFamily: "inherit",
+    },
+});
 
 export const RequestPanel = observer(({ activeRequest }: { activeRequest: HttpRequestData }) => {
     function onRequestBodyChanged(value: string) {
@@ -141,6 +150,7 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: HttpRe
                             flexBasis: "100%",
                             overflow: "hidden",
                         }}
+                        extensions={[codemirrorTheme]}
                         value={activeRequest.body}
                         onChange={onRequestBodyChanged}
                     />

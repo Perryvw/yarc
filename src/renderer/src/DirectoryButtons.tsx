@@ -16,6 +16,7 @@ const DirectoryButtonsContainer = styled.div`
 `;
 
 const Button = styled.button`
+    font: inherit;
     border: unset;
     background: unset;
     padding: 10px;
