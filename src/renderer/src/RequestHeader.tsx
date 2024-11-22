@@ -89,6 +89,8 @@ const RequestButton = styled.button`
     }
 `;
 
+const elementsToSkipEnter = ["INPUT", "TEXTAREA", "SELECT", "BUTTON"];
+
 const RequestHeader = observer(({ context }: { context: AppContext }) => {
     const { activeRequest } = context;
     const [isExecutionAnimating, setIsExecutionAnimating] = useState(false);
@@ -180,10 +182,18 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                 e.preventDefault();
 
-                if (
-                    e.target !== null &&
-                    ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes((e.target as HTMLElement).tagName)
-                ) {
+                if (e.target === null) {
+                    return;
+                }
+
+                const focusedElement = e.target as HTMLElement;
+
+                if (focusedElement.contentEditable === "true") {
+                    // CodeMirror
+                    return;
+                }
+
+                if (elementsToSkipEnter.includes(focusedElement.tagName)) {
                     return;
                 }
 
