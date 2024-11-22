@@ -49,7 +49,7 @@ function grpcUnaryRequest(
         client.makeUnaryRequest(
             method.path,
             method.requestSerialize,
-            (r) => JSON.stringify(method.responseDeserialize(r)),
+            (r) => JSON.stringify(method.responseDeserialize(r), null, 2),
             parseRequestBody(request.body),
             (err: grpc.ServiceError | null, value?: string) => {
                 if (err) {
@@ -89,7 +89,7 @@ async function grpcServerStreamingRequest(
             requestId: request.id,
             response: {
                 result: "success",
-                body: JSON.stringify(data),
+                body: JSON.stringify(data, null, 2),
                 time: Date.now(),
             },
         };

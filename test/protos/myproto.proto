@@ -14,6 +14,8 @@ service Greeter {
 
   rpc TestNested(NestedRequest) returns (HelloReply);
 
+  rpc TestGetStringList(HelloRequest) returns (StringListReply);
+
   rpc TestEnums(MessageWithEnums) returns (HelloReply);
 
   rpc Unary (HelloRequest) returns (HelloReply);
@@ -40,6 +42,10 @@ message NestedRequest {
     HelloRequest request4 = 4;
   }
   repeated HelloReply replies = 5;
+}
+
+message StringListReply {
+  repeated string values = 1;
 }
 
 enum GlobalEnum {

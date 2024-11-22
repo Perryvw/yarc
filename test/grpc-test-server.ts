@@ -29,6 +29,10 @@ interface NestedRequest {
     replies?: HelloReply[];
 }
 
+interface StringListReply {
+    values: string[];
+}
+
 const server = new grpc.Server();
 server.addService(greeterService.service, {
     SayHello: (call: grpc.ServerWritableStream<HelloRequest, HelloReply>) => {
@@ -60,6 +64,16 @@ server.addService(greeterService.service, {
     },
     TestNested: (call: grpc.ServerWritableStream<NestedRequest, HelloReply>) => {
         call.write({ message: JSON.stringify(call.request) });
+        call.end();
+    },
+    TestGetStringList: (call: grpc.ServerWritableStream<HelloRequest, StringListReply>) => {
+        call.write({
+            values: [
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "ccccccccccccccccccccccc",
+            ],
+        });
         call.end();
     },
 });

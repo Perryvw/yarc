@@ -1,14 +1,12 @@
-import { html } from "@codemirror/lang-html";
-import { json } from "@codemirror/lang-json";
+import { json5 } from "codemirror-json5";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { CircleSlash2, Ghost } from "lucide-react";
-import { autorun, toJS } from "mobx";
 import { observer } from "mobx-react-lite";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { GrpcResponse, GrpcResponseData, GrpcServerStreamData } from "../../common/request-types";
 import { ResponseBody, ResponsePanelEmpty, ResponsePanelRoot, Status, StatusCode } from "./ResponsePanel";
 import styled from "styled-components";
-import { backgroundColor, borderColor } from "./palette";
+import { borderColor } from "./palette";
 
 const codemirrorTheme = EditorView.theme({
     "&": {
@@ -61,8 +59,6 @@ export const GrpcResponsePanel = observer(({ response }: { response: GrpcRespons
 });
 
 const UnaryResponsePanel = observer(({ response }: { response: GrpcResponseData }) => {
-    const [prettyPrint, setPrettyPrint] = useState(true);
-
     return (
         <ResponsePanelRoot>
             <Status>
@@ -75,22 +71,12 @@ const UnaryResponsePanel = observer(({ response }: { response: GrpcResponseData 
             </Status>
 
             <ResponseBody>
-                <div>
-                    <label>
-                        <input
-                            type="checkbox"
-                            onClick={() => setPrettyPrint(!prettyPrint)}
-                            defaultChecked={prettyPrint}
-                        />
-                        Pretty print
-                    </label>
-                </div>
                 <CodeMirror
                     readOnly
                     theme="dark"
                     value={response.body}
                     basicSetup={{ foldGutter: true }}
-                    extensions={[codemirrorTheme, json(), html()]}
+                    extensions={[codemirrorTheme, json5()]}
                     style={{
                         flexBasis: "100%",
                         overflow: "hidden",
@@ -101,9 +87,7 @@ const UnaryResponsePanel = observer(({ response }: { response: GrpcResponseData 
     );
 });
 
-const StreamingHeader = styled(Status)`
-    font-weight: bold;
-
+const StreamingStatusCode = styled(StatusCode)`
     background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
     background-size: 400% 400%;
     animation: gradient 10s ease infinite;
@@ -141,16 +125,20 @@ const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStr
     const bottomRef = useRef<null | HTMLDivElement>(null);
 
     useEffect(() => {
-        autorun(() => {
-            const responses = response.responses.length; // Make mobx look at this property
+        const responses = response.responses.length;
+        setTimeout(() => {
             bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-        });
+        }, 0);
     }, [response.responses.length]);
 
     return (
         <ResponsePanelRoot>
             {response.streamOpen ? (
-                <StreamingHeader>STREAMING SERVER RESPONSES</StreamingHeader>
+                <Status>
+                    <div>
+                        <StreamingStatusCode $statusCode={200}>STREAMING SERVER RESPONSES</StreamingStatusCode>
+                    </div>
+                </Status>
             ) : (
                 <Status>
                     <div>
@@ -177,31 +165,33 @@ const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStr
 });
 
 const StreamResponseHeader = styled.div`
-    background-color: ${backgroundColor};
     font-size: 10pt;
     padding: 1px 0px 0px 10px;
     border: solid ${borderColor};
-    border-width: 1px 0px 1px 0px;
+    border-width: 0px 0px 1px 0px;
     color: #bbb;
 `;
 
 const StreamResponseBody = styled.div`
-    padding: 2px 10px 5px 10px;
 `;
 
 function StreamResponsePanel({ response }: { response: GrpcResponseData }) {
     return (
         <div>
             <StreamResponseHeader>{new Date(response.time).toLocaleTimeString()}</StreamResponseHeader>
-            <StreamResponseBody>{response.body}</StreamResponseBody>
+            <StreamResponseBody>
+                <CodeMirror
+                    readOnly
+                    theme="dark"
+                    value={response.body}
+                    basicSetup={{ foldGutter: true }}
+                    extensions={[codemirrorTheme, json5()]}
+                    style={{
+                        flexBasis: "100%",
+                        overflow: "hidden",
+                    }}
+                />
+            </StreamResponseBody>
         </div>
     );
-}
-
-function statusColor(statusCode: number) {
-    if (statusCode >= 500) return "status-500";
-    if (statusCode >= 400) return "status-400";
-    if (statusCode >= 300) return "status-300";
-    if (statusCode >= 200) return "status-200";
-    return "";
 }
