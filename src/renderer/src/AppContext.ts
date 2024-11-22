@@ -304,7 +304,7 @@ export class AppContext {
         return null;
     }
 
-    public moveRequest(who: RequestId, where: RequestId, position: "below" | "above" | "group") {
+    public moveRequest(who: RequestId, where: RequestId) {
         if (who === where) {
             return;
         }
@@ -325,10 +325,10 @@ export class AppContext {
             return;
         }
 
-        if (position === "group" && newIndex.request.type === "group") {
+        if (this.draggingInsertPosition === "group" && newIndex.request.type === "group") {
             newIndex.request.requests.unshift(request);
         } else {
-            const delta = position === "below" ? 1 : 0;
+            const delta = this.draggingInsertPosition === "below" ? 1 : 0;
             newIndex.requests.splice(newIndex.index + delta, 0, request);
         }
 

@@ -128,33 +128,6 @@ export const Directory = observer(
             [context],
         );
 
-        function handleDragStart() {
-            runInAction(() => {
-                context.isDragging = true;
-            });
-        }
-
-        function handleDragEnd() {
-            runInAction(() => {
-                context.isDragging = false;
-                context.draggingOverRequestId = null;
-            });
-        }
-
-        function handleDragEnter(request: RequestDataOrGroup) {
-            runInAction(() => {
-                context.draggingOverRequestId = request.id;
-            });
-        }
-
-        function handleDragLeave(request: RequestDataOrGroup) {
-            runInAction(() => {
-                if (context.draggingOverRequestId === request.id) {
-                    context.draggingOverRequestId = null;
-                }
-            });
-        }
-
         function getFilteredRequests(requests = context.requests) {
             if (!search) {
                 return requests;
@@ -211,10 +184,6 @@ export const Directory = observer(
                         depth={1}
                         requests={getFilteredRequests()}
                         context={context}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        onDragEnter={handleDragEnter}
-                        onDragLeave={handleDragLeave}
                         deleteRequest={deleteRequest}
                         duplicateRequest={duplicateRequest}
                         selectRequest={selectRequest}
@@ -284,7 +253,40 @@ const RequestActions = styled.div`
     height: 20px;
 `;
 
-const Request = styled.div`
+const DraggableLine = styled.div`
+    position: relative;
+
+    &.is-drag-over-above,
+    &.is-drag-over-below {
+        z-index: 2;
+    }
+
+    &.is-drag-over-above:after,
+    &.is-drag-over-below:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: blue;
+        border-radius: 10px;
+        pointer-events: none;
+    }
+
+    &.is-drag-over-above:after {
+        top: -3px;
+    }
+
+    &.is-drag-over-below:after {
+        bottom: -3px;
+    }
+`;
+
+const RequestGroupDraggableLine = styled(DraggableLine)`
+    height: 3px;
+`;
+
+const Request = styled(DraggableLine)`
     --method-color: #FFF;
     background: unset;
     text-align: left;
@@ -293,9 +295,7 @@ const Request = styled.div`
     flex-direction: column;
     position: relative;
     border-radius: 10px;
-    position: relative;
     flex-shrink: 0;
-    position: relative;
 
     // :GroupMargins
     border: 1px solid transparent;
@@ -333,31 +333,6 @@ const Request = styled.div`
 
     &.active:before {
         opacity: 1;
-    }
-
-    &.is-drag-over-above,
-    &.is-drag-over-below {
-        z-index: 2;
-    }
-
-    &.is-drag-over-above:after,
-    &.is-drag-over-below:after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background-color: blue;
-        border-radius: 10px;
-        pointer-events: none;
-    }
-
-    &.is-drag-over-above:after {
-        top: -3px;
-    }
-
-    &.is-drag-over-below:after {
-        bottom: -3px;
     }
 `;
 
@@ -458,10 +433,6 @@ const RequestEntry = observer(
         active,
         isDragOver,
         request,
-        onDragStart,
-        onDragEnd,
-        onDragEnter,
-        onDragLeave,
         selectRequest,
         deleteRequest,
         duplicateRequest,
@@ -472,10 +443,6 @@ const RequestEntry = observer(
         active: boolean;
         isDragOver: boolean;
         request: RequestData;
-        onDragStart: () => void;
-        onDragEnd: () => void;
-        onDragEnter: (r: RequestData) => void;
-        onDragLeave: (r: RequestData) => void;
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestData) => void;
         duplicateRequest: (r: RequestData) => void;
@@ -526,13 +493,15 @@ const RequestEntry = observer(
             const rect = e.currentTarget.getBoundingClientRect();
             runInAction(() => {
                 context.draggingStartClientY = rect.bottom;
+                context.isDragging = true;
             });
-
-            onDragStart();
         };
 
         const handleDragEnd = (e: React.DragEvent) => {
-            onDragEnd();
+            runInAction(() => {
+                context.isDragging = false;
+                context.draggingOverRequestId = null;
+            });
         };
 
         const handleDragEnter = (e: React.DragEvent) => {
@@ -541,9 +510,8 @@ const RequestEntry = observer(
             const rect = e.currentTarget.getBoundingClientRect();
             runInAction(() => {
                 context.draggingInsertPosition = context.draggingStartClientY > rect.bottom ? "above" : "below";
+                context.draggingOverRequestId = request.id;
             });
-
-            onDragEnter(request);
         };
 
         const handleDragOver = (e: React.DragEvent) => {
@@ -551,7 +519,11 @@ const RequestEntry = observer(
         };
 
         const handleDragLeave = (e: React.DragEvent) => {
-            onDragLeave(request);
+            runInAction(() => {
+                if (context.draggingOverRequestId === request.id) {
+                    context.draggingOverRequestId = null;
+                }
+            });
         };
 
         const handleDrop = (e: React.DragEvent) => {
@@ -561,9 +533,14 @@ const RequestEntry = observer(
                 return;
             }
 
-            context.moveRequest(movedRequestId as RequestId, request.id, context.draggingInsertPosition);
+            context.moveRequest(movedRequestId as RequestId, request.id);
 
-            onDragEnd(); // Moving the request element causes dropend event to not fire
+            // Moving the request element causes dropend event to not fire
+            runInAction(() => {
+                if (context.draggingOverRequestId === request.id) {
+                    context.draggingOverRequestId = null;
+                }
+            });
         };
 
         function finishRename() {
@@ -725,10 +702,6 @@ const RequestGroupEntry = observer(
         isDragOver,
         context,
         request,
-        onDragStart,
-        onDragEnd,
-        onDragEnter,
-        onDragLeave,
         selectRequest,
         deleteRequest,
         duplicateRequest,
@@ -739,10 +712,6 @@ const RequestGroupEntry = observer(
         isDragOver: boolean;
         context: AppContext;
         request: RequestGroup;
-        onDragStart: () => void;
-        onDragEnd: () => void;
-        onDragEnter: (r: RequestDataOrGroup) => void;
-        onDragLeave: (r: RequestDataOrGroup) => void;
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestDataOrGroup) => void;
         duplicateRequest: (r: RequestData) => void;
@@ -772,21 +741,32 @@ const RequestGroupEntry = observer(
             const rect = e.currentTarget.getBoundingClientRect();
             runInAction(() => {
                 context.draggingStartClientY = rect.bottom;
+                context.isDragging = true;
             });
-
-            onDragStart();
         };
 
         const handleDragEnd = (e: React.DragEvent) => {
-            onDragEnd();
+            runInAction(() => {
+                context.isDragging = false;
+                context.draggingOverRequestId = null;
+            });
         };
 
         const handleDragEnter = (e: React.DragEvent) => {
             e.preventDefault();
-            onDragEnter(request);
 
             runInAction(() => {
                 context.draggingInsertPosition = "group";
+                context.draggingOverRequestId = request.id;
+            });
+        };
+
+        const handleDragEnterAbove = (e: React.DragEvent) => {
+            e.preventDefault();
+
+            runInAction(() => {
+                context.draggingInsertPosition = "above";
+                context.draggingOverRequestId = request.id;
             });
         };
 
@@ -795,7 +775,13 @@ const RequestGroupEntry = observer(
         };
 
         const handleDragLeave = (e: React.DragEvent) => {
-            onDragLeave(request);
+            /* TODO: When entering the "drag above" in this group, it will incorrectly set to null
+            runInAction(() => {
+                if (context.draggingOverRequestId === request.id) {
+                    context.draggingOverRequestId = null;
+                }
+            });
+            */
         };
 
         const handleDrop = (e: React.DragEvent) => {
@@ -805,9 +791,14 @@ const RequestGroupEntry = observer(
                 return;
             }
 
-            context.moveRequest(movedRequestId as RequestId, request.id, "group");
+            context.moveRequest(movedRequestId as RequestId, request.id);
 
-            onDragEnd(); // Moving the request element causes dropend event to not fire
+            // Moving the request element causes dropend event to not fire
+            runInAction(() => {
+                if (context.draggingOverRequestId === request.id) {
+                    context.draggingOverRequestId = null;
+                }
+            });
         };
 
         function finishRename() {
@@ -827,13 +818,27 @@ const RequestGroupEntry = observer(
 
         return (
             <RequestGroupRoot
-                className={classNames({ "is-drag-over-group": isDragOver, "is-renaming": isRenaming })}
+                className={classNames({
+                    "is-drag-over-group": isDragOver && context.draggingInsertPosition === "group",
+                    "is-renaming": isRenaming,
+                })}
                 style={
                     {
                         "--group-depth": depth,
                     } as React.CSSProperties
                 }
             >
+                <RequestGroupDraggableLine
+                    className={classNames({
+                        "is-drag-over-above": isDragOver && context.draggingInsertPosition === "above",
+                    })}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragEnter={handleDragEnterAbove}
+                    onDragLeave={handleDragLeave}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                />
                 <RequestNameLine
                     onClick={handleNameClick}
                     draggable={!isRenaming}
@@ -884,17 +889,12 @@ const RequestGroupEntry = observer(
                         </RequestActions>
                     )}
                 </RequestNameLine>
-
                 {!request.collapsed && (
                     <RequestGroupInner>
                         <SortableRequests
                             depth={depth + 1}
                             requests={request.requests}
                             context={context}
-                            onDragStart={onDragStart}
-                            onDragEnd={onDragEnd}
-                            onDragEnter={onDragEnter}
-                            onDragLeave={onDragLeave}
                             deleteRequest={deleteRequest}
                             duplicateRequest={duplicateRequest}
                             selectRequest={selectRequest}
@@ -913,10 +913,6 @@ const SortableRequests = observer(
         depth,
         requests,
         context,
-        onDragStart,
-        onDragEnd,
-        onDragEnter,
-        onDragLeave,
         selectRequest,
         deleteRequest,
         duplicateRequest,
@@ -926,10 +922,6 @@ const SortableRequests = observer(
         depth: number;
         requests: RequestList;
         context: AppContext;
-        onDragStart: () => void;
-        onDragEnd: () => void;
-        onDragEnter: (r: RequestDataOrGroup) => void;
-        onDragLeave: (r: RequestDataOrGroup) => void;
         selectRequest: (r: RequestData) => void;
         deleteRequest: (r: RequestDataOrGroup) => void;
         duplicateRequest: (r: RequestData) => void;
@@ -991,10 +983,6 @@ const SortableRequests = observer(
                                 isDragOver={r.id === context.draggingOverRequestId}
                                 request={r}
                                 context={context}
-                                onDragStart={onDragStart}
-                                onDragEnd={onDragEnd}
-                                onDragEnter={onDragEnter}
-                                onDragLeave={onDragLeave}
                                 selectRequest={selectRequest}
                                 deleteRequest={deleteRequest}
                                 duplicateRequest={duplicateRequest}
@@ -1008,10 +996,6 @@ const SortableRequests = observer(
                                     active={r === context.activeRequest}
                                     isDragOver={r.id === context.draggingOverRequestId}
                                     request={r}
-                                    onDragStart={onDragStart}
-                                    onDragEnd={onDragEnd}
-                                    onDragEnter={onDragEnter}
-                                    onDragLeave={onDragLeave}
                                     selectRequest={selectRequest}
                                     deleteRequest={deleteRequest}
                                     duplicateRequest={duplicateRequest}
