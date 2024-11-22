@@ -1,10 +1,10 @@
 import type { KeyValue } from "./key-values";
-import type { RequestList } from "./request-types";
+import type { RequestId, RequestList } from "./request-types";
 
 export interface PersistedState {
     requests: RequestList;
     protoRoots: string[];
-    selectedRequest: string | null;
+    selectedRequest: RequestId | null;
     substitutionVariables: KeyValue[];
     layout: {
         directoryWidth: number;

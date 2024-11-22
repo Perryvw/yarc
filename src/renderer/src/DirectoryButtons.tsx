@@ -3,7 +3,13 @@ import { observer } from "mobx-react-lite";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { v7 as uuidv7 } from "uuid";
-import type { GrpcRequestData, HttpRequestData, RequestData, RequestGroup } from "../../common/request-types";
+import type {
+    GrpcRequestData,
+    HttpRequestData,
+    RequestData,
+    RequestGroup,
+    RequestId,
+} from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { SubstitutionVariablesModal } from "./modals/substitution-variables";
 import { backgroundHoverColor } from "./palette";
@@ -116,7 +122,7 @@ export const DirectoryButtons = observer(
         function newRequest() {
             const newRequest: HttpRequestData = {
                 type: "http",
-                id: uuidv7(),
+                id: uuidv7() as RequestId,
                 name: "New request",
                 method: "GET",
                 params: [],
@@ -134,7 +140,7 @@ export const DirectoryButtons = observer(
         function newRequestGrpc() {
             const newRequest: GrpcRequestData = {
                 type: "grpc",
-                id: uuidv7(),
+                id: uuidv7() as RequestId,
                 name: "New request",
                 url: "new",
                 body: "{\n\t\n}",
@@ -148,7 +154,7 @@ export const DirectoryButtons = observer(
         function newGroup() {
             const group: RequestGroup = {
                 type: "group",
-                id: uuidv7(),
+                id: uuidv7() as RequestId,
                 name: "Group",
                 collapsed: false,
                 requests: [],

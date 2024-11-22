@@ -2,9 +2,11 @@ import type { KeyValue } from "./key-values";
 
 export type HttpMethodVerb = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
 
+export type RequestId = string & { __requestIdBrand: never };
+
 export interface HttpRequestData {
     type: "http";
-    id: string;
+    id: RequestId;
     name: string;
     url: string;
     method: HttpMethodVerb;
@@ -28,7 +30,7 @@ export enum GrpcRequestKind {
 
 export interface GrpcRequestData {
     type: "grpc";
-    id: string;
+    id: RequestId;
     name: string;
     url: string;
     lastExecute: number;
@@ -48,7 +50,7 @@ export type RequestData = HttpRequestData | GrpcRequestData;
 
 export interface RequestGroup {
     type: "group";
-    id: string;
+    id: RequestId;
     name: string;
     collapsed: boolean;
     requests: RequestDataOrGroup[];
@@ -59,7 +61,7 @@ export type RequestDataOrGroup = RequestData | RequestGroup;
 export type RequestList = RequestDataOrGroup[];
 
 export interface HttpResponseEvent {
-    requestId: string;
+    requestId: RequestId;
     response: HttpResponseData;
 }
 

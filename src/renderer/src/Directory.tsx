@@ -25,6 +25,7 @@ import { type ChangeEvent, Fragment, useCallback, useEffect, useRef, useState } 
 import styled from "styled-components";
 import {
     GrpcRequestKind,
+    RequestId,
     type RequestData,
     type RequestDataOrGroup,
     type RequestGroup,
@@ -560,7 +561,7 @@ const RequestEntry = observer(
                 return;
             }
 
-            context.moveRequest(movedRequestId, request.id, context.draggingInsertPosition);
+            context.moveRequest(movedRequestId as RequestId, request.id, context.draggingInsertPosition);
 
             onDragEnd(); // Moving the request element causes dropend event to not fire
         };
@@ -804,7 +805,7 @@ const RequestGroupEntry = observer(
                 return;
             }
 
-            context.moveRequest(movedRequestId, request.id, "group");
+            context.moveRequest(movedRequestId as RequestId, request.id, "group");
 
             onDragEnd(); // Moving the request element causes dropend event to not fire
         };

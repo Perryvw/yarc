@@ -3,7 +3,13 @@ import * as path from "node:path";
 import { type BaseWindow, app } from "electron";
 import { v7 as uuidv7 } from "uuid";
 import type { PersistedState, PersistedStateWithWindow } from "../../common/persist-state";
-import type { GrpcRequestData, HttpRequestData, RequestDataOrGroup, RequestGroup } from "../../common/request-types";
+import type {
+    GrpcRequestData,
+    HttpRequestData,
+    RequestDataOrGroup,
+    RequestGroup,
+    RequestId,
+} from "../../common/request-types";
 import type { KeyValue } from "../../common/key-values";
 
 const storagePath = app.getPath("sessionData");
@@ -82,7 +88,7 @@ function fixPersistedData(
         }
         return {
             type: "http",
-            id: ri.id ?? uuidv7(),
+            id: (ri.id ?? uuidv7()) as RequestId,
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
             method: ri.method ?? "GET",
@@ -99,7 +105,7 @@ function fixPersistedData(
     function fixGrpcRequest(ri: DeepPartial<GrpcRequestData>): GrpcRequestData {
         return {
             type: "grpc",
-            id: ri.id ?? uuidv7(),
+            id: (ri.id ?? uuidv7()) as RequestId,
             name: ri.name ?? "Restored request",
             url: ri.url ?? "",
             kind: ri.kind,
@@ -128,7 +134,7 @@ function fixPersistedData(
     function fixGroup(ri: DeepPartial<RequestGroup>): RequestGroup {
         return {
             type: "group",
-            id: ri.id ?? uuidv7(),
+            id: (ri.id ?? uuidv7()) as RequestId,
             name: ri.name ?? "Restored group",
             collapsed: ri.collapsed ?? false,
             requests: ri.requests?.map(fixRequest).filter(notUndefined) ?? [],
@@ -146,7 +152,7 @@ function fixPersistedData(
     return {
         requests: incoming.requests?.map(fixRequest).filter(notUndefined) ?? [],
         protoRoots: incoming.protoRoots?.filter(notUndefined) ?? [],
-        selectedRequest: incoming.selectedRequest ?? null,
+        selectedRequest: (incoming.selectedRequest ?? null) as RequestId,
         substitutionVariables: incoming.substitutionVariables?.filter(notUndefined)?.map(fixSubstitutionVariable) ?? [],
         response: {
             prettyPrint: incoming.response?.lineWrap ?? true,

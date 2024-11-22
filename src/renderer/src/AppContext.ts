@@ -27,6 +27,7 @@ import type {
     RequestData,
     RequestDataOrGroup,
     RequestGroup,
+    RequestId,
     RequestList,
 } from "../../common/request-types";
 import { debounce } from "./util/debounce";
@@ -43,7 +44,7 @@ export class AppContext {
     lastDeletedRequestForUndo: RequestWithPositionContext | undefined;
     substitutionVariables: KeyValue[] = [];
 
-    historyActiveRequestIds: string[] = [];
+    historyActiveRequestIds: RequestId[] = [];
     historyCurrentIndex = 0;
 
     gridWidthDirectory = 20;
@@ -53,7 +54,7 @@ export class AppContext {
     responseLineWrap = true;
 
     isDragging = false;
-    draggingOverRequestId: string | null = null;
+    draggingOverRequestId: RequestId | null = null;
     draggingInsertPosition: "above" | "below" | "group" = "above";
     draggingStartClientY = 0;
 
@@ -144,7 +145,7 @@ export class AppContext {
     }
 
     public navigateInHistory(forward: boolean) {
-        let requestId: string | null = null;
+        let requestId: RequestId | null = null;
 
         if (forward) {
             if (this.historyCurrentIndex + 1 < this.historyActiveRequestIds.length) {
@@ -253,7 +254,11 @@ export class AppContext {
             return;
         }
 
-        const newRequest = { ...request, id: uuidv7(), name: `${request.name} - Duplicate` };
+        const newRequest = {
+            ...request,
+            id: uuidv7() as RequestId,
+            name: `${request.name} - Duplicate`,
+        };
 
         oldIndex.requests.splice(oldIndex.index + 1, 0, newRequest);
 
@@ -278,7 +283,7 @@ export class AppContext {
     }
 
     public findRequestById(
-        id: string,
+        id: RequestId,
         requests: RequestDataOrGroup[] = this.requests,
     ): RequestWithPositionContext | null {
         for (let i = 0; i < requests.length; i++) {
@@ -299,7 +304,7 @@ export class AppContext {
         return null;
     }
 
-    public moveRequest(who: string, where: string, position: "below" | "above" | "group") {
+    public moveRequest(who: RequestId, where: RequestId, position: "below" | "above" | "group") {
         if (who === where) {
             return;
         }

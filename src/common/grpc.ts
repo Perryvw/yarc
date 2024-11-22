@@ -1,4 +1,4 @@
-import type { GrpcResponseData } from "./request-types";
+import type { GrpcResponseData, RequestId } from "./request-types";
 
 export interface ProtoRoot {
     rootPath: string;
@@ -28,16 +28,16 @@ export interface MethodInfo {
 }
 
 export interface GrpcStreamClosedEvent {
-    requestId: string;
+    requestId: RequestId;
 }
 
 export interface GrpcServerStreamDataEvent {
-    requestId: string;
+    requestId: RequestId;
     response: GrpcResponseData;
 }
 
 export interface GrpcServerStreamErrorEvent {
-    requestId: string;
+    requestId: RequestId;
     code?: string;
     detail?: string;
 }
