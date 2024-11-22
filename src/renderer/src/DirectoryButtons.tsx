@@ -53,6 +53,7 @@ const ImportButton = styled(Button)``;
 const SettingsButton = styled(Button)``;
 
 const NewRequestType = styled.button`
+    font: inherit;
     border: unset;
     border-bottom: 1px solid var(--color-border);
     background: unset;
