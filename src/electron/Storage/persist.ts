@@ -152,7 +152,7 @@ function fixPersistedData(
     return {
         requests: incoming.requests?.map(fixRequest).filter(notUndefined) ?? [],
         protoRoots: incoming.protoRoots?.filter(notUndefined) ?? [],
-        selectedRequest: (incoming.selectedRequest ?? null) as RequestId,
+        selectedRequest: (incoming.selectedRequest as RequestId) ?? null,
         substitutionVariables: incoming.substitutionVariables?.filter(notUndefined)?.map(fixSubstitutionVariable) ?? [],
         response: {
             prettyPrint: incoming.response?.lineWrap ?? true,

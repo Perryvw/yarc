@@ -498,12 +498,12 @@ export class AppContext {
 
         if (request.response?.result === "stream") {
             request.response.streamOpen = false;
-            request.response.error = {
+            request.response.responses.push({
                 result: "error",
                 code: event.code ?? "<unknown>",
                 detail: event.detail ?? "",
-                time: 0,
-            };
+                time: Date.now(),
+            });
         }
     }
 }

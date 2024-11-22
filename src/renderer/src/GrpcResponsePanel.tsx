@@ -3,7 +3,7 @@ import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { CircleSlash2, Ghost } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useRef } from "react";
-import type { GrpcResponse, GrpcResponseData, GrpcServerStreamData } from "../../common/request-types";
+import type { GrpcError, GrpcResponse, GrpcResponseData, GrpcServerStreamData } from "../../common/request-types";
 import { ResponseBody, ResponsePanelEmpty, ResponsePanelRoot, Status, StatusCode } from "./ResponsePanel";
 import styled from "styled-components";
 import { borderColor } from "./palette";
@@ -122,15 +122,6 @@ const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStr
         );
     }
 
-    const bottomRef = useRef<null | HTMLDivElement>(null);
-
-    useEffect(() => {
-        const responses = response.responses.length;
-        setTimeout(() => {
-            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-        }, 0);
-    }, [response.responses.length]);
-
     return (
         <ResponsePanelRoot>
             {response.streamOpen ? (
@@ -146,10 +137,26 @@ const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStr
                     </div>
                 </Status>
             )}
+            <StreamingResponsesList responses={response.responses} />
+        </ResponsePanelRoot>
+    );
+});
 
-            {response.responses.length > 0 ? (
+const StreamingResponsesList = observer(({ responses }: { responses: Array<GrpcResponseData | GrpcError> }) => {
+    const bottomRef = useRef<null | HTMLDivElement>(null);
+
+    useEffect(() => {
+        const l = responses.length;
+        setTimeout(() => {
+            bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }, 0);
+    }, [responses.length]);
+
+    return (
+        <>
+            {responses.length > 0 ? (
                 <ResponseBody>
-                    {response.responses.map((r, i) => (
+                    {responses.map((r, i) => (
                         <StreamResponsePanel key={i.toString()} response={r} />
                     ))}
                     <div ref={bottomRef} />
@@ -160,7 +167,7 @@ const StreamingResponsePanel = observer(({ response }: { response: GrpcServerStr
                     <i>No responses received yet...</i>
                 </ResponsePanelEmpty>
             )}
-        </ResponsePanelRoot>
+        </>
     );
 });
 
@@ -175,22 +182,32 @@ const StreamResponseHeader = styled.div`
 const StreamResponseBody = styled.div`
 `;
 
-function StreamResponsePanel({ response }: { response: GrpcResponseData }) {
+const StreamError = styled.div`
+    padding: 10px 5px;
+`;
+
+function StreamResponsePanel({ response }: { response: GrpcResponseData | GrpcError }) {
     return (
         <div>
             <StreamResponseHeader>{new Date(response.time).toLocaleTimeString()}</StreamResponseHeader>
             <StreamResponseBody>
-                <CodeMirror
-                    readOnly
-                    theme="dark"
-                    value={response.body}
-                    basicSetup={{ foldGutter: true }}
-                    extensions={[codemirrorTheme, json5()]}
-                    style={{
-                        flexBasis: "100%",
-                        overflow: "hidden",
-                    }}
-                />
+                {response.result === "success" ? (
+                    <CodeMirror
+                        readOnly
+                        theme="dark"
+                        value={response.body}
+                        basicSetup={{ foldGutter: true }}
+                        extensions={[codemirrorTheme, json5()]}
+                        style={{
+                            flexBasis: "100%",
+                            overflow: "hidden",
+                        }}
+                    />
+                ) : (
+                    <StreamError>
+                        <StatusCode $statusCode={500}>{response.code}</StatusCode> {response.detail}
+                    </StreamError>
+                )}
             </StreamResponseBody>
         </div>
     );

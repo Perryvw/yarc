@@ -90,6 +90,6 @@ export interface GrpcResponseData {
 export interface GrpcServerStreamData {
     result: "stream";
     streamOpen: boolean;
-    responses: GrpcResponseData[];
+    responses: Array<GrpcResponseData | GrpcError>;
     error?: GrpcError;
 }

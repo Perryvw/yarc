@@ -6,7 +6,9 @@ import { dialog } from "electron";
 import JSON5 from "json5";
 import type { GrpcServerStreamDataEvent, GrpcServerStreamErrorEvent, GrpcStreamClosedEvent } from "../../common/grpc";
 import { type BrowseProtoResult, IpcEvent } from "../../common/ipc";
-import type { GrpcRequestData, GrpcResponse, GrpcServerStreamData } from "../../common/request-types";
+import type { GrpcRequestData, GrpcResponse, GrpcServerStreamData, RequestId } from "../../common/request-types";
+
+const RequestCancelHandles: Partial<Record<RequestId, () => void>> = {};
 
 export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.WebContents): Promise<GrpcResponse> {
     if (!request.protoFile || !request.rpc) {
@@ -23,12 +25,10 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
         const method = service[request.rpc.method];
         if (method) {
             if (!method.requestStream && !method.responseStream) {
-                console.log("sending unary request");
                 return await grpcUnaryRequest(request, method, client);
             }
 
             if (!method.requestStream && method.responseStream) {
-                console.log("sending server streaming request");
                 return await grpcServerStreamingRequest(request, method, client, ipc);
             }
 
@@ -84,6 +84,11 @@ async function grpcServerStreamingRequest(
         parseRequestBody(request.body),
     );
 
+    RequestCancelHandles[request.id] = () => {
+        stream.cancel();
+        delete RequestCancelHandles[request.id];
+    };
+
     stream.on("data", (data) => {
         const eventData: GrpcServerStreamDataEvent = {
             requestId: request.id,
@@ -100,6 +105,7 @@ async function grpcServerStreamingRequest(
         const eventData: GrpcStreamClosedEvent = {
             requestId: request.id,
         };
+        delete RequestCancelHandles[request.id];
         ipc.send(IpcEvent.GrpcServerStreamEnded, eventData);
     });
 
@@ -113,6 +119,12 @@ async function grpcServerStreamingRequest(
     });
 
     return { result: "stream", streamOpen: true, responses: [] };
+}
+
+export function cancelGrpcRequest(id: RequestId) {
+    if (RequestCancelHandles[id]) {
+        RequestCancelHandles[id]();
+    }
 }
 
 function parseRequestBody(body: string): object {

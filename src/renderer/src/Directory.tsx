@@ -527,13 +527,13 @@ const RequestEntry = observer(
         };
 
         const handleDrop = (e: React.DragEvent) => {
-            const movedRequestId = e.dataTransfer.getData("yarc/drag");
+            const movedRequestId = e.dataTransfer.getData("yarc/drag") as RequestId;
 
             if (!movedRequestId) {
                 return;
             }
 
-            context.moveRequest(movedRequestId as RequestId, request.id);
+            context.moveRequest(movedRequestId, request.id);
 
             // Moving the request element causes dropend event to not fire
             runInAction(() => {
@@ -785,13 +785,13 @@ const RequestGroupEntry = observer(
         };
 
         const handleDrop = (e: React.DragEvent) => {
-            const movedRequestId = e.dataTransfer.getData("yarc/drag");
+            const movedRequestId = e.dataTransfer.getData("yarc/drag") as RequestId;
 
             if (!movedRequestId) {
                 return;
             }
 
-            context.moveRequest(movedRequestId as RequestId, request.id);
+            context.moveRequest(movedRequestId, request.id);
 
             // Moving the request element causes dropend event to not fire
             runInAction(() => {

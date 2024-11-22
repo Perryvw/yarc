@@ -8,9 +8,10 @@ import type {
     GrpcResponse,
     HttpRequestData,
     HttpResponseData,
+    RequestId,
     RequestList,
 } from "../common/request-types";
-import { browseProtoRoot, findProtoFiles, makeGrpcRequest } from "./Communication/grpc";
+import { browseProtoRoot, cancelGrpcRequest, findProtoFiles, makeGrpcRequest } from "./Communication/grpc";
 import { makeHttpRequest } from "./Communication/http";
 import { parseProtoFile } from "./Communication/proto";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
@@ -52,11 +53,11 @@ app.whenReady().then(async () => {
         }
     });
 
-    ipcMain.handle(IpcCall.AbortRequest, (_, requestType: "http" | "grpc", requestId: string) => {
+    ipcMain.handle(IpcCall.AbortRequest, (_, requestType: "http" | "grpc", requestId: RequestId) => {
         if (requestType === "http") {
             console.log("abort http request!");
         } else {
-            console.log("abort grpc request!");
+            cancelGrpcRequest(requestId);
         }
     });
 
