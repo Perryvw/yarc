@@ -25,7 +25,7 @@ import { type ChangeEvent, Fragment, useCallback, useEffect, useRef, useState } 
 import styled from "styled-components";
 import {
     GrpcRequestKind,
-    RequestId,
+    type RequestId,
     type RequestData,
     type RequestDataOrGroup,
     type RequestGroup,
@@ -689,7 +689,7 @@ export const RenameInput = observer(
         }, []);
 
         function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-            if (e.key === "Enter") {
+            if (e.key === "Enter" || e.key === "Escape") {
                 e.preventDefault();
                 finishRename();
             }
