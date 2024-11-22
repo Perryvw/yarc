@@ -42,7 +42,7 @@ export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.We
         let body = request.body;
 
         if (request.type === "http") {
-            const contentType = request.headers.find((x) => x.key === "Content-Type");
+            const contentType = request.headers.find((kv) => kv.enabled && kv.key === "Content-Type");
 
             if (!contentType || contentType.value === "application/x-www-form-urlencoded") {
                 const bodyFormParams = new URLSearchParams();
