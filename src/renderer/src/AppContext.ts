@@ -404,7 +404,7 @@ export class AppContext {
 
                     this.protoConfig.roots = observable<ProtoRoot>([]);
                     for (const protoRoot of state.protoRoots) {
-                        const root = this.protoConfig.addProtoRoot({ rootPath: protoRoot, protoFiles: [] });
+                        const root = this.protoConfig.addProtoRoot({ rootPath: protoRoot, protoFiles: [] }, false);
                         // Only the root path is persisted, discover proto files from the root on disk
                         this.protoConfig.refreshProtoRoot(root);
                     }
@@ -515,9 +515,11 @@ export class ProtoConfig {
         makeAutoObservable(this);
     }
 
-    addProtoRoot(protoRoot: ProtoRoot) {
+    addProtoRoot(protoRoot: ProtoRoot, persist: boolean) {
         this.roots.push(protoRoot);
-        this.context.persistState();
+        if (persist) {
+            this.context.persistState();
+        }
         return this.roots[this.roots.length - 1];
     }
 
@@ -534,9 +536,6 @@ export class ProtoConfig {
             IpcCall.RefreshProtoDirectory,
             protoRoot.rootPath,
         );
-        runInAction(() => {
-            protoRoot.protoFiles = refreshedRoot.protoFiles;
-        });
     }
 }
 

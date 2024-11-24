@@ -143,7 +143,7 @@ export const SelectProtosModal = observer(
         const addRoot = useCallback(async () => {
             const result: BrowseProtoResult = await window.electron.ipcRenderer.invoke(IpcCall.BrowseProtoDirectory);
             if (!result.cancelled) {
-                protoConfig.addProtoRoot(result.result);
+                protoConfig.addProtoRoot(result.result, true);
             }
         }, [protoConfig]);
 
