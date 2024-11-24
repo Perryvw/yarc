@@ -46,7 +46,7 @@ function grpcUnaryRequest(
 ): Promise<GrpcResponse> {
     return new Promise((resolve) => {
         const start = performance.now();
-        client.makeUnaryRequest(
+        const call = client.makeUnaryRequest(
             method.path,
             method.requestSerialize,
             (r) => JSON.stringify(method.responseDeserialize(r), null, 2),
@@ -68,6 +68,11 @@ function grpcUnaryRequest(
                 }
             },
         );
+
+        RequestCancelHandles[request.id] = () => {
+            call.cancel();
+            delete RequestCancelHandles[request.id];
+        };
     });
 }
 
