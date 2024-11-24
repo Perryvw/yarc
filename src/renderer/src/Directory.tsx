@@ -34,7 +34,7 @@ import {
 import type { AppContext } from "./AppContext";
 import { DirectoryButtons } from "./DirectoryButtons";
 import { backgroundHoverColor, httpVerbColorPalette } from "./palette";
-import { substituteVariables } from "./util/substitute-variables";
+import { getSubstitutionResult, substituteVariables } from "./util/substitute-variables";
 
 const DirectoryRoot = styled.div`
     display: flex;
@@ -244,6 +244,7 @@ const RequestUrl = styled(RequestName)`
     line-height: 1;
     color: #999;
     height: 20px;
+    gap: 0px;
 `;
 
 const RequestActions = styled.div`
@@ -427,6 +428,14 @@ const HistoryButton = styled(RenameButton)`
     margin-left: auto;
 `;
 
+const InlineUrl = styled.span`
+    margin-right: 7px;
+`;
+
+const ReplacedUrlPart = styled.span`
+    color: #7bb8d1;
+`;
+
 const RequestEntry = observer(
     ({
         context,
@@ -453,18 +462,29 @@ const RequestEntry = observer(
         const [isRenaming, setIsRenaming] = useState(false);
 
         function getCleanerRequestUrl() {
-            let url = substituteVariables(request.url, context.substitutionVariables);
-            const protocol = url.indexOf("://");
-
-            if (protocol > -1) {
-                url = url.substring(protocol + 3);
+            const parts = getSubstitutionResult(request.url, context.substitutionVariables);
+            if (parts.length === 0) {
+                return undefined;
             }
+
+            const protocol = parts[0].value.indexOf("://");
+            if (protocol > -1) {
+                parts[0].value = parts[0].value.substring(protocol + 3);
+            }
+
+            const urlParts = parts.map((p, i) =>
+                p.isReplaced ? <ReplacedUrlPart key={i.toString()}>{p.value}</ReplacedUrlPart> : p.value,
+            );
 
             if (request.type === "grpc" && request.rpc) {
-                url += ` ${request.rpc.service} / ${request.rpc.method}`;
+                return (
+                    <>
+                        <InlineUrl>{urlParts}</InlineUrl> {request.rpc.service} / {request.rpc.method}
+                    </>
+                );
             }
 
-            return url;
+            return urlParts;
         }
 
         function duplicateHandler(e: React.MouseEvent) {
