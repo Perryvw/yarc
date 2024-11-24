@@ -536,6 +536,7 @@ export class ProtoConfig {
             IpcCall.RefreshProtoDirectory,
             protoRoot.rootPath,
         );
+        protoRoot.protoFiles = refreshedRoot.protoFiles;
     }
 }
 
