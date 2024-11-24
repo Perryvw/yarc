@@ -79,6 +79,7 @@ export interface GrpcError {
     code: string;
     detail: string;
     time: number;
+    metadata?: { [key: string]: string | Buffer };
 }
 
 export interface GrpcResponseData {

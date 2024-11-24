@@ -9,6 +9,9 @@ export const borderColor: CSS.DataType.Color = "#2b2b2b";
 
 export const errorColor: CSS.DataType.Color = "darkred";
 
+export const textColor: CSS.DataType.Color = "white";
+export const lightTextColor: CSS.DataType.Color = "#999";
+
 export const httpVerbColorPalette: Record<string, CSS.DataType.Color> = {
     GET: "#51cf66",
     POST: "#4dabf7",

@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import type { GrpcError, GrpcResponse, GrpcResponseData, GrpcServerStreamData } from "../../common/request-types";
 import { ResponseBody, ResponsePanelEmpty, ResponsePanelRoot, Status, StatusCode } from "./ResponsePanel";
 import styled from "styled-components";
-import { borderColor } from "./palette";
+import { backgroundColor, borderColor, lightTextColor } from "./palette";
 
 const codemirrorTheme = EditorView.theme({
     "&": {
@@ -19,6 +19,23 @@ const codemirrorTheme = EditorView.theme({
         height: "100%",
     },
 });
+
+const ResponseMetaData = styled.div`
+
+`;
+
+const ResponseMetaDataHeader = styled.i`
+    color: ${lightTextColor};
+    font-size: 10pt;
+    padding-left: 5px;
+`;
+
+const ResponseMetaDataRow = styled.div`
+    background-color: ${backgroundColor};
+    border: solid ${borderColor};
+    border-width: 0px 0px 1px 0px;
+    padding-left: 5px;
+`;
 
 export const GrpcResponsePanel = observer(({ response }: { response: GrpcResponse | undefined }): React.ReactNode => {
     if (!response) {
@@ -33,6 +50,7 @@ export const GrpcResponsePanel = observer(({ response }: { response: GrpcRespons
     }
 
     if (response.result === "error") {
+        const metadataEntries = response.metadata ? Object.entries(response.metadata) : [];
         return (
             <ResponsePanelRoot>
                 <Status>
@@ -45,6 +63,17 @@ export const GrpcResponsePanel = observer(({ response }: { response: GrpcRespons
                 </Status>
 
                 <ResponseBody>{response.detail}</ResponseBody>
+
+                {metadataEntries.length > 2 && (
+                    <ResponseMetaData>
+                        <ResponseMetaDataHeader>Metadata</ResponseMetaDataHeader>
+                        {metadataEntries.map(([name, value], i) => (
+                            <ResponseMetaDataRow key={i.toString()}>
+                                {name} | {value}
+                            </ResponseMetaDataRow>
+                        ))}
+                    </ResponseMetaData>
+                )}
             </ResponsePanelRoot>
         );
     }

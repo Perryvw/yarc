@@ -147,8 +147,15 @@ export const SelectProtosModal = observer(
             }
         }, [protoConfig]);
 
+        const refreshRoot = useCallback(
+            (root: ProtoRoot) => {
+                protoConfig.refreshProtoRoot(root);
+            },
+            [protoConfig],
+        );
+
         const deleteRoot = useCallback(
-            async (root: ProtoRoot) => {
+            (root: ProtoRoot) => {
                 protoConfig.deleteProtoRoot(root);
             },
             [protoConfig],
@@ -161,7 +168,12 @@ export const SelectProtosModal = observer(
                         Proto roots
                         <ProtoRootsList>
                             {protoConfig.roots.map((root, i) => (
-                                <ProtoRootEntry key={i.toString()} root={root} deleteRequest={deleteRoot} />
+                                <ProtoRootEntry
+                                    key={i.toString()}
+                                    root={root}
+                                    refreshRoot={refreshRoot}
+                                    deleteRoot={deleteRoot}
+                                />
                             ))}
                         </ProtoRootsList>
                         <AddRootButton type="button" onClick={addRoot}>
@@ -211,15 +223,19 @@ export const SelectProtosModal = observer(
 );
 
 const ProtoRootEntry = observer(
-    ({ root, deleteRequest }: { root: ProtoRoot; deleteRequest: (root: ProtoRoot) => void }) => {
+    ({
+        root,
+        refreshRoot,
+        deleteRoot,
+    }: { root: ProtoRoot; refreshRoot: (root: ProtoRoot) => void; deleteRoot: (root: ProtoRoot) => void }) => {
         return (
             <ProtoEntry>
                 {root.rootPath}
                 <Actions>
                     <RefreshButton>
-                        <RefreshCcw size={16} />
+                        <RefreshCcw size={16} onClick={() => refreshRoot(root)} />
                     </RefreshButton>
-                    <DeleteButton onClick={() => deleteRequest(root)}>
+                    <DeleteButton onClick={() => deleteRoot(root)}>
                         <Trash size={16} />
                     </DeleteButton>
                 </Actions>

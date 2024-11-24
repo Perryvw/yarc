@@ -58,6 +58,7 @@ function grpcUnaryRequest(
                         code: grpc.status[err.code],
                         detail: err.details,
                         time: performance.now() - start,
+                        metadata: err.metadata.getMap(),
                     });
                 } else {
                     resolve({

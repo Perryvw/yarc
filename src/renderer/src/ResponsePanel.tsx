@@ -49,7 +49,7 @@ export const StatusCode = styled.b<{ $statusCode: number }>`
 export const ResponseBody = styled.div`
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex-grow: 1;
     min-height: 0;
     overflow: auto;
 `;
