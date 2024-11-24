@@ -35,10 +35,9 @@ interface StringListReply {
 
 const server = new grpc.Server();
 server.addService(greeterService.service, {
-    SayHello: (call: grpc.ServerWritableStream<HelloRequest, HelloReply>) => {
+    SayHello: (call: grpc.ServerUnaryCall<HelloRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
         console.log("handling unary request");
-        call.write({ message: `Hello ${call.request.name}!` });
-        call.end();
+        callback(null, { message: `Hello ${call.request.name}!` });
     },
     StreamHello: (call: grpc.ServerWritableStream<HelloRequest, HelloReply>) => {
         const maxCount = 20;
@@ -62,19 +61,29 @@ server.addService(greeterService.service, {
         }
         setTimeout(send, 3000);
     },
-    TestNested: (call: grpc.ServerWritableStream<NestedRequest, HelloReply>) => {
-        call.write({ message: JSON.stringify(call.request) });
-        call.end();
+    TestNested: (call: grpc.ServerUnaryCall<NestedRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
+        callback(null, { message: JSON.stringify(call.request) });
     },
-    TestGetStringList: (call: grpc.ServerWritableStream<HelloRequest, StringListReply>) => {
-        call.write({
+    TestGetStringList: (
+        call: grpc.ServerUnaryCall<HelloRequest, StringListReply>,
+        callback: grpc.sendUnaryData<StringListReply>,
+    ) => {
+        callback(null, {
             values: [
                 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
                 "ccccccccccccccccccccccc",
             ],
         });
-        call.end();
+    },
+    ErrorWithTrailers: (call: grpc.ServerUnaryCall<unknown, unknown>, callback: grpc.sendUnaryData<unknown>) => {
+        const trailers = new grpc.Metadata();
+        trailers.set("hello-trailer", "abc");
+
+        const err = new Error() as unknown as grpc.StatusObject;
+        err.code = grpc.status.FAILED_PRECONDITION;
+        err.metadata = trailers;
+        callback(err);
     },
 });
 

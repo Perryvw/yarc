@@ -18,6 +18,8 @@ service Greeter {
 
   rpc TestEnums(MessageWithEnums) returns (HelloReply);
 
+  rpc ErrorWithTrailers(HelloRequest) returns (HelloReply);
+
   rpc Unary (HelloRequest) returns (HelloReply);
   rpc ServerStream (HelloRequest) returns (stream HelloReply);
   rpc RequestStream (stream HelloRequest) returns (HelloReply);
