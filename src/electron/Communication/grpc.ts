@@ -52,6 +52,8 @@ function grpcUnaryRequest(
             (r) => JSON.stringify(method.responseDeserialize(r), null, 2),
             parseRequestBody(request.body),
             (err: grpc.ServiceError | null, value?: string) => {
+                delete RequestCancelHandles[request.id];
+
                 if (err) {
                     resolve({
                         result: "error",

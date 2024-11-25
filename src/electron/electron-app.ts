@@ -12,7 +12,7 @@ import type {
     RequestList,
 } from "../common/request-types";
 import { browseProtoRoot, cancelGrpcRequest, findProtoFiles, makeGrpcRequest } from "./Communication/grpc";
-import { makeHttpRequest } from "./Communication/http";
+import { cancelHttpRequest, makeHttpRequest } from "./Communication/http";
 import { parseProtoFile } from "./Communication/proto";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
@@ -55,8 +55,8 @@ app.whenReady().then(async () => {
 
     ipcMain.handle(IpcCall.AbortRequest, (_, requestType: "http" | "grpc", requestId: RequestId) => {
         if (requestType === "http") {
-            console.log("abort http request!");
-        } else {
+            cancelHttpRequest(requestId);
+        } else if (requestType === "grpc") {
             cancelGrpcRequest(requestId);
         }
     });

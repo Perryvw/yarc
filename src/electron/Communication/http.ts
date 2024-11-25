@@ -1,6 +1,8 @@
 import { net } from "electron";
 import { IpcEvent } from "../../common/ipc";
-import type { HttpRequestData, HttpResponseData, HttpResponseEvent } from "../../common/request-types";
+import type { HttpRequestData, HttpResponseData, HttpResponseEvent, RequestId } from "../../common/request-types";
+
+const RequestCancelHandles: Partial<Record<RequestId, () => void>> = {};
 
 export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.WebContents) {
     const start = performance.now(); // This isn't good. If we switch to libcurl then get real timings from there.
@@ -41,20 +43,18 @@ export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.We
 
         let body = request.body;
 
-        if (request.type === "http") {
-            const contentType = request.headers.find((kv) => kv.enabled && kv.key === "Content-Type");
+        const contentType = request.headers.find((kv) => kv.enabled && kv.key === "Content-Type");
 
-            if (!contentType || contentType.value === "application/x-www-form-urlencoded") {
-                const bodyFormParams = new URLSearchParams();
+        if (!contentType || contentType.value === "application/x-www-form-urlencoded") {
+            const bodyFormParams = new URLSearchParams();
 
-                for (const kv of request.bodyForm) {
-                    if (kv.enabled) {
-                        bodyFormParams.append(kv.key, kv.value);
-                    }
+            for (const kv of request.bodyForm) {
+                if (kv.enabled) {
+                    bodyFormParams.append(kv.key, kv.value);
                 }
-
-                body = bodyFormParams.toString();
             }
+
+            body = bodyFormParams.toString();
         }
 
         const req = net.request({
@@ -66,7 +66,30 @@ export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.We
             headers: headers,
         });
 
+        RequestCancelHandles[request.id] = () => {
+            req.abort();
+            delete RequestCancelHandles[request.id];
+        };
+
+        req.on("abort", () => {
+            // TODO: Better error handling
+            const data: HttpResponseData = {
+                statusCode: 0,
+                headers: {},
+                time: performance.now() - start,
+                body: "Request aborted",
+            };
+            const event: HttpResponseEvent = {
+                requestId: request.id,
+                response: data,
+            };
+
+            ipc.send(IpcEvent.HttpResponseData, event);
+        });
+
         req.on("error", (error) => {
+            delete RequestCancelHandles[request.id];
+
             // TODO: Better error handling
             const data: HttpResponseData = {
                 statusCode: 0,
@@ -88,6 +111,8 @@ export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.We
                 body += chunk;
             });
             response.on("end", () => {
+                delete RequestCancelHandles[request.id];
+
                 const data: HttpResponseData = {
                     statusCode: response.statusCode,
                     headers: response.headers,
@@ -121,5 +146,11 @@ export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.We
         };
 
         ipc.send(IpcEvent.HttpResponseData, event);
+    }
+}
+
+export function cancelHttpRequest(id: RequestId) {
+    if (RequestCancelHandles[id]) {
+        RequestCancelHandles[id]();
     }
 }
