@@ -2,14 +2,17 @@
 
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
+import * as protobufjs from "protobufjs";
 
 const SERVER_ADDRESS = "0.0.0.0:50051";
 
 const protoFile = `${__dirname}/protos/myproto.proto`;
-const packageDescriptor = proto.loadSync(protoFile);
+const protoPackage = proto.loadSync(protoFile);
 
-const descriptor = grpc.loadPackageDefinition(packageDescriptor);
-const greeterService = (descriptor.greet as grpc.GrpcObject).Greeter as grpc.ServiceClientConstructor;
+const packageDescriptor = grpc.loadPackageDefinition(protoPackage);
+const greeterService = (packageDescriptor.greet as grpc.GrpcObject).Greeter as grpc.ServiceClientConstructor;
+
+const protoContent = protobufjs.loadSync(protoFile);
 
 interface HelloRequest {
     name: string;
@@ -78,7 +81,12 @@ server.addService(greeterService.service, {
     },
     ErrorWithTrailers: (call: grpc.ServerUnaryCall<unknown, unknown>, callback: grpc.sendUnaryData<unknown>) => {
         const trailers = new grpc.Metadata();
-        trailers.set("hello-trailer", "abc");
+        trailers.set("plaintext-trailer", "abc");
+
+        const helloReplyType = protoContent.lookupType("greet.HelloReply")!;
+        const b = helloReplyType.encode({ message: "hi" }).finish();
+
+        trailers.set("binary-trailer-bin", Buffer.from(b));
 
         const err = new Error() as unknown as grpc.StatusObject;
         err.code = grpc.status.FAILED_PRECONDITION;

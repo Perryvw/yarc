@@ -64,7 +64,7 @@ export const GrpcResponsePanel = observer(({ response }: { response: GrpcRespons
 
                 <ResponseBody>{response.detail}</ResponseBody>
 
-                {metadataEntries.length > 2 && (
+                {metadataEntries.length > 0 && (
                     <ResponseMetaData>
                         <ResponseMetaDataHeader>Metadata</ResponseMetaDataHeader>
                         {metadataEntries.map(([name, value], i) => (
