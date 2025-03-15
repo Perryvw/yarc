@@ -8,6 +8,10 @@ on:
 env:
   NODE_VERSION: 20.17.0
 
+permissions:
+  actions: write
+  contents: write
+
 jobs:
   release:
     runs-on: ${{ matrix.os }}
