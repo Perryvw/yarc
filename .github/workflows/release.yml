@@ -73,11 +73,17 @@ jobs:
           path: dist/*.exe
           if-no-files-found: error
 
+      - name: Zip Windows portable
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd dist
+          7z a yarc-portable-windows.zip win-unpacked/*
+
       - uses: actions/upload-artifact@v4
         if: matrix.os == 'windows-latest'
         with:
-          name: yarc-windows-portable
-          path: dist/win-unpacked
+          name: yarc-windows-portable-zip
+          path: dist/yarc-portable-windows.zip
           if-no-files-found: error
 
   github-release:
@@ -97,7 +103,14 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: artifacts/**/*
+          files: |
+            artifacts/yarc-linux-snap/*
+            artifacts/yarc-linux-appimage/*
+            artifacts/yarc-mac-dmg/*
+            artifacts/yarc-mac-zip/*
+            artifacts/yarc-windows-installer/*
+            artifacts/yarc-windows-portable-zip/*
+          name: Release ${{ github.ref_name }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
