@@ -668,6 +668,7 @@ const RequestEntry = observer(
 const RenameInputTextual = styled.input`
     all: unset;
     min-width: 0;
+    flex-grow: 1;
     cursor: text;
 `;
 
