@@ -2,6 +2,10 @@ appId: "com.yarc.app"
 
 directories:
   output: "./dist"
+  buildResources: "./resources"
+
+win:
+  icon: "./resources/icons/icon.ico"
 
 files:
   - "!*.*"
