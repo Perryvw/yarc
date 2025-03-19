@@ -507,6 +507,8 @@ const RequestEntry = observer(
         }, [request, selectRequest]);
 
         const handleDragStart = (e: React.DragEvent) => {
+            console.log("RequestEntry drag start");
+
             e.dataTransfer.setData("yarc/drag", request.id);
             e.dataTransfer.effectAllowed = "move";
 
@@ -518,6 +520,8 @@ const RequestEntry = observer(
         };
 
         const handleDragEnd = (e: React.DragEvent) => {
+            console.log("RequestEntry drag end");
+
             runInAction(() => {
                 context.isDragging = false;
                 context.draggingOverRequestId = null;
@@ -547,16 +551,19 @@ const RequestEntry = observer(
         };
 
         const handleDrop = (e: React.DragEvent) => {
+            console.log("RequestEntry drop");
+
             const movedRequestId = e.dataTransfer.getData("yarc/drag") as RequestId;
 
             if (!movedRequestId) {
                 return;
             }
 
-            context.moveRequest(movedRequestId, request.id);
-
             // Moving the request element causes dropend event to not fire
             runInAction(() => {
+                context.isDragging = false;
+                context.moveRequest(movedRequestId, request.id);
+
                 if (context.draggingOverRequestId === request.id) {
                     context.draggingOverRequestId = null;
                 }
@@ -756,6 +763,8 @@ const RequestGroupEntry = observer(
         }
 
         const handleDragStart = (e: React.DragEvent) => {
+            console.log("RequestGroupEntry drag start");
+
             e.dataTransfer.setData("yarc/drag", request.id);
             e.dataTransfer.effectAllowed = "move";
 
@@ -767,6 +776,8 @@ const RequestGroupEntry = observer(
         };
 
         const handleDragEnd = (e: React.DragEvent) => {
+            console.log("RequestGroupEntry drag end");
+
             runInAction(() => {
                 context.isDragging = false;
                 context.draggingOverRequestId = null;
@@ -806,16 +817,19 @@ const RequestGroupEntry = observer(
         };
 
         const handleDrop = (e: React.DragEvent) => {
+            console.log("RequestGroupEntry drop");
+
             const movedRequestId = e.dataTransfer.getData("yarc/drag") as RequestId;
 
             if (!movedRequestId) {
                 return;
             }
 
-            context.moveRequest(movedRequestId, request.id);
-
             // Moving the request element causes dropend event to not fire
             runInAction(() => {
+                context.isDragging = false;
+                context.moveRequest(movedRequestId, request.id);
+
                 if (context.draggingOverRequestId === request.id) {
                     context.draggingOverRequestId = null;
                 }
