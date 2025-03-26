@@ -16,6 +16,7 @@ import { cancelHttpRequest, makeHttpRequest } from "./Communication/http";
 import { parseProtoFile } from "./Communication/proto";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
+import { backgroundColor } from "../renderer/src/palette";
 
 app.whenReady().then(async () => {
     let persistedState = await getPersistedState();
@@ -28,8 +29,10 @@ app.whenReady().then(async () => {
 
         x: persistedState?.window.position[0],
         y: persistedState?.window.position[1],
-        width: persistedState?.window.size[0] ?? 1000,
-        height: persistedState?.window.size[1],
+        width: persistedState?.window.size[0] ?? 1280,
+        height: persistedState?.window.size[1] ?? 720,
+        backgroundColor: backgroundColor,
+        darkTheme: true,
     });
     if (persistedState?.window.maximized) {
         window.maximize();
