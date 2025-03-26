@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { BrowserWindow, app, ipcMain } from "electron";
+import { BrowserWindow, app, ipcMain, nativeTheme } from "electron";
 import type { ProtoContent, ProtoRoot } from "../common/grpc";
 import { type BrowseProtoResult, IpcCall, IpcEvent } from "../common/ipc";
 import type { PersistedState } from "../common/persist-state";
@@ -18,6 +18,8 @@ import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
 import { backgroundColor } from "../renderer/src/palette";
 
+nativeTheme.themeSource = "dark";
+
 app.whenReady().then(async () => {
     let persistedState = await getPersistedState();
     const window = new BrowserWindow({
@@ -33,10 +35,15 @@ app.whenReady().then(async () => {
         height: persistedState?.window.size[1] ?? 720,
         backgroundColor: backgroundColor,
         darkTheme: true,
+        show: false,
     });
     if (persistedState?.window.maximized) {
         window.maximize();
     }
+
+    window.once("ready-to-show", () => {
+        window.show();
+    });
 
     // Do not let dragged links onto the app to open new window
     window.webContents.setWindowOpenHandler(() => {
