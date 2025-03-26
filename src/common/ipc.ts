@@ -2,6 +2,7 @@ import type { ProtoRoot } from "./grpc";
 import type { RequestList } from "./request-types";
 
 export enum IpcCall {
+    SetTitle = "set-title",
     PersistState = "persist-state",
     LoadPersistedState = "load-persisted-state",
     ImportDirectory = "import-directory",

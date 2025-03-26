@@ -136,11 +136,15 @@ export class AppContext {
         // Dispose previous observer
         this.activeRequestObserverDispose();
 
-        if (this.activeRequest) {
+        if (request) {
             // Set new observer
-            this.activeRequestObserverDispose = observe(this.activeRequest, () => {
+            this.activeRequestObserverDispose = observe(request, () => {
                 this.debouncedPersist();
             });
+
+            window.electron.ipcRenderer.invoke(IpcCall.SetTitle, `YARC | ${request.name}`);
+        } else {
+            window.electron.ipcRenderer.invoke(IpcCall.SetTitle, "YARC");
         }
     }
 

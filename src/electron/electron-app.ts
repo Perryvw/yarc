@@ -43,6 +43,10 @@ app.whenReady().then(async () => {
         return { action: "deny" };
     });
 
+    ipcMain.handle(IpcCall.SetTitle, (_, title: string) => {
+        window.setTitle(title);
+    });
+
     ipcMain.handle(IpcCall.HttpRequest, (_, request: HttpRequestData) => {
         return makeHttpRequest(request, window.webContents);
     });
