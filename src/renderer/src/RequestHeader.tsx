@@ -234,10 +234,26 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             return url;
         }
 
-        const p = new URLSearchParams(activeRequest.params.filter((p) => p.enabled).map((kv) => [kv.key, kv.value]));
+        const params = new URLSearchParams(
+            activeRequest.params
+                .filter((p) => p.enabled)
+                .map((kv) => {
+                    var value = kv.value;
 
-        if (p.size > 0) {
-            url += `?${p}`;
+                    if (kv.isJson) {
+                        try {
+                            value = JSON.stringify(JSON.parse(value));
+                        } catch {
+                            //failed
+                        }
+                    }
+
+                    return [kv.key, value];
+                }),
+        );
+
+        if (params.size > 0) {
+            url += `?${params}`;
         }
 
         return url;

@@ -9,7 +9,23 @@ export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.We
 
     try {
         const url = new URL(request.url);
-        const params = new URLSearchParams(request.params.filter((p) => p.enabled).map((kv) => [kv.key, kv.value]));
+        const params = new URLSearchParams(
+            request.params
+                .filter((p) => p.enabled)
+                .map((kv) => {
+                    var value = kv.value;
+
+                    if (kv.isJson) {
+                        try {
+                            value = JSON.stringify(JSON.parse(value));
+                        } catch {
+                            // failed
+                        }
+                    }
+
+                    return [kv.key, value];
+                }),
+        );
 
         let path = url.pathname;
 

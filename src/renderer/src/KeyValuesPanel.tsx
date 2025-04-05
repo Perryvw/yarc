@@ -1,9 +1,11 @@
 import { Plus, Trash, Trash2 } from "lucide-react";
 import { runInAction } from "mobx";
+import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { observer } from "mobx-react-lite";
 import styled from "styled-components";
 import { commonHeaders } from "../../common/common-headers";
 import type { KeyValue } from "../../common/key-values";
+import { json } from "@codemirror/lang-json";
 
 const QueryParameters = styled.table`
     width: 100%;
@@ -23,6 +25,10 @@ const QueryParameters = styled.table`
 
     & .kv-header td {
         border-left-color: transparent;
+    }
+
+    & .text-left {
+        text-align: left;
     }
 `;
 
@@ -90,6 +96,22 @@ export const KeyValuesPanel = observer(
             });
         }
 
+        function onToggleJson(index: number, enabled: boolean) {
+            runInAction(() => {
+                params[index].isJson = enabled;
+
+                try {
+                    const obj = JSON.parse(params[index].value);
+
+                    if (obj) {
+                        params[index].value = JSON.stringify(obj, null, enabled ? "\t" : 0);
+                    }
+                } catch {
+                    // failed
+                }
+            });
+        }
+
         function onUpdateKey(index: number, key: string) {
             // If we're updating the virtual empty row, create a new parameter
             if (index === params.length) {
@@ -142,7 +164,7 @@ export const KeyValuesPanel = observer(
                             />
                         )}
                     </td>
-                    <td>
+                    <td className="text-left">
                         <QueryParameterKey
                             type="text"
                             placeholder="Key"
@@ -151,11 +173,32 @@ export const KeyValuesPanel = observer(
                             onChange={(ev) => onUpdateKey(index, ev.target.value)}
                         />
                     </td>
+                    <td className="text-left">
+                        {kv.isJson ? (
+                            <CodeMirror
+                                theme="dark"
+                                basicSetup={{ foldGutter: true }}
+                                extensions={[json()]}
+                                style={{
+                                    flexBasis: "100%",
+                                    overflow: "hidden",
+                                }}
+                                value={kv.value}
+                                onChange={(value) => onUpdateValue(index, value)}
+                            />
+                        ) : (
+                            <QueryParameterValue
+                                placeholder="Value"
+                                value={kv.value}
+                                onChange={(ev) => onUpdateValue(index, ev.target.value)}
+                            />
+                        )}
+                    </td>
                     <td>
-                        <QueryParameterValue
-                            placeholder="Value"
-                            value={kv.value}
-                            onChange={(ev) => onUpdateValue(index, ev.target.value)}
+                        <QueryParameterCheckbox
+                            type="checkbox"
+                            checked={kv.isJson}
+                            onChange={(ev) => onToggleJson(index, ev.target.checked)}
                         />
                     </td>
                     <td>
@@ -195,6 +238,7 @@ export const KeyValuesPanel = observer(
                             </td>
                             <td style={{ width: "50%" }} />
                             <td style={{ width: "50%" }} />
+                            <td style={{ width: "32px", fontSize: "6px" }}>JSON</td>
                             <td style={{ width: "32px" }}>
                                 <QueryParameterDelete type="button" onClick={clearParams}>
                                     <Trash2 size={16} />

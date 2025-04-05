@@ -2,6 +2,7 @@ import CodeMirror, { EditorView } from "@uiw/react-codemirror";
 import { ChevronUp } from "lucide-react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
+import { json } from "@codemirror/lang-json";
 import { useEffect } from "react";
 import styled from "styled-components";
 import type { HttpRequestData } from "../../common/request-types";
@@ -150,7 +151,7 @@ export const RequestPanel = observer(({ activeRequest }: { activeRequest: HttpRe
                             flexBasis: "100%",
                             overflow: "hidden",
                         }}
-                        extensions={[codemirrorTheme]}
+                        extensions={[codemirrorTheme, json()]}
                         value={activeRequest.body}
                         onChange={onRequestBodyChanged}
                     />
