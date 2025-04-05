@@ -92,15 +92,6 @@ const ResponseHeaderValue = styled.textarea`
     }
 `;
 
-const ResponseTextarea = styled.textarea`
-    font-family: var(--font-monospace);
-    padding: 10px;
-    border: 0;
-    background: inherit;
-    resize: none;
-    flex-grow: 1;
-`;
-
 const codemirrorTheme = EditorView.theme({
     "&": {
         fontFamily: "var(--font-monospace)",
@@ -110,6 +101,45 @@ const codemirrorTheme = EditorView.theme({
     },
     "&.cm-editor": {
         height: "100%",
+    },
+    ".cm-panel.cm-search": {
+        display: "flex",
+        gap: "10px",
+        alignItems: "center",
+        padding: "5px",
+        fontSize: "14px",
+    },
+    ".cm-panel.cm-search input": {
+        margin: "0",
+        flexGrow: "1",
+        padding: "5px 10px",
+        fontSize: "inherit",
+    },
+    ".cm-panel.cm-search label": {
+        display: "flex",
+        alignItems: "center",
+        gap: "5px",
+        margin: "0",
+        fontSize: "inherit",
+    },
+    ".cm-panel.cm-search input[type=checkbox]": {
+        padding: "0",
+        margin: "0",
+        height: "16px",
+        width: "16px",
+    },
+    ".cm-panel.cm-search button": {
+        margin: "0",
+        padding: "5px 10px",
+        fontSize: "inherit",
+    },
+    ".cm-panel.cm-search [name=close]": {
+        position: "unset",
+        fontSize: "20px",
+        margin: "0",
+        lineHeight: "1",
+        width: "20px",
+        height: "20px",
     },
 });
 
