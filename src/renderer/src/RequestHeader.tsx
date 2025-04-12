@@ -4,11 +4,11 @@ import { observer } from "mobx-react-lite";
 import { type ChangeEvent, useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { IpcCall } from "../../common/ipc";
+import type { KeyValue } from "../../common/key-values";
 import type { GrpcRequestData, GrpcResponse, HttpRequestData } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
 import { httpVerbColorPalette } from "./palette";
 import { substituteVariables } from "./util/substitute-variables";
-import type { KeyValue } from "../../common/key-values";
 
 const RequestHeaderContainer = styled.div`
     padding: 15px;
@@ -238,7 +238,7 @@ const RequestHeader = observer(({ context }: { context: AppContext }) => {
             activeRequest.params
                 .filter((p) => p.enabled)
                 .map((kv) => {
-                    var value = kv.value;
+                    let value = kv.value;
 
                     if (kv.isJson) {
                         try {

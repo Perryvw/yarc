@@ -11,12 +11,12 @@ import type {
     RequestId,
     RequestList,
 } from "../common/request-types";
+import { backgroundColor } from "../renderer/src/palette";
 import { browseProtoRoot, cancelGrpcRequest, findProtoFiles, makeGrpcRequest } from "./Communication/grpc";
 import { cancelHttpRequest, makeHttpRequest } from "./Communication/http";
 import { parseProtoFile } from "./Communication/proto";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
 import { getPersistedState, persistCurrentState } from "./Storage/persist";
-import { backgroundColor } from "../renderer/src/palette";
 
 nativeTheme.themeSource = "dark";
 

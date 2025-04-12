@@ -13,7 +13,7 @@ export async function makeHttpRequest(request: HttpRequestData, ipc: Electron.We
             request.params
                 .filter((p) => p.enabled)
                 .map((kv) => {
-                    var value = kv.value;
+                    let value = kv.value;
 
                     if (kv.isJson) {
                         try {

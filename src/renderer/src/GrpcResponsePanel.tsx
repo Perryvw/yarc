@@ -1,11 +1,11 @@
-import { json5 } from "codemirror-json5";
 import CodeMirror, { EditorView } from "@uiw/react-codemirror";
+import { json5 } from "codemirror-json5";
 import { CircleSlash2, Ghost } from "lucide-react";
 import { observer } from "mobx-react-lite";
 import { useEffect, useRef } from "react";
+import styled from "styled-components";
 import type { GrpcError, GrpcResponse, GrpcResponseData, GrpcServerStreamData } from "../../common/request-types";
 import { ResponseBody, ResponsePanelEmpty, ResponsePanelRoot, Status, StatusCode } from "./ResponsePanel";
-import styled from "styled-components";
 import { backgroundColor, borderColor, lightTextColor } from "./palette";
 
 const codemirrorTheme = EditorView.theme({

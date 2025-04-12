@@ -25,10 +25,10 @@ import { type ChangeEvent, Fragment, useCallback, useEffect, useRef, useState } 
 import styled from "styled-components";
 import {
     GrpcRequestKind,
-    type RequestId,
     type RequestData,
     type RequestDataOrGroup,
     type RequestGroup,
+    type RequestId,
     type RequestList,
 } from "../../common/request-types";
 import type { AppContext } from "./AppContext";
