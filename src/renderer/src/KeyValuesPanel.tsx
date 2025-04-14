@@ -236,8 +236,8 @@ export const KeyValuesPanel = observer(
                                     <Plus size={16} />
                                 </QueryParameterDelete>
                             </td>
-                            <td style={{ width: "50%" }} />
-                            <td style={{ width: "50%" }} />
+                            <td style={{ width: "200px" }} />
+                            <td />
                             <td style={{ width: "32px", fontSize: "6px" }}>JSON</td>
                             <td style={{ width: "32px" }}>
                                 <QueryParameterDelete type="button" onClick={clearParams}>
