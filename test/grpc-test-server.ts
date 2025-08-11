@@ -36,6 +36,11 @@ interface StringListReply {
     values: string[];
 }
 
+interface MessageWithBools {
+    mybool: boolean;
+    myoptionalbool?: boolean;
+}
+
 const server = new grpc.Server();
 server.addService(greeterService.service, {
     SayHello: (call: grpc.ServerUnaryCall<HelloRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
@@ -92,6 +97,13 @@ server.addService(greeterService.service, {
         err.code = grpc.status.FAILED_PRECONDITION;
         err.metadata = trailers;
         callback(err);
+    },
+    Bools: (
+        call: grpc.ServerUnaryCall<HelloRequest, MessageWithBools>,
+        callback: grpc.sendUnaryData<MessageWithBools>,
+    ) => {
+        console.log("handling unary request");
+        callback(null, { mybool: false });
     },
 });
 

@@ -24,6 +24,9 @@ service Greeter {
   rpc ServerStream (HelloRequest) returns (stream HelloReply);
   rpc RequestStream (stream HelloRequest) returns (HelloReply);
   rpc Bidi (stream HelloRequest) returns (stream HelloReply);
+
+  // Test default bool values:
+  rpc Bools(HelloRequest) returns (MessageWithBools);
 }
 
 // The request message containing the user's name.
@@ -64,4 +67,9 @@ message MessageWithEnums {
   }
   GlobalEnum globalEnum = 0;
   optional NestedEnum nestedEnum = 1;
+}
+
+message MessageWithBools {
+  bool mybool = 0;
+  optional bool myoptionalbool = 1;
 }
