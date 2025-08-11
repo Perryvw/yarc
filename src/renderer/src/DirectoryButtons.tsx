@@ -142,8 +142,8 @@ export const DirectoryButtons = observer(
             const newRequest: GrpcRequestData = {
                 type: "grpc",
                 id: uuidv7() as RequestId,
-                name: "New request",
-                url: "new",
+                name: "New gRPC request",
+                url: "0.0.0.0:50051",
                 body: "{\n\t\n}",
                 lastExecute: Date.now(),
                 isExecuting: false,
