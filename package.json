@@ -30,7 +30,7 @@
         "@electron-toolkit/preload": "^3.0.1",
         "@fontsource-variable/inter": "^5.1.0",
         "@fontsource-variable/jetbrains-mono": "^5.1.1",
-        "@grpc/grpc-js": "^1.12.2",
+        "@grpc/grpc-js": "^1.13.4",
         "@styled/typescript-styled-plugin": "^1.0.1",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
