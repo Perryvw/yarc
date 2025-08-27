@@ -84,6 +84,7 @@ function fixPersistedData(
                 enabled: kv.enabled ?? true,
                 key: kv.key ?? "",
                 value: kv.value ?? "",
+                isJson: kv.isJson ?? false,
             };
         }
         return {
@@ -146,6 +147,7 @@ function fixPersistedData(
             enabled: vi.enabled ?? true,
             key: vi.key ?? "restored-variable",
             value: vi.value ?? "",
+            isJson: vi.isJson ?? false,
         };
     }
 
