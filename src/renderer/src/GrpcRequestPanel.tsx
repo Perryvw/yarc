@@ -8,11 +8,11 @@ import styled from "styled-components";
 import type { MethodInfo, ProtoContent } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
 import { type GrpcRequestData, GrpcRequestKind } from "../../common/request-types";
-import type { ProtoConfig } from "./AppContext";
+import type { AppContext, ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
 import { backgroundHoverColor, errorColor } from "./palette";
-import { debounce } from "./util/debounce";
 import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
+import { substituteVariables } from "./util/substitute-variables";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -74,6 +74,24 @@ const ProtoErrorBox = styled.div`
     padding: 5px 10px;
 `;
 
+const ReflectionToggle = styled.label`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+`;
+
+const ReflectionButton = styled.button`
+    padding: 2px 10px 5px 10px;
+    cursor: pointer;
+    border: none;
+    background-color: var(--color-background);
+
+    &:hover {
+        background-color: ${backgroundHoverColor};
+    }
+`;
+
 interface MethodDescriptor {
     service: string;
     method: MethodInfo;
@@ -89,8 +107,13 @@ const codemirrorTheme = EditorView.theme({
 });
 
 export const GrpcRequestPanel = observer(
-    ({ activeRequest, protoConfig }: { activeRequest: GrpcRequestData; protoConfig: ProtoConfig }) => {
+    ({
+        context,
+        activeRequest,
+        protoConfig,
+    }: { context: AppContext; activeRequest: GrpcRequestData; protoConfig: ProtoConfig }) => {
         const [protoModalOpen, setProtoModalOpen] = useState(false);
+        const [useReflection, setUseReflection] = useState(false);
 
         const openProtoModal = useCallback(() => setProtoModalOpen(true), []);
         const closeProtoModal = useCallback(
@@ -183,15 +206,42 @@ export const GrpcRequestPanel = observer(
             return lintProtoJson(content, activeRpc.method.requestType);
         });
 
+        const fetchReflectionMethods = useCallback(async () => {
+            try {
+                const url = substituteVariables(activeRequest.url, context.substitutionVariables);
+                const result = await window.electron.ipcRenderer.invoke(IpcCall.GrpcReflection, url);
+                if (result.success) {
+                    setRpcs(result.value);
+                    setError(undefined);
+                } else {
+                    setError(`Error fetching reflection methods: ${result.error}`);
+                }
+            } catch (err) {
+                setError(`Failed to fetch reflection methods: ${err}`);
+            }
+        }, [activeRequest.url, context.substitutionVariables]);
+
         return (
             <RequestPanelRoot>
                 <SelectProtosModal open={protoModalOpen} close={closeProtoModal} protoConfig={protoConfig} />
                 <GrpcMethodPopover rpcs={rpcs ?? []} onSelectMethod={selectMethod} />
-                <ProtoFileBox onClick={openProtoModal}>
-                    {activeRequest.protoFile
-                        ? shortProtoPath(activeRequest.protoFile.protoPath)
-                        : "Select proto file..."}
-                </ProtoFileBox>
+                <ReflectionToggle>
+                    <input
+                        type="checkbox"
+                        checked={useReflection}
+                        onChange={(e) => setUseReflection(e.target.checked)}
+                    />
+                    Use reflection
+                </ReflectionToggle>
+                {useReflection ? (
+                    <ReflectionButton onClick={fetchReflectionMethods}>fetch methods via reflection</ReflectionButton>
+                ) : (
+                    <ProtoFileBox onClick={openProtoModal}>
+                        {activeRequest.protoFile
+                            ? shortProtoPath(activeRequest.protoFile.protoPath)
+                            : "Select proto file..."}
+                    </ProtoFileBox>
+                )}
                 <ProtoMethodBox popovertarget="grpc-method-popover" disabled={activeRequest.protoFile === undefined}>
                     {activeRequest.rpc ? activeRequest.rpc.method : "Select method..."}
                 </ProtoMethodBox>

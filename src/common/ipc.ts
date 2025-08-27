@@ -13,6 +13,7 @@ export enum IpcCall {
 
     HttpRequest = "http-request",
     GrpcRequest = "grpc-request",
+    GrpcReflection = "get-methods-grpc-reflection",
 
     AbortRequest = "abort-request",
 }

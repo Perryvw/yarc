@@ -1,6 +1,7 @@
 // If you want you can run this test server with `npx tsx test/grpc-test-server.ts`
 
 import * as grpc from "@grpc/grpc-js";
+import * as grpc_reflection from "@grpc/reflection";
 import * as proto from "@grpc/proto-loader";
 import * as protobufjs from "protobufjs";
 
@@ -106,6 +107,9 @@ server.addService(greeterService.service, {
         callback(null, { mybool: false });
     },
 });
+
+const reflection = new grpc_reflection.ReflectionService(protoPackage);
+reflection.addToServer(server);
 
 // Start server, will block process
 server.bindAsync(SERVER_ADDRESS, grpc.ServerCredentials.createInsecure(), () => {

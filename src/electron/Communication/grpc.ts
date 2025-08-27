@@ -2,11 +2,19 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
+import * as protobufjs from "protobufjs";
+import type * as protobuf_descriptor from "protobufjs/ext/descriptor";
 import { dialog } from "electron";
 import JSON5 from "json5";
-import type { GrpcServerStreamDataEvent, GrpcServerStreamErrorEvent, GrpcStreamClosedEvent } from "../../common/grpc";
+import type {
+    GrpcServerStreamDataEvent,
+    GrpcServerStreamErrorEvent,
+    GrpcStreamClosedEvent,
+    ProtoService,
+} from "../../common/grpc";
 import { type BrowseProtoResult, IpcEvent } from "../../common/ipc";
 import type { GrpcRequestData, GrpcResponse, GrpcServerStreamData, RequestId } from "../../common/request-types";
+import { GrpcReflectionHandler } from "./grpc-reflection";
 
 const RequestCancelHandles: Partial<Record<RequestId, () => void>> = {};
 
@@ -37,6 +45,14 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
     }
 
     return { result: "error", code: "INVALID", detail: "Invalid request", time: 0 };
+}
+
+export async function getMethodsViaReflection(serverUrl: string): Promise<Result<ProtoService[], string>> {
+    const GenericClient = grpc.makeGenericClientConstructor({}, "");
+    const client = new GenericClient(serverUrl, grpc.credentials.createInsecure());
+
+    // This protocol is so complicated it was moved to its own file
+    return GrpcReflectionHandler.fetchServicesFromServer(client);
 }
 
 function grpcUnaryRequest(
@@ -176,7 +192,7 @@ export async function findProtoFiles(protoRoot: string): Promise<string[]> {
 }
 
 function parseProtoPackageDescription(protoPath: string, protoRootDir: string): Promise<proto.PackageDefinition> {
-    return proto.load(path.join(protoRootDir, protoPath), { includeDirs: [protoRootDir] });
+    return proto.load(protoPath, { includeDirs: [protoRootDir] });
 }
 
 function isServiceDefinition(desc: proto.AnyDefinition): desc is proto.ServiceDefinition {
