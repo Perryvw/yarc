@@ -5,7 +5,7 @@ import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import type { MethodInfo, ProtoContent } from "../../common/grpc";
+import type { MethodInfo, ProtoContent, ProtoService } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
 import { type GrpcRequestData, GrpcRequestKind } from "../../common/request-types";
 import type { AppContext, ProtoConfig } from "./AppContext";
@@ -209,14 +209,28 @@ export const GrpcRequestPanel = observer(
         const fetchReflectionMethods = useCallback(async () => {
             try {
                 const url = substituteVariables(activeRequest.url, context.substitutionVariables);
-                const result = await window.electron.ipcRenderer.invoke(IpcCall.GrpcReflection, url);
+                const result: Result<ProtoService[], string> = await window.electron.ipcRenderer.invoke(
+                    IpcCall.GrpcReflection,
+                    url,
+                );
                 if (result.success) {
-                    setRpcs(result.value);
+                    const reflectionMethods: MethodDescriptor[] = [];
+                    for (const service of result.value) {
+                        for (const method of service.methods) {
+                            reflectionMethods.push({
+                                service: service.name,
+                                method,
+                            });
+                        }
+                    }
+                    setRpcs(reflectionMethods);
                     setError(undefined);
                 } else {
+                    setRpcs([]);
                     setError(`Error fetching reflection methods: ${result.error}`);
                 }
             } catch (err) {
+                setRpcs([]);
                 setError(`Failed to fetch reflection methods: ${err}`);
             }
         }, [activeRequest.url, context.substitutionVariables]);
@@ -242,7 +256,10 @@ export const GrpcRequestPanel = observer(
                             : "Select proto file..."}
                     </ProtoFileBox>
                 )}
-                <ProtoMethodBox popovertarget="grpc-method-popover" disabled={activeRequest.protoFile === undefined}>
+                <ProtoMethodBox
+                    popovertarget="grpc-method-popover"
+                    disabled={!useReflection && activeRequest.protoFile === undefined}
+                >
                     {activeRequest.rpc ? activeRequest.rpc.method : "Select method..."}
                 </ProtoMethodBox>
                 {protoError && <ProtoErrorBox>{protoError}</ProtoErrorBox>}

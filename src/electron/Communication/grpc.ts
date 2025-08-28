@@ -2,8 +2,6 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
-import * as protobufjs from "protobufjs";
-import type * as protobuf_descriptor from "protobufjs/ext/descriptor";
 import { dialog } from "electron";
 import JSON5 from "json5";
 import type {
