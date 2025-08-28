@@ -120,6 +120,7 @@ export class GrpcReflectionHandler {
         // Then read all the services and see which types we need to request as follow-up
         if (fileDesc?.service) {
             for (const svc of fileDesc.service) {
+                svc.name = `${fileDesc.package}.${svc.name}`;
                 this.services.push(svc);
                 for (const method of svc.method ?? []) {
                     if (method.inputType && !this.knownTypes.has(method.inputType)) {
@@ -170,7 +171,11 @@ export class GrpcReflectionHandler {
 
         const fields: ProtoMessageDescriptor["fields"] = {};
         for (const field of type.field ?? []) {
-            fields[field.name!] = this.mapMessageField(field);
+            fields[field.name!] = {
+                id: field.number!,
+                name: field.name!,
+                type: this.mapMessageField(field),
+            };
         }
 
         return {

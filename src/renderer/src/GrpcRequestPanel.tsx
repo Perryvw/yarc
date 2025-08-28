@@ -113,7 +113,6 @@ export const GrpcRequestPanel = observer(
         protoConfig,
     }: { context: AppContext; activeRequest: GrpcRequestData; protoConfig: ProtoConfig }) => {
         const [protoModalOpen, setProtoModalOpen] = useState(false);
-        const [useReflection, setUseReflection] = useState(false);
 
         const openProtoModal = useCallback(() => setProtoModalOpen(true), []);
         const closeProtoModal = useCallback(
@@ -169,12 +168,13 @@ export const GrpcRequestPanel = observer(
             (method: MethodDescriptor) => {
                 activeRequest.rpc = {
                     service: method.service,
-                    method: method.method.name,
+                    method: method.method,
                 };
                 if (rpcs) {
                     const rpc = rpcs.find(
                         (rpc) =>
-                            rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
+                            rpc.service === activeRequest.rpc?.service &&
+                            rpc.method.name === activeRequest.rpc.method.name,
                     );
                     if (rpc?.method) {
                         if (!rpc.method.requestStream && !rpc.method.serverStream) {
@@ -196,7 +196,7 @@ export const GrpcRequestPanel = observer(
         );
 
         const activeRpc = rpcs?.find(
-            (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
+            (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method.name,
         );
 
         const linter = CodeMirrorLint.linter((view) => {
@@ -242,12 +242,14 @@ export const GrpcRequestPanel = observer(
                 <ReflectionToggle>
                     <input
                         type="checkbox"
-                        checked={useReflection}
-                        onChange={(e) => setUseReflection(e.target.checked)}
+                        checked={activeRequest.useReflection}
+                        onChange={(e) => {
+                            activeRequest.useReflection = e.target.checked;
+                        }}
                     />
                     Use reflection
                 </ReflectionToggle>
-                {useReflection ? (
+                {activeRequest.useReflection ? (
                     <ReflectionButton onClick={fetchReflectionMethods}>fetch methods via reflection</ReflectionButton>
                 ) : (
                     <ProtoFileBox onClick={openProtoModal}>
@@ -258,9 +260,9 @@ export const GrpcRequestPanel = observer(
                 )}
                 <ProtoMethodBox
                     popovertarget="grpc-method-popover"
-                    disabled={!useReflection && activeRequest.protoFile === undefined}
+                    disabled={!activeRequest.useReflection && activeRequest.protoFile === undefined}
                 >
-                    {activeRequest.rpc ? activeRequest.rpc.method : "Select method..."}
+                    {activeRequest.rpc ? activeRequest.rpc.method.name : "Select method..."}
                 </ProtoMethodBox>
                 {protoError && <ProtoErrorBox>{protoError}</ProtoErrorBox>}
                 {activeRequest.rpc !== undefined && (

@@ -53,11 +53,11 @@ function lintMessage(
     const knownFields = new Map(protoFields);
     const requiredFields = new Set(
         protoFields
-            .filter(([name, field]) => field?.type !== "optional" && field?.type !== "oneof")
+            .filter(([name, field]) => field?.type.type !== "optional" && field?.type.type !== "oneof")
             .map(([name, field]) => name),
     );
     const seenFields = new Map<string, fleeceAPI.Node>();
-    const oneofs = protoFields.filter(([name, field]) => field?.type === "oneof") as Array<[string, ProtoOneOf]>;
+    const oneofs = protoFields.filter(([name, field]) => field?.type.type === "oneof") as Array<[string, ProtoOneOf]>;
     for (const [_, oneof] of oneofs) {
         for (const [name, type] of Object.entries(oneof.fields)) {
             knownFields.set(name, type);
@@ -76,7 +76,7 @@ function lintMessage(
         }
 
         if (protoFieldType) {
-            lint(property.value, protoFieldType, text, diagnostics);
+            lint(property.value, protoFieldType.type, text, diagnostics);
         }
 
         seenFields.set(property.key.name, property.key);
@@ -226,15 +226,15 @@ export function defaultProtoBody(protoDescriptor: ProtoObject, indent = ""): { v
         let result = "{\n";
         for (const [name, field] of Object.entries(protoDescriptor.fields)) {
             if (field) {
-                if (field.type === "oneof") {
-                    const options = Object.entries(field.fields);
+                if (field.type.type === "oneof") {
+                    const options = Object.entries(field.type.fields);
                     if (options.length === 0) continue;
 
-                    const { value, comments } = defaultProtoBody(field, indent + INDENT_STEP);
+                    const { value, comments } = defaultProtoBody(field.type, indent + INDENT_STEP);
                     const comment = comments && comments.length > 0 ? ` // ${comments.join(", ")}` : "";
                     result += `${indent}${INDENT_STEP}${options[0][0]}: ${value},${comment}\n`;
                 } else {
-                    const { value, comments } = defaultProtoBody(field, indent + INDENT_STEP);
+                    const { value, comments } = defaultProtoBody(field.type, indent + INDENT_STEP);
                     const comment = comments && comments.length > 0 ? ` // ${comments.join(", ")}` : "";
                     result += `${indent}${INDENT_STEP}${name}: ${value},${comment}\n`;
                 }

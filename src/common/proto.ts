@@ -3,7 +3,7 @@ type ProtoObject = ProtoMessageDescriptor | ProtoRepeated | ProtoOneOf | ProtoLi
 interface ProtoMessageDescriptor {
     type: "message";
     name: string;
-    fields: Record<string, ProtoObject | undefined>;
+    fields: Record<string, ProtoField | undefined>;
 }
 
 interface ProtoRepeated {
@@ -30,4 +30,10 @@ interface ProtoEnum {
     type: "enum";
     name: string;
     values: Array<{ value: number; name: string }>;
+}
+
+interface ProtoField {
+    id: number;
+    name: string;
+    type: ProtoObject;
 }
