@@ -50,16 +50,23 @@ function lintMessage(
     diagnostics: CodeMirrorLint.Diagnostic[],
 ): void {
     const protoFields = Object.entries(protoDescriptor.fields);
-    const knownFields = new Map(protoFields);
+    const knownFields = new Map<string, ProtoObject | undefined>();
+    for (const [name, field] of protoFields) {
+        knownFields.set(name, field?.type);
+    }
     const requiredFields = new Set(
         protoFields
             .filter(([name, field]) => field?.type.type !== "optional" && field?.type.type !== "oneof")
             .map(([name, field]) => name),
     );
+    const isOneOf = (protoObj: ProtoObject): protoObj is ProtoOneOf => protoObj.type === "oneof";
+    const oneofs = protoFields.filter((f) => f[1] && isOneOf(f[1].type)) as unknown as Array<[string, ProtoOneOf]>;
     const seenFields = new Map<string, fleeceAPI.Node>();
-    const oneofs = protoFields.filter(([name, field]) => field?.type.type === "oneof") as Array<[string, ProtoOneOf]>;
-    for (const [_, oneof] of oneofs) {
-        for (const [name, type] of Object.entries(oneof.fields)) {
+    for (const [_, field] of protoFields) {
+        if (field === undefined) continue;
+        if (field.type.type !== "oneof") continue;
+
+        for (const [name, type] of Object.entries(field.type.fields)) {
             knownFields.set(name, type);
         }
     }
@@ -76,7 +83,7 @@ function lintMessage(
         }
 
         if (protoFieldType) {
-            lint(property.value, protoFieldType.type, text, diagnostics);
+            lint(property.value, protoFieldType, text, diagnostics);
         }
 
         seenFields.set(property.key.name, property.key);

@@ -168,13 +168,12 @@ export const GrpcRequestPanel = observer(
             (method: MethodDescriptor) => {
                 activeRequest.rpc = {
                     service: method.service,
-                    method: method.method,
+                    method: method.method.name,
                 };
                 if (rpcs) {
                     const rpc = rpcs.find(
                         (rpc) =>
-                            rpc.service === activeRequest.rpc?.service &&
-                            rpc.method.name === activeRequest.rpc.method.name,
+                            rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
                     );
                     if (rpc?.method) {
                         if (!rpc.method.requestStream && !rpc.method.serverStream) {
@@ -196,7 +195,7 @@ export const GrpcRequestPanel = observer(
         );
 
         const activeRpc = rpcs?.find(
-            (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method.name,
+            (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
         );
 
         const linter = CodeMirrorLint.linter((view) => {
@@ -262,7 +261,7 @@ export const GrpcRequestPanel = observer(
                     popovertarget="grpc-method-popover"
                     disabled={!activeRequest.useReflection && activeRequest.protoFile === undefined}
                 >
-                    {activeRequest.rpc ? activeRequest.rpc.method.name : "Select method..."}
+                    {activeRequest.rpc ? activeRequest.rpc.method : "Select method..."}
                 </ProtoMethodBox>
                 {protoError && <ProtoErrorBox>{protoError}</ProtoErrorBox>}
                 {activeRequest.rpc !== undefined && (

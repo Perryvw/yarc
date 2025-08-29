@@ -1,4 +1,3 @@
-import type { MethodInfo } from "./grpc";
 import type { KeyValue } from "./key-values";
 
 export type HttpMethodVerb = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
@@ -41,7 +40,7 @@ export interface GrpcRequestData {
 
     kind?: GrpcRequestKind;
     protoFile?: { protoPath: string; rootDir: string };
-    rpc?: { service: string; method: MethodInfo };
+    rpc?: { service: string; method: string };
 
     body: string;
 

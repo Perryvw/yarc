@@ -479,7 +479,7 @@ const RequestEntry = observer(
             if (request.type === "grpc" && request.rpc) {
                 return (
                     <>
-                        <InlineUrl>{urlParts}</InlineUrl> {request.rpc.service} / {request.rpc.method.name}
+                        <InlineUrl>{urlParts}</InlineUrl> {request.rpc.service} / {request.rpc.method}
                     </>
                 );
             }

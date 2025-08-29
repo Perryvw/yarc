@@ -2,7 +2,6 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { type BaseWindow, app } from "electron";
 import { v7 as uuidv7 } from "uuid";
-import type { MethodInfo } from "../../common/grpc";
 import type { KeyValue } from "../../common/key-values";
 import type { PersistedState, PersistedStateWithWindow } from "../../common/persist-state";
 import type {
@@ -104,7 +103,6 @@ function fixPersistedData(
     }
 
     function fixGrpcRequest(ri: DeepPartial<GrpcRequestData>): GrpcRequestData {
-        const fixedMethod = ri.rpc?.method ? fixGrpcMethod(ri.rpc.method, ri.protoFile !== undefined) : undefined;
         return {
             type: "grpc",
             id: (ri.id ?? uuidv7()) as RequestId,
@@ -119,13 +117,7 @@ function fixPersistedData(
                       rootDir: ri.protoFile?.rootDir ?? "",
                   }
                 : undefined,
-            rpc:
-                ri.rpc && fixedMethod
-                    ? {
-                          service: ri.rpc?.service ?? "",
-                          method: fixedMethod,
-                      }
-                    : undefined,
+            rpc: ri.rpc ? fixGrpcRpc(ri.rpc) : undefined,
 
             body: ri.body ?? "{}",
 
@@ -135,27 +127,15 @@ function fixPersistedData(
         };
     }
 
-    function fixGrpcMethod(rpc: DeepPartial<MethodInfo>, hasProtoFile: boolean): MethodInfo | undefined {
-        if (typeof rpc === "string" && hasProtoFile) {
-            // If we only have a name, but we have the proto file it's in, we can deal with just the name
-            return {
-                name: rpc,
-                requestStream: false, // assume unary
-                serverStream: false, // assume unary
-            };
-        }
+    function fixGrpcRpc(m: DeepPartial<GrpcRequestData["rpc"]>): GrpcRequestData["rpc"] {
+        if (m?.service === undefined) return undefined;
+        if (m?.method === undefined) return undefined;
+        if (typeof m.method !== "string") return undefined;
 
-        if (typeof rpc === "object") {
-            return {
-                name: rpc.name ?? "",
-                requestStream: rpc.requestStream ?? false,
-                serverStream: rpc.serverStream ?? false,
-                requestType: rpc.requestType as ProtoMessageDescriptor | undefined, // assume content of this is correct
-                responseType: rpc.responseType as ProtoMessageDescriptor | undefined, // assume content of htis is correct
-            };
-        }
-
-        return undefined;
+        return {
+            service: m.service,
+            method: m.method,
+        };
     }
 
     function fixGroup(ri: DeepPartial<RequestGroup>): RequestGroup {

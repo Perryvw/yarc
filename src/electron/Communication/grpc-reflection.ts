@@ -7,7 +7,7 @@ import type { ServerReflectionRequest } from "@grpc/reflection/build/src/generat
 import type { ServerReflectionResponse } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/ServerReflectionResponse";
 import type { FileDescriptorResponse } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/FileDescriptorResponse";
 import type { ServiceResponse } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/ServiceResponse";
-import type { ProtoService } from "../../common/grpc";
+import type { MethodInfo, ProtoService } from "../../common/grpc";
 
 let ReflectionService: proto.ServiceDefinition = undefined!;
 let FileDescriptorProto: protobufjs.Type = undefined!;
@@ -25,6 +25,8 @@ async function loadPrerequisites(): Promise<void> {
     }
 }
 
+const reflectionCache = new Map<string, MethodInfo>();
+
 export class GrpcReflectionHandler {
     private pendingRequests = 0;
     private stream: grpc.ClientDuplexStream<ServerReflectionRequest, ServerReflectionResponse> = undefined!;
@@ -39,7 +41,23 @@ export class GrpcReflectionHandler {
     static async fetchServicesFromServer(client: grpc.Client): Promise<Result<ProtoService[], string>> {
         const handler = new GrpcReflectionHandler(client);
         await loadPrerequisites();
+        reflectionCache.clear();
         return await handler.fetchServices();
+    }
+
+    static async getMethodInfo(client: grpc.Client, service: string, method: string): Promise<MethodInfo> {
+        const methodPath = methodKey(service, method);
+        let methodInfo = reflectionCache.get(methodPath);
+        if (methodInfo) return methodInfo;
+
+        // Method not found in cache, re-execute the reflection call to make sure cache is up to date
+        await GrpcReflectionHandler.fetchServicesFromServer(client);
+
+        methodInfo = reflectionCache.get(methodPath);
+        if (methodInfo === undefined) {
+            throw `Failed to find method info for ${methodPath} through reflection`;
+        }
+        return methodInfo;
     }
 
     async fetchServices(): Promise<Result<ProtoService[], string>> {
@@ -151,7 +169,7 @@ export class GrpcReflectionHandler {
     }
 
     mapServices(): ProtoService[] {
-        return this.services.map((svc) => ({
+        const services = this.services.map((svc) => ({
             name: svc.name!,
             methods: (svc.method ?? []).map((method) => ({
                 name: method.name!,
@@ -161,6 +179,14 @@ export class GrpcReflectionHandler {
                 responseType: this.mapMessageType(method.outputType!),
             })),
         }));
+
+        for (const svc of services) {
+            for (const method of svc.methods) {
+                reflectionCache.set(methodKey(svc.name, method.name), method);
+            }
+        }
+
+        return services;
     }
 
     mapMessageType(typeName: string): ProtoMessageDescriptor {
@@ -212,6 +238,10 @@ export class GrpcReflectionHandler {
             literalType: mapLiteralType(field.type!),
         };
     }
+}
+
+function methodKey(service: string, method: string): string {
+    return `${service}/${method}`;
 }
 
 function mapLiteralType(type: protobuf_descriptor.IFieldDescriptorProtoType): string {

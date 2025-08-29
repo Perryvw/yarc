@@ -35,7 +35,7 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
         const service = parsedProto[request.rpc.service];
 
         if (service && isServiceDefinition(service)) {
-            const method = service[request.rpc.method.name];
+            const method = service[request.rpc.method];
             if (method) {
                 if (!method.requestStream && !method.responseStream) {
                     return await grpcUnaryRequest(
@@ -61,11 +61,14 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
         }
     } else {
         //reflection
-        if (!request.rpc.method.requestType || !request.rpc.method.responseType) {
+        const GenericClient = grpc.makeGenericClientConstructor({}, "");
+        const client = new GenericClient(request.url, grpc.credentials.createInsecure());
+        const methodInfo = await GrpcReflectionHandler.getMethodInfo(client, request.rpc.service, request.rpc.method);
+        if (methodInfo.requestType === undefined || methodInfo.responseType === undefined) {
             return {
                 result: "error",
                 code: "INVALID",
-                detail: "Missing request or repsonse type for reflection rpc",
+                detail: "Reflected method information could not figure out request or response type",
                 time: 0,
             };
         }
@@ -77,7 +80,7 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
                     type.fields[field.name] = new protobuf.Field(
                         field.name,
                         field.id,
-                        field.type.type === "literal" ? field.type.literalType : field.type.name,
+                        field.type.type === "literal" ? field.type.literalType : field.type.type,
                     );
                     if (field.type.type === "message") {
                         type.fields[field.name].resolved = true;
@@ -88,16 +91,16 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
             return type;
         };
 
-        const requestMessage = descriptorToProtoType(request.rpc.method.requestType);
-        const responseMessage = descriptorToProtoType(request.rpc.method.responseType);
-        const methodPath = `/${request.rpc.service}/${request.rpc.method.name}`;
+        const requestMessage = descriptorToProtoType(methodInfo.requestType);
+        const responseMessage = descriptorToProtoType(methodInfo.responseType);
+        const methodPath = `/${request.rpc.service}/${request.rpc.method}`;
 
         const root = new protobuf.Root();
         requestMessage.parent;
         root.add(requestMessage);
         root.add(responseMessage);
 
-        if (!request.rpc.method.requestStream && !request.rpc.method.serverStream) {
+        if (!methodInfo.requestStream && !methodInfo.serverStream) {
             return await grpcUnaryRequest(
                 request,
                 methodPath,
