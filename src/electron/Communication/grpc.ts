@@ -42,7 +42,7 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
                         request,
                         method.path,
                         method.requestSerialize,
-                        method.requestDeserialize,
+                        method.responseDeserialize,
                         client,
                     );
                 }
@@ -73,32 +73,67 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
             };
         }
 
-        const descriptorToProtoType = (message: ProtoMessageDescriptor): protobuf.Type => {
+        const typeName = (message: ProtoObject): string => {
+            switch (message.type) {
+                case "message":
+                    return message.name;
+                case "enum":
+                    return message.name;
+                case "literal":
+                    return message.literalType;
+                case "optional":
+                    return typeName(message.optionalType);
+                case "repeated":
+                    return typeName(message.repeatedType);
+                default:
+                    throw `Don't know how to get name for ${message.type} proto object!`;
+            }
+        };
+        const messageDescriptorToProtoType = (message: ProtoMessageDescriptor): protobuf.Type => {
             const type = new protobuf.Type(message.name);
             for (const field of Object.values(message.fields)) {
-                if (field) {
-                    type.fields[field.name] = new protobuf.Field(
-                        field.name,
-                        field.id,
-                        field.type.type === "literal" ? field.type.literalType : field.type.type,
-                    );
-                    if (field.type.type === "message") {
-                        type.fields[field.name].resolved = true;
-                        type.fields[field.name].resolvedType = descriptorToProtoType(field.type);
+                if (!field) continue;
+
+                let innerType: ProtoObject | undefined = undefined;
+                if (field.type.type === "message") {
+                    innerType = field.type;
+                } else if (field.type.type === "optional") {
+                    innerType = field.type.optionalType;
+                } else if (field.type.type === "repeated") {
+                    innerType = field.type.repeatedType;
+                }
+
+                if (!innerType) {
+                    throw `Could not determine type of proto field ${field.name}=${field.id}! ${JSON.stringify(field.type)}`;
+                }
+
+                type.fields[field.name] = new protobuf.Field(field.name, field.id, typeName(innerType));
+
+                if (field.type.type === "optional") {
+                    type.fields[field.name].optional = true;
+                } else if (field.type.type === "repeated") {
+                    type.fields[field.name].repeated = true;
+                }
+
+                if (innerType.type === "message") {
+                    // Fill in resolved types because we can't resolve in the reflected information
+                    type.fields[field.name].resolved = true;
+                    type.fields[field.name].resolvedType = messageDescriptorToProtoType(innerType);
+                } else if (innerType.type === "enum") {
+                    type.fields[field.name].resolved = true;
+                    const enumType = new protobuf.Enum(innerType.name);
+                    for (const v of innerType.values) {
+                        enumType.values[v.name] = v.value;
                     }
+                    type.fields[field.name].resolvedType = enumType;
                 }
             }
             return type;
         };
 
-        const requestMessage = descriptorToProtoType(methodInfo.requestType);
-        const responseMessage = descriptorToProtoType(methodInfo.responseType);
+        const requestMessage = messageDescriptorToProtoType(methodInfo.requestType);
+        const responseMessage = messageDescriptorToProtoType(methodInfo.responseType);
         const methodPath = `/${request.rpc.service}/${request.rpc.method}`;
-
-        const root = new protobuf.Root();
-        requestMessage.parent;
-        root.add(requestMessage);
-        root.add(responseMessage);
 
         if (!methodInfo.requestStream && !methodInfo.serverStream) {
             return await grpcUnaryRequest(
@@ -133,7 +168,7 @@ function grpcUnaryRequest(
     request: GrpcRequestData,
     path: string,
     requestSerialize: (obj: object) => Buffer,
-    requestDeserialize: (b: Buffer) => object,
+    responseDeserialize: (b: Buffer) => object,
     client: grpc.Client,
 ): Promise<GrpcResponse> {
     return new Promise((resolve) => {
@@ -141,7 +176,7 @@ function grpcUnaryRequest(
         const call = client.makeUnaryRequest(
             path,
             requestSerialize,
-            (r) => JSON.stringify(requestDeserialize(r), null, 2),
+            (r) => JSON.stringify(responseDeserialize(r), null, 2),
             parseRequestBody(request.body),
             (err: grpc.ServiceError | null, value?: string) => {
                 delete RequestCancelHandles[request.id];

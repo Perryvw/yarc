@@ -197,10 +197,17 @@ export class GrpcReflectionHandler {
 
         const fields: ProtoMessageDescriptor["fields"] = {};
         for (const field of type.field ?? []) {
+            let innerType = this.mapMessageField(field);
+            if (field.label === ProtoFieldLabel.LABEL_OPTIONAL) {
+                innerType = { type: "optional", optionalType: innerType };
+            }
+            if (field.label === ProtoFieldLabel.LABEL_REPEATED) {
+                innerType = { type: "repeated", repeatedType: innerType };
+            }
             fields[field.name!] = {
                 id: field.number!,
                 name: field.name!,
-                type: this.mapMessageField(field),
+                type: innerType,
             };
         }
 
@@ -212,13 +219,10 @@ export class GrpcReflectionHandler {
     }
 
     mapMessageField(field: protobuf_descriptor.IFieldDescriptorProto): ProtoObject {
-        /**
-         * Types declared in protobufjs\ext\descriptor\index.js
-         */
-        if (field.type === 11 /* TYPE_MESSAGE */) {
+        if (field.type === ProtoFieldType.TYPE_MESSAGE) {
             return this.mapMessageType(field.typeName!);
         }
-        if (field.type === 14 /* TYPE_ENUM */) {
+        if (field.type === ProtoFieldType.TYPE_ENUM) {
             const enumType = this.knownEnums.get(field.typeName!);
             if (!enumType) {
                 throw `Unknown enum type ${field.typeName}`;
@@ -244,42 +248,40 @@ function methodKey(service: string, method: string): string {
     return `${service}/${method}`;
 }
 
+/**
+ * Enum values declared in protobufjs\ext\descriptor\index.js
+ */
+enum ProtoFieldLabel {
+    LABEL_OPTIONAL = 1,
+    LABEL_REQUIRED = 2,
+    LABEL_REPEATED = 3,
+}
+enum ProtoFieldType {
+    TYPE_DOUBLE = 1,
+    TYPE_FLOAT = 2,
+    TYPE_INT64 = 3,
+    TYPE_UINT64 = 4,
+    TYPE_INT32 = 5,
+    TYPE_FIXED64 = 6,
+    TYPE_FIXED32 = 7,
+    TYPE_BOOL = 8,
+    TYPE_STRING = 9,
+    TYPE_GROUP = 10,
+    TYPE_MESSAGE = 11,
+    TYPE_BYTES = 12,
+    TYPE_UINT32 = 13,
+    TYPE_ENUM = 14,
+    TYPE_SFIXED32 = 15,
+    TYPE_SFIXED64 = 16,
+    TYPE_SINT32 = 17,
+    TYPE_SINT64 = 18,
+}
+
 function mapLiteralType(type: protobuf_descriptor.IFieldDescriptorProtoType): string {
-    /**
-     * Types declared in protobufjs\ext\descriptor\index.js
-     */
     switch (type) {
-        case 1:
-            return "DOUBLE";
-        case 2:
-            return "FLOAT";
-        case 3:
-            return "INT64";
-        case 4:
-            return "UINT64";
-        case 5:
-            return "INT32";
-        case 6:
-            return "FIXED64";
-        case 7:
-            return "FIXED32";
-        case 8:
-            return "BOOL";
-        case 9:
+        case ProtoFieldType.TYPE_STRING:
             return "string";
-        case 12:
-            return "BYTES";
-        case 13:
-            return "UINT32";
-        case 15:
-            return "SFIXED32";
-        case 16:
-            return "SFIXED64";
-        case 17:
-            return "SINT32";
-        case 18:
-            return "SINT64";
         default:
-            throw `Unknown literal type: ${type}`;
+            return ProtoFieldType[type].split("_")[1].toLowerCase();
     }
 }

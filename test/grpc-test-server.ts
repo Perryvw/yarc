@@ -42,6 +42,11 @@ interface MessageWithBools {
     myoptionalbool?: boolean;
 }
 
+interface MessageWithEnums {
+    globalEnum: number;
+    nestedEnum: number;
+}
+
 const server = new grpc.Server();
 server.addService(greeterService.service, {
     SayHello: (call: grpc.ServerUnaryCall<HelloRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
@@ -69,6 +74,12 @@ server.addService(greeterService.service, {
             }
         }
         setTimeout(send, 3000);
+    },
+    TestEnums: (
+        call: grpc.ServerUnaryCall<MessageWithEnums, MessageWithEnums>,
+        callback: grpc.sendUnaryData<MessageWithEnums>,
+    ) => {
+        callback(null, call.request);
     },
     TestNested: (call: grpc.ServerUnaryCall<NestedRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
         callback(null, { message: JSON.stringify(call.request) });

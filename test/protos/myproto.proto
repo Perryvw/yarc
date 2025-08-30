@@ -16,7 +16,7 @@ service Greeter {
 
   rpc TestGetStringList(HelloRequest) returns (StringListReply);
 
-  rpc TestEnums(MessageWithEnums) returns (HelloReply);
+  rpc TestEnums(MessageWithEnums) returns (MessageWithEnums);
 
   rpc ErrorWithTrailers(HelloRequest) returns (HelloReply);
 
