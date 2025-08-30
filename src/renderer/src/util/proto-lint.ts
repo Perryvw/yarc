@@ -59,15 +59,14 @@ function lintMessage(
             .filter(([name, field]) => field?.type.type !== "optional" && field?.type.type !== "oneof")
             .map(([name, field]) => name),
     );
-    const isOneOf = (protoObj: ProtoObject): protoObj is ProtoOneOf => protoObj.type === "oneof";
-    const oneofs = protoFields.filter((f) => f[1] && isOneOf(f[1].type)) as unknown as Array<[string, ProtoOneOf]>;
+
     const seenFields = new Map<string, fleeceAPI.Node>();
     for (const [_, field] of protoFields) {
         if (field === undefined) continue;
         if (field.type.type !== "oneof") continue;
 
         for (const [name, type] of Object.entries(field.type.fields)) {
-            knownFields.set(name, type);
+            knownFields.set(name, type.type);
         }
     }
 
@@ -100,7 +99,9 @@ function lintMessage(
     }
 
     // Check oneofs
-    for (const [oneOfName, oneof] of oneofs) {
+    for (const [oneOfName, field] of protoFields) {
+        if (field === undefined || field.type.type !== "oneof") continue;
+        const oneof = field.type;
         if (oneof) {
             // Count how many fields were seen
             const seen = [];
@@ -279,7 +280,7 @@ export function defaultProtoBody(protoDescriptor: ProtoObject, indent = ""): { v
             const [optionName, optionType] = options[0];
             const comment = `oneof ${options.map(([name]) => name).join(", ")}`;
 
-            const { value, comments } = defaultProtoBody(optionType, indent + INDENT_STEP);
+            const { value, comments } = defaultProtoBody(optionType.type, indent + INDENT_STEP);
             return { value, comments: comments ? [comment, ...comments] : [comment] };
         }
         return { value: "{}", comments: ["Empty oneof"] };

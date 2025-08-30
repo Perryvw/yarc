@@ -12,7 +12,7 @@ service Greeter {
   rpc StreamHello(HelloRequest) returns (stream HelloReply);
   rpc BiDirectionalStream(stream HelloRequest) returns (stream HelloReply);
 
-  rpc TestNested(NestedRequest) returns (HelloReply);
+  rpc TestNested(NestedRequest) returns (NestedRequest);
 
   rpc TestGetStringList(HelloRequest) returns (StringListReply);
 

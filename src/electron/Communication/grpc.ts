@@ -96,8 +96,25 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
         };
         const messageDescriptorToProtoType = (message: ProtoMessageDescriptor): protobuf.Type => {
             const type = new protobuf.Type(message.name);
-            for (const field of Object.values(message.fields)) {
-                if (!field) continue;
+
+            const handleField = (field: ProtoField) => {
+                if (field.type.type === "oneof") {
+                    if (type.oneofs === undefined) type.oneofs = {};
+
+                    const oneof = new protobuf.OneOf(field.name);
+                    type.oneofs[field.name] = oneof;
+                    type.oneofsArray.push(type.oneofs[field.name]);
+
+                    for (const [name, oneOfField] of Object.entries(field.type.fields)) {
+                        handleField(oneOfField);
+                        const f = type.fields[oneOfField.name];
+                        oneof.fieldsArray.push(f);
+                        f.optional = true;
+                        f.required = false;
+                        f.partOf = oneof;
+                    }
+                    return;
+                }
 
                 let innerType: ProtoObject | undefined = undefined;
                 if (field.type.type === "message") {
@@ -118,6 +135,9 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
                     type.fields[field.name].optional = true;
                 } else if (field.type.type === "repeated") {
                     type.fields[field.name].repeated = true;
+                } else {
+                    type.fields[field.name].optional = false;
+                    type.fields[field.name].required = true;
                 }
 
                 if (innerType.type === "message") {
@@ -132,6 +152,11 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
                     }
                     type.fields[field.name].resolvedType = enumType;
                 }
+            };
+
+            for (const field of Object.values(message.fields)) {
+                if (!field) continue;
+                handleField(field);
             }
             return type;
         };

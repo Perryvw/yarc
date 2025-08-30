@@ -13,7 +13,7 @@ interface ProtoRepeated {
 
 interface ProtoOneOf {
     type: "oneof";
-    fields: Record<string, ProtoObject>;
+    fields: Record<string, ProtoField>;
 }
 
 interface ProtoLiteral {

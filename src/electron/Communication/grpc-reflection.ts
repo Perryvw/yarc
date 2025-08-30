@@ -196,19 +196,65 @@ export class GrpcReflectionHandler {
         }
 
         const fields: ProtoMessageDescriptor["fields"] = {};
+        const oneOfs = new Map<number, ProtoField[]>();
         for (const field of type.field ?? []) {
             let innerType = this.mapMessageField(field);
-            if (field.label === ProtoFieldLabel.LABEL_OPTIONAL) {
+            const inOneOf = Object.hasOwn(field, "oneofIndex");
+            if (field.label === ProtoFieldLabel.LABEL_OPTIONAL && !inOneOf) {
                 innerType = { type: "optional", optionalType: innerType };
             }
             if (field.label === ProtoFieldLabel.LABEL_REPEATED) {
                 innerType = { type: "repeated", repeatedType: innerType };
             }
-            fields[field.name!] = {
-                id: field.number!,
-                name: field.name!,
-                type: innerType,
-            };
+
+            if (inOneOf && field.oneofIndex !== undefined) {
+                if (!oneOfs.has(field.oneofIndex)) {
+                    oneOfs.set(field.oneofIndex, []);
+                }
+                oneOfs.get(field.oneofIndex)!.push({
+                    id: field.number!,
+                    name: field.name!,
+                    type: innerType,
+                });
+            } else {
+                fields[field.name!] = {
+                    id: field.number!,
+                    name: field.name!,
+                    type: innerType,
+                };
+            }
+        }
+
+        let oneOfId = 0;
+        for (const oneof of type.oneofDecl ?? []) {
+            const oneOfFields: ProtoOneOf["fields"] = {};
+            const oneOfValues = oneOfs.get(oneOfId) ?? [];
+
+            // If only one value, assume optional:
+            if (oneOfValues.length === 1) {
+                const value = oneOfValues[0];
+                fields[value.name] = {
+                    id: value.id,
+                    name: value.name,
+                    type: {
+                        type: "optional",
+                        optionalType: value.type,
+                    },
+                };
+            } else {
+                for (const field of oneOfValues) {
+                    oneOfFields[field.name] = field;
+                }
+                fields[oneof.name!] = {
+                    id: -1,
+                    name: oneof.name!,
+                    type: {
+                        type: "oneof",
+                        fields: oneOfFields,
+                    },
+                };
+            }
+            oneOfId++;
         }
 
         return {

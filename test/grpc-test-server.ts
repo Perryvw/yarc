@@ -81,8 +81,11 @@ server.addService(greeterService.service, {
     ) => {
         callback(null, call.request);
     },
-    TestNested: (call: grpc.ServerUnaryCall<NestedRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
-        callback(null, { message: JSON.stringify(call.request) });
+    TestNested: (
+        call: grpc.ServerUnaryCall<NestedRequest, NestedRequest>,
+        callback: grpc.sendUnaryData<NestedRequest>,
+    ) => {
+        callback(null, call.request);
     },
     TestGetStringList: (
         call: grpc.ServerUnaryCall<HelloRequest, StringListReply>,
