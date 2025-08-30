@@ -48,7 +48,14 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
                 }
 
                 if (!method.requestStream && method.responseStream) {
-                    return await grpcServerStreamingRequest(request, method, client, ipc);
+                    return await grpcServerStreamingRequest(
+                        request,
+                        method.path,
+                        method.requestSerialize,
+                        method.responseDeserialize,
+                        client,
+                        ipc,
+                    );
                 }
 
                 return {
@@ -61,8 +68,6 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
         }
     } else {
         //reflection
-        const GenericClient = grpc.makeGenericClientConstructor({}, "");
-        const client = new GenericClient(request.url, grpc.credentials.createInsecure());
         const methodInfo = await GrpcReflectionHandler.getMethodInfo(client, request.rpc.service, request.rpc.method);
         if (methodInfo.requestType === undefined || methodInfo.responseType === undefined) {
             return {
@@ -145,6 +150,17 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
             );
         }
 
+        if (!methodInfo.requestStream && methodInfo.serverStream) {
+            return await grpcServerStreamingRequest(
+                request,
+                methodPath,
+                (o) => Buffer.from(requestMessage.encode(o).finish()),
+                (b) => responseMessage.decode(b),
+                client,
+                ipc,
+            );
+        }
+
         return {
             result: "error",
             code: "INVALID",
@@ -208,14 +224,16 @@ function grpcUnaryRequest(
 
 async function grpcServerStreamingRequest(
     request: GrpcRequestData,
-    method: proto.MethodDefinition<object, object, object, object>,
+    path: string,
+    requestSerialize: (obj: object) => Buffer,
+    responseDeserialize: (b: Buffer) => object,
     client: grpc.Client,
     ipc: Electron.WebContents,
 ): Promise<GrpcServerStreamData> {
     const stream = client.makeServerStreamRequest(
-        method.path,
-        method.requestSerialize,
-        method.responseDeserialize,
+        path,
+        requestSerialize,
+        responseDeserialize,
         parseRequestBody(request.body),
     );
 
