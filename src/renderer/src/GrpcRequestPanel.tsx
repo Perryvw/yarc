@@ -13,6 +13,8 @@ import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-
 import { backgroundHoverColor, errorColor } from "./palette";
 import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
 import { substituteVariables } from "./util/substitute-variables";
+import Toggle from "./common-components/toggle";
+import { RefreshCcw } from "lucide-react";
 
 const RequestPanelRoot = styled.div`
     display: flex;
@@ -55,12 +57,16 @@ const GrpcMethodPopoverRoot = styled.div`
     right: anchor(right);
     top: anchor(bottom);
     width: auto;
+    border: none;
+    max-height: 70vh;
 `;
 
 const GrpcMethodPopoverEntry = styled.button`
     font: inherit;
     border: unset;
     width: 100%;
+
+    margin-top: 1px;
 
     cursor: pointer;
 
@@ -74,17 +80,29 @@ const ProtoErrorBox = styled.div`
     padding: 5px 10px;
 `;
 
-const ReflectionToggle = styled.label`
+const ReflectionHeader = styled.label`
     display: flex;
     align-items: center;
     gap: 8px;
-    cursor: pointer;
+`;
+
+const UseReflectionText = styled.label`
+    font-size: 13px;
+    margin-top: -3px;
+`;
+
+const ReflectedServicesText = styled.label`
+    font-size: 13px;
+    margin-top: -3px;
+    margin-left: auto;
+    color: #ccc;
 `;
 
 const ReflectionButton = styled.button`
-    padding: 2px 10px 5px 10px;
+    padding: 6px;
     cursor: pointer;
     border: none;
+    border-radius: 5px;
     background-color: var(--color-background);
 
     &:hover {
@@ -131,6 +149,7 @@ export const GrpcRequestPanel = observer(
         );
 
         const [rpcs, setRpcs] = useState<MethodDescriptor[] | undefined>(undefined);
+        const [reflectedServices, setReflectedServices] = useState<ProtoService[] | undefined>(undefined);
         const [protoError, setError] = useState<string | undefined>(undefined);
 
         useEffect(() => {
@@ -166,37 +185,73 @@ export const GrpcRequestPanel = observer(
 
         const selectMethod = useCallback(
             (method: MethodDescriptor) => {
-                activeRequest.rpc = {
-                    service: method.service,
-                    method: method.method.name,
-                };
-                if (rpcs) {
-                    const rpc = rpcs.find(
-                        (rpc) =>
-                            rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
-                    );
-                    if (rpc?.method) {
-                        if (!rpc.method.requestStream && !rpc.method.serverStream) {
+                runInAction(() => {
+                    activeRequest.rpc = {
+                        service: method.service,
+                        method: method.method.name,
+                    };
+                    if (activeRequest.useReflection && reflectedServices) {
+                        const service = reflectedServices.find((service) => service.name === method.service);
+                        if (!service) return;
+                        const rpc = service.methods.find((m) => m.name === method.method.name);
+                        if (!rpc) return;
+
+                        if (!rpc.requestStream && !rpc.serverStream) {
                             activeRequest.kind = GrpcRequestKind.Unary;
-                        } else if (!rpc.method.requestStream && rpc.method.serverStream) {
+                        } else if (!rpc.requestStream && rpc.serverStream) {
                             activeRequest.kind = GrpcRequestKind.ResponseStreaming;
-                        } else if (rpc.method.requestStream && !rpc.method.serverStream) {
+                        } else if (rpc.requestStream && !rpc.serverStream) {
                             activeRequest.kind = GrpcRequestKind.RequestStreaming;
-                        } else if (rpc.method.requestStream && rpc.method.serverStream) {
+                        } else if (rpc.requestStream && rpc.serverStream) {
                             activeRequest.kind = GrpcRequestKind.Bidirectional;
                         }
+
+                        if (rpc?.requestType) {
+                            activeRequest.body = defaultProtoBody(rpc.requestType).value;
+                        }
+                    } else if (rpcs) {
+                        const rpc = rpcs.find(
+                            (rpc) =>
+                                rpc.service === activeRequest.rpc?.service &&
+                                rpc.method.name === activeRequest.rpc.method,
+                        );
+
+                        if (rpc?.method) {
+                            if (!rpc.method.requestStream && !rpc.method.serverStream) {
+                                activeRequest.kind = GrpcRequestKind.Unary;
+                            } else if (!rpc.method.requestStream && rpc.method.serverStream) {
+                                activeRequest.kind = GrpcRequestKind.ResponseStreaming;
+                            } else if (rpc.method.requestStream && !rpc.method.serverStream) {
+                                activeRequest.kind = GrpcRequestKind.RequestStreaming;
+                            } else if (rpc.method.requestStream && rpc.method.serverStream) {
+                                activeRequest.kind = GrpcRequestKind.Bidirectional;
+                            }
+                        }
+                        if (rpc?.method.requestType) {
+                            activeRequest.body = defaultProtoBody(rpc.method.requestType).value;
+                        }
                     }
-                    if (rpc?.method.requestType) {
-                        activeRequest.body = defaultProtoBody(rpc.method.requestType).value;
-                    }
-                }
+                });
             },
-            [activeRequest, rpcs],
+            [activeRequest, rpcs, reflectedServices],
         );
 
         const activeRpc = rpcs?.find(
             (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
         );
+
+        const reflectedRpcs = () => {
+            const reflectionMethods: MethodDescriptor[] = [];
+            for (const service of reflectedServices ?? []) {
+                for (const method of service.methods) {
+                    reflectionMethods.push({
+                        service: service.name,
+                        method,
+                    });
+                }
+            }
+            return reflectionMethods;
+        };
 
         const linter = CodeMirrorLint.linter((view) => {
             if (!activeRpc?.method.requestType) return [];
@@ -213,16 +268,7 @@ export const GrpcRequestPanel = observer(
                     url,
                 );
                 if (result.success) {
-                    const reflectionMethods: MethodDescriptor[] = [];
-                    for (const service of result.value) {
-                        for (const method of service.methods) {
-                            reflectionMethods.push({
-                                service: service.name,
-                                method,
-                            });
-                        }
-                    }
-                    setRpcs(reflectionMethods);
+                    setReflectedServices(result.value);
                     setError(undefined);
                 } else {
                     setRpcs([]);
@@ -237,20 +283,33 @@ export const GrpcRequestPanel = observer(
         return (
             <RequestPanelRoot>
                 <SelectProtosModal open={protoModalOpen} close={closeProtoModal} protoConfig={protoConfig} />
-                <GrpcMethodPopover rpcs={rpcs ?? []} onSelectMethod={selectMethod} />
-                <ReflectionToggle>
-                    <input
-                        type="checkbox"
-                        checked={activeRequest.useReflection}
-                        onChange={(e) => {
-                            activeRequest.useReflection = e.target.checked;
-                        }}
+                <GrpcMethodPopover
+                    rpcs={activeRequest.useReflection ? reflectedRpcs() : (rpcs ?? [])}
+                    onSelectMethod={selectMethod}
+                />
+                <ReflectionHeader>
+                    <Toggle
+                        checked={activeRequest.useReflection ?? false}
+                        onChange={(v) =>
+                            runInAction(() => {
+                                activeRequest.useReflection = v;
+                            })
+                        }
                     />
-                    Use reflection
-                </ReflectionToggle>
-                {activeRequest.useReflection ? (
-                    <ReflectionButton onClick={fetchReflectionMethods}>fetch methods via reflection</ReflectionButton>
-                ) : (
+                    <UseReflectionText>Use reflection</UseReflectionText>
+                    {activeRequest.useReflection && (
+                        <>
+                            <ReflectedServicesText>
+                                {reflectedServices?.length ?? 0} services found
+                            </ReflectedServicesText>
+                            <ReflectionButton onClick={fetchReflectionMethods}>
+                                <RefreshCcw size={16} />
+                            </ReflectionButton>
+                        </>
+                    )}
+                </ReflectionHeader>
+
+                {!activeRequest.useReflection && (
                     <ProtoFileBox onClick={openProtoModal}>
                         {activeRequest.protoFile
                             ? shortProtoPath(activeRequest.protoFile.protoPath)
@@ -289,13 +348,15 @@ function GrpcMethodPopover({
 }: { rpcs: MethodDescriptor[]; onSelectMethod: (method: MethodDescriptor) => void }) {
     return (
         <GrpcMethodPopoverRoot popover="auto" id="grpc-method-popover">
-            {rpcs.map((r, i) => (
-                <GrpcMethodPopoverEntry
-                    key={i.toString()}
-                    popovertarget="grpc-method-popover"
-                    onClick={() => onSelectMethod(r)}
-                >{`${r.service} / ${r.method.name}`}</GrpcMethodPopoverEntry>
-            ))}
+            {rpcs.length === 0
+                ? "No requests found..."
+                : rpcs.map((r, i) => (
+                      <GrpcMethodPopoverEntry
+                          key={i.toString()}
+                          popovertarget="grpc-method-popover"
+                          onClick={() => onSelectMethod(r)}
+                      >{`${r.service} / ${r.method.name}`}</GrpcMethodPopoverEntry>
+                  ))}
         </GrpcMethodPopoverRoot>
     );
 }

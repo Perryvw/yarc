@@ -128,7 +128,11 @@ function mapType(type: protobufjs.Type | protobufjs.Enum): ProtoObject {
         for (const field of oneof.fieldsArray) {
             const nestedFieldType = field.resolvedType ? mapType(field.resolvedType) : mapLiteralType(field.type);
             if (nestedFieldType) {
-                oneOfMembers[field.name] = nestedFieldType;
+                oneOfMembers[field.name] = {
+                    id: field.id,
+                    name: field.name,
+                    type: nestedFieldType,
+                };
             }
         }
 
