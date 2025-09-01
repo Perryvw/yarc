@@ -82,21 +82,37 @@ function mapType(type: protobufjs.Type | protobufjs.Enum): ProtoObject {
     }
 
     // Else: Assume message
-    const members: Record<string, ProtoObject | undefined> = {};
+    const members: ProtoMessageDescriptor["fields"] = {};
     for (const field of type.fieldsArray) {
         const fieldType = field.resolvedType ? mapType(field.resolvedType) : mapLiteralType(field.type);
 
         if (isOptionalField(field)) {
-            members[field.name] = fieldType ? { type: "optional", optionalType: fieldType } : undefined;
+            members[field.name] = fieldType
+                ? {
+                      id: field.id,
+                      name: field.name,
+                      type: { type: "optional", optionalType: fieldType },
+                  }
+                : undefined;
             continue;
         }
 
         if (field.partOf instanceof protobufjs.OneOf) continue; // Skip oneofs for now
 
         if (field.repeated && fieldType) {
-            members[field.name] = { type: "repeated", repeatedType: fieldType };
+            members[field.name] = {
+                id: field.id,
+                name: field.name,
+                type: { type: "repeated", repeatedType: fieldType },
+            };
         } else {
-            members[field.name] = fieldType;
+            members[field.name] = fieldType
+                ? {
+                      id: field.id,
+                      name: field.name,
+                      type: fieldType,
+                  }
+                : undefined;
         }
     }
 
@@ -107,16 +123,20 @@ function mapType(type: protobufjs.Type | protobufjs.Enum): ProtoObject {
             continue;
         }
 
-        const oneOfMembers: Record<string, ProtoObject> = {};
+        const oneOfMembers: ProtoOneOf["fields"] = {};
 
         for (const field of oneof.fieldsArray) {
             const nestedFieldType = field.resolvedType ? mapType(field.resolvedType) : mapLiteralType(field.type);
             if (nestedFieldType) {
-                oneOfMembers[field.name] = nestedFieldType;
+                oneOfMembers[field.name] = {
+                    id: field.id,
+                    name: field.name,
+                    type: nestedFieldType,
+                };
             }
         }
 
-        members[oneof.name] = { type: "oneof", fields: oneOfMembers };
+        members[oneof.name] = { id: 0, name: oneof.name, type: { type: "oneof", fields: oneOfMembers } };
     }
 
     return {

@@ -1,6 +1,7 @@
 // If you want you can run this test server with `npx tsx test/grpc-test-server.ts`
 
 import * as grpc from "@grpc/grpc-js";
+import * as grpc_reflection from "@grpc/reflection";
 import * as proto from "@grpc/proto-loader";
 import * as protobufjs from "protobufjs";
 
@@ -41,6 +42,11 @@ interface MessageWithBools {
     myoptionalbool?: boolean;
 }
 
+interface MessageWithEnums {
+    globalEnum: number;
+    nestedEnum: number;
+}
+
 const server = new grpc.Server();
 server.addService(greeterService.service, {
     SayHello: (call: grpc.ServerUnaryCall<HelloRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
@@ -69,8 +75,17 @@ server.addService(greeterService.service, {
         }
         setTimeout(send, 3000);
     },
-    TestNested: (call: grpc.ServerUnaryCall<NestedRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
-        callback(null, { message: JSON.stringify(call.request) });
+    TestEnums: (
+        call: grpc.ServerUnaryCall<MessageWithEnums, MessageWithEnums>,
+        callback: grpc.sendUnaryData<MessageWithEnums>,
+    ) => {
+        callback(null, call.request);
+    },
+    TestNested: (
+        call: grpc.ServerUnaryCall<NestedRequest, NestedRequest>,
+        callback: grpc.sendUnaryData<NestedRequest>,
+    ) => {
+        callback(null, call.request);
     },
     TestGetStringList: (
         call: grpc.ServerUnaryCall<HelloRequest, StringListReply>,
@@ -106,6 +121,9 @@ server.addService(greeterService.service, {
         callback(null, { mybool: false });
     },
 });
+
+const reflection = new grpc_reflection.ReflectionService(protoPackage);
+reflection.addToServer(server);
 
 // Start server, will block process
 server.bindAsync(SERVER_ADDRESS, grpc.ServerCredentials.createInsecure(), () => {

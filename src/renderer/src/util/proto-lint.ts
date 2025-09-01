@@ -50,17 +50,23 @@ function lintMessage(
     diagnostics: CodeMirrorLint.Diagnostic[],
 ): void {
     const protoFields = Object.entries(protoDescriptor.fields);
-    const knownFields = new Map(protoFields);
+    const knownFields = new Map<string, ProtoObject | undefined>();
+    for (const [name, field] of protoFields) {
+        knownFields.set(name, field?.type);
+    }
     const requiredFields = new Set(
         protoFields
-            .filter(([name, field]) => field?.type !== "optional" && field?.type !== "oneof")
+            .filter(([name, field]) => field?.type.type !== "optional" && field?.type.type !== "oneof")
             .map(([name, field]) => name),
     );
+
     const seenFields = new Map<string, fleeceAPI.Node>();
-    const oneofs = protoFields.filter(([name, field]) => field?.type === "oneof") as Array<[string, ProtoOneOf]>;
-    for (const [_, oneof] of oneofs) {
-        for (const [name, type] of Object.entries(oneof.fields)) {
-            knownFields.set(name, type);
+    for (const [_, field] of protoFields) {
+        if (field === undefined) continue;
+        if (field.type.type !== "oneof") continue;
+
+        for (const [name, type] of Object.entries(field.type.fields)) {
+            knownFields.set(name, type.type);
         }
     }
 
@@ -93,7 +99,9 @@ function lintMessage(
     }
 
     // Check oneofs
-    for (const [oneOfName, oneof] of oneofs) {
+    for (const [oneOfName, field] of protoFields) {
+        if (field === undefined || field.type.type !== "oneof") continue;
+        const oneof = field.type;
         if (oneof) {
             // Count how many fields were seen
             const seen = [];
@@ -226,15 +234,15 @@ export function defaultProtoBody(protoDescriptor: ProtoObject, indent = ""): { v
         let result = "{\n";
         for (const [name, field] of Object.entries(protoDescriptor.fields)) {
             if (field) {
-                if (field.type === "oneof") {
-                    const options = Object.entries(field.fields);
+                if (field.type.type === "oneof") {
+                    const options = Object.entries(field.type.fields);
                     if (options.length === 0) continue;
 
-                    const { value, comments } = defaultProtoBody(field, indent + INDENT_STEP);
+                    const { value, comments } = defaultProtoBody(field.type, indent + INDENT_STEP);
                     const comment = comments && comments.length > 0 ? ` // ${comments.join(", ")}` : "";
                     result += `${indent}${INDENT_STEP}${options[0][0]}: ${value},${comment}\n`;
                 } else {
-                    const { value, comments } = defaultProtoBody(field, indent + INDENT_STEP);
+                    const { value, comments } = defaultProtoBody(field.type, indent + INDENT_STEP);
                     const comment = comments && comments.length > 0 ? ` // ${comments.join(", ")}` : "";
                     result += `${indent}${INDENT_STEP}${name}: ${value},${comment}\n`;
                 }
@@ -272,7 +280,7 @@ export function defaultProtoBody(protoDescriptor: ProtoObject, indent = ""): { v
             const [optionName, optionType] = options[0];
             const comment = `oneof ${options.map(([name]) => name).join(", ")}`;
 
-            const { value, comments } = defaultProtoBody(optionType, indent + INDENT_STEP);
+            const { value, comments } = defaultProtoBody(optionType.type, indent + INDENT_STEP);
             return { value, comments: comments ? [comment, ...comments] : [comment] };
         }
         return { value: "{}", comments: ["Empty oneof"] };

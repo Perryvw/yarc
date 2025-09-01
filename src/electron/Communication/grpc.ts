@@ -2,54 +2,222 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
+import * as protobuf from "protobufjs";
 import { dialog } from "electron";
 import JSON5 from "json5";
-import type { GrpcServerStreamDataEvent, GrpcServerStreamErrorEvent, GrpcStreamClosedEvent } from "../../common/grpc";
+import type {
+    GrpcServerStreamDataEvent,
+    GrpcServerStreamErrorEvent,
+    GrpcStreamClosedEvent,
+    ProtoService,
+} from "../../common/grpc";
 import { type BrowseProtoResult, IpcEvent } from "../../common/ipc";
 import type { GrpcRequestData, GrpcResponse, GrpcServerStreamData, RequestId } from "../../common/request-types";
+import { GrpcReflectionHandler } from "./grpc-reflection";
 
 const RequestCancelHandles: Partial<Record<RequestId, () => void>> = {};
 
 export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.WebContents): Promise<GrpcResponse> {
-    if (!request.protoFile || !request.rpc) {
-        throw "invalid request";
+    if (!request.rpc) {
+        return {
+            result: "error",
+            code: "INVALID",
+            detail: "Invalid rpc data",
+            time: 0,
+        };
     }
 
     const GenericClient = grpc.makeGenericClientConstructor({}, "");
     const client = new GenericClient(request.url, grpc.credentials.createInsecure());
 
-    const parsedProto = await parseProtoPackageDescription(request.protoFile.protoPath, request.protoFile.rootDir);
-    const service = parsedProto[request.rpc.service];
+    if (request.protoFile) {
+        const parsedProto = await parseProtoPackageDescription(request.protoFile.protoPath, request.protoFile.rootDir);
+        const service = parsedProto[request.rpc.service];
 
-    if (service && isServiceDefinition(service)) {
-        const method = service[request.rpc.method];
-        if (method) {
-            if (!method.requestStream && !method.responseStream) {
-                return await grpcUnaryRequest(request, method, client);
+        if (service && isServiceDefinition(service)) {
+            const method = service[request.rpc.method];
+            if (method) {
+                if (!method.requestStream && !method.responseStream) {
+                    return await grpcUnaryRequest(
+                        request,
+                        method.path,
+                        method.requestSerialize,
+                        method.responseDeserialize,
+                        client,
+                    );
+                }
+
+                if (!method.requestStream && method.responseStream) {
+                    return await grpcServerStreamingRequest(
+                        request,
+                        method.path,
+                        method.requestSerialize,
+                        method.responseDeserialize,
+                        client,
+                        ipc,
+                    );
+                }
+
+                return {
+                    result: "error",
+                    code: "INVALID",
+                    detail: "Request streaming is not (yet) supported",
+                    time: 0,
+                };
             }
-
-            if (!method.requestStream && method.responseStream) {
-                return await grpcServerStreamingRequest(request, method, client, ipc);
-            }
-
-            return { result: "error", code: "INVALID", detail: "Request streaming is not (yet) supported", time: 0 };
         }
+    } else {
+        //reflection
+        const methodInfo = await GrpcReflectionHandler.getMethodInfo(client, request.rpc.service, request.rpc.method);
+        if (methodInfo.requestType === undefined || methodInfo.responseType === undefined) {
+            return {
+                result: "error",
+                code: "INVALID",
+                detail: "Reflected method information could not figure out request or response type",
+                time: 0,
+            };
+        }
+
+        const typeName = (message: ProtoObject): string => {
+            switch (message.type) {
+                case "message":
+                    return message.name;
+                case "enum":
+                    return message.name;
+                case "literal":
+                    return message.literalType;
+                case "optional":
+                    return typeName(message.optionalType);
+                case "repeated":
+                    return typeName(message.repeatedType);
+                default:
+                    throw `Don't know how to get name for ${message.type} proto object!`;
+            }
+        };
+        const messageDescriptorToProtoType = (message: ProtoMessageDescriptor): protobuf.Type => {
+            const type = new protobuf.Type(message.name);
+
+            const handleField = (field: ProtoField) => {
+                if (field.type.type === "oneof") {
+                    if (type.oneofs === undefined) type.oneofs = {};
+
+                    const oneof = new protobuf.OneOf(field.name);
+                    type.oneofs[field.name] = oneof;
+                    type.oneofsArray.push(type.oneofs[field.name]);
+
+                    for (const [name, oneOfField] of Object.entries(field.type.fields)) {
+                        handleField(oneOfField);
+                        const f = type.fields[oneOfField.name];
+                        oneof.fieldsArray.push(f);
+                        f.optional = true;
+                        f.required = false;
+                        f.partOf = oneof;
+                    }
+                    return;
+                }
+
+                let innerType: ProtoObject | undefined = undefined;
+                if (field.type.type === "message") {
+                    innerType = field.type;
+                } else if (field.type.type === "optional") {
+                    innerType = field.type.optionalType;
+                } else if (field.type.type === "repeated") {
+                    innerType = field.type.repeatedType;
+                }
+
+                if (!innerType) {
+                    throw `Could not determine type of proto field ${field.name}=${field.id}! ${JSON.stringify(field.type)}`;
+                }
+
+                type.fields[field.name] = new protobuf.Field(field.name, field.id, typeName(innerType));
+
+                if (field.type.type === "optional") {
+                    type.fields[field.name].optional = true;
+                } else if (field.type.type === "repeated") {
+                    type.fields[field.name].repeated = true;
+                } else {
+                    type.fields[field.name].optional = false;
+                    type.fields[field.name].required = true;
+                }
+
+                if (innerType.type === "message") {
+                    // Fill in resolved types because we can't resolve in the reflected information
+                    type.fields[field.name].resolved = true;
+                    type.fields[field.name].resolvedType = messageDescriptorToProtoType(innerType);
+                } else if (innerType.type === "enum") {
+                    type.fields[field.name].resolved = true;
+                    const enumType = new protobuf.Enum(innerType.name);
+                    for (const v of innerType.values) {
+                        enumType.values[v.name] = v.value;
+                    }
+                    type.fields[field.name].resolvedType = enumType;
+                }
+            };
+
+            for (const field of Object.values(message.fields)) {
+                if (!field) continue;
+                handleField(field);
+            }
+            return type;
+        };
+
+        const requestMessage = messageDescriptorToProtoType(methodInfo.requestType);
+        const responseMessage = messageDescriptorToProtoType(methodInfo.responseType);
+        const methodPath = `/${request.rpc.service}/${request.rpc.method}`;
+
+        if (!methodInfo.requestStream && !methodInfo.serverStream) {
+            return await grpcUnaryRequest(
+                request,
+                methodPath,
+                (o) => Buffer.from(requestMessage.encode(o).finish()),
+                (b) => responseMessage.decode(b),
+                client,
+            );
+        }
+
+        if (!methodInfo.requestStream && methodInfo.serverStream) {
+            return await grpcServerStreamingRequest(
+                request,
+                methodPath,
+                (o) => Buffer.from(requestMessage.encode(o).finish()),
+                (b) => responseMessage.decode(b),
+                client,
+                ipc,
+            );
+        }
+
+        return {
+            result: "error",
+            code: "INVALID",
+            detail: "Request streaming is not (yet) supported",
+            time: 0,
+        };
     }
 
     return { result: "error", code: "INVALID", detail: "Invalid request", time: 0 };
 }
 
+export async function getMethodsViaReflection(serverUrl: string): Promise<Result<ProtoService[], string>> {
+    const GenericClient = grpc.makeGenericClientConstructor({}, "");
+    const client = new GenericClient(serverUrl, grpc.credentials.createInsecure());
+
+    // This protocol is so complicated it was moved to its own file
+    return GrpcReflectionHandler.fetchServicesFromServer(client);
+}
+
 function grpcUnaryRequest(
     request: GrpcRequestData,
-    method: proto.MethodDefinition<object, object, object, object>,
+    path: string,
+    requestSerialize: (obj: object) => Buffer,
+    responseDeserialize: (b: Buffer) => object,
     client: grpc.Client,
 ): Promise<GrpcResponse> {
     return new Promise((resolve) => {
         const start = performance.now();
         const call = client.makeUnaryRequest(
-            method.path,
-            method.requestSerialize,
-            (r) => JSON.stringify(method.responseDeserialize(r), null, 2),
+            path,
+            requestSerialize,
+            (r) => JSON.stringify(responseDeserialize(r), null, 2),
             parseRequestBody(request.body),
             (err: grpc.ServiceError | null, value?: string) => {
                 delete RequestCancelHandles[request.id];
@@ -81,14 +249,16 @@ function grpcUnaryRequest(
 
 async function grpcServerStreamingRequest(
     request: GrpcRequestData,
-    method: proto.MethodDefinition<object, object, object, object>,
+    path: string,
+    requestSerialize: (obj: object) => Buffer,
+    responseDeserialize: (b: Buffer) => object,
     client: grpc.Client,
     ipc: Electron.WebContents,
 ): Promise<GrpcServerStreamData> {
     const stream = client.makeServerStreamRequest(
-        method.path,
-        method.requestSerialize,
-        method.responseDeserialize,
+        path,
+        requestSerialize,
+        responseDeserialize,
         parseRequestBody(request.body),
     );
 
@@ -176,7 +346,7 @@ export async function findProtoFiles(protoRoot: string): Promise<string[]> {
 }
 
 function parseProtoPackageDescription(protoPath: string, protoRootDir: string): Promise<proto.PackageDefinition> {
-    return proto.load(path.join(protoRootDir, protoPath), { includeDirs: [protoRootDir] });
+    return proto.load(protoPath, { includeDirs: [protoRootDir] });
 }
 
 function isServiceDefinition(desc: proto.AnyDefinition): desc is proto.ServiceDefinition {

@@ -36,6 +36,7 @@ export interface GrpcRequestData {
     lastExecute: number;
     isExecuting: boolean;
     history: GrpcRequestData[];
+    useReflection?: boolean;
 
     kind?: GrpcRequestKind;
     protoFile?: { protoPath: string; rootDir: string };

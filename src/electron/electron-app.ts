@@ -3,16 +3,15 @@ import { BrowserWindow, app, ipcMain, nativeTheme } from "electron";
 import type { ProtoContent, ProtoRoot } from "../common/grpc";
 import { type BrowseProtoResult, IpcCall, IpcEvent } from "../common/ipc";
 import type { PersistedState } from "../common/persist-state";
-import type {
-    GrpcRequestData,
-    GrpcResponse,
-    HttpRequestData,
-    HttpResponseData,
-    RequestId,
-    RequestList,
-} from "../common/request-types";
+import type { GrpcRequestData, GrpcResponse, HttpRequestData, RequestId, RequestList } from "../common/request-types";
 import { backgroundColor } from "../renderer/src/palette";
-import { browseProtoRoot, cancelGrpcRequest, findProtoFiles, makeGrpcRequest } from "./Communication/grpc";
+import {
+    browseProtoRoot,
+    cancelGrpcRequest,
+    findProtoFiles,
+    getMethodsViaReflection,
+    makeGrpcRequest,
+} from "./Communication/grpc";
 import { cancelHttpRequest, makeHttpRequest } from "./Communication/http";
 import { parseProtoFile } from "./Communication/proto";
 import { exportDirectory, importDirectory } from "./Storage/import-export";
@@ -61,6 +60,14 @@ app.whenReady().then(async () => {
     ipcMain.handle(IpcCall.GrpcRequest, async (_, request: GrpcRequestData): Promise<GrpcResponse> => {
         try {
             return await makeGrpcRequest(request, window.webContents);
+            // biome-ignore lint/suspicious/noExplicitAny:
+        } catch (err: any) {
+            return { result: "error", code: "EXCEPTION", detail: err.toString(), time: 0 };
+        }
+    });
+    ipcMain.handle(IpcCall.GrpcReflection, async (_, url: string) => {
+        try {
+            return await getMethodsViaReflection(url);
             // biome-ignore lint/suspicious/noExplicitAny:
         } catch (err: any) {
             return { result: "error", code: "EXCEPTION", detail: err.toString(), time: 0 };

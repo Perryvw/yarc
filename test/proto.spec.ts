@@ -40,7 +40,11 @@ describe("myproto.proto", async () => {
             type: "message",
             name: "HelloRequest",
             fields: {
-                name: { type: "literal", literalType: "string" },
+                name: {
+                    id: 1,
+                    name: "name",
+                    type: { type: "literal", literalType: "string" },
+                },
             },
         });
     });
@@ -54,7 +58,11 @@ describe("myproto.proto", async () => {
             type: "message",
             name: "HelloReply",
             fields: {
-                message: { type: "literal", literalType: "string" },
+                message: {
+                    id: 1,
+                    name: "message",
+                    type: { type: "literal", literalType: "string" },
+                },
             },
         });
     });
@@ -67,7 +75,11 @@ describe("myproto.proto", async () => {
             type: "message",
             name: "HelloRequest",
             fields: {
-                name: { type: "literal", literalType: "string" },
+                name: {
+                    id: 1,
+                    name: "name",
+                    type: { type: "literal", literalType: "string" },
+                },
             },
         };
 
@@ -75,7 +87,11 @@ describe("myproto.proto", async () => {
             type: "message",
             name: "HelloReply",
             fields: {
-                message: { type: "literal", literalType: "string" },
+                message: {
+                    id: 1,
+                    name: "message",
+                    type: { type: "literal", literalType: "string" },
+                },
             },
         };
 
@@ -83,16 +99,40 @@ describe("myproto.proto", async () => {
             type: "message",
             name: "NestedRequest",
             fields: {
-                reply: helloReplyType,
-                request2: { type: "optional", optionalType: helloRequestType },
+                reply: {
+                    id: 1,
+                    name: "reply",
+                    type: helloReplyType,
+                },
+                request2: {
+                    id: 2,
+                    name: "request2",
+                    type: { type: "optional", optionalType: helloRequestType },
+                },
                 testoneof: {
-                    type: "oneof",
-                    fields: {
-                        reply3: helloReplyType,
-                        request4: helloRequestType,
+                    id: 0,
+                    name: "testoneof",
+                    type: {
+                        type: "oneof",
+                        fields: {
+                            reply3: {
+                                id: 3,
+                                name: "reply3",
+                                type: helloReplyType,
+                            },
+                            request4: {
+                                id: 4,
+                                name: "request4",
+                                type: helloRequestType,
+                            },
+                        },
                     },
                 },
-                replies: { type: "repeated", repeatedType: helloReplyType },
+                replies: {
+                    id: 5,
+                    name: "replies",
+                    type: { type: "repeated", repeatedType: helloReplyType },
+                },
             },
         });
     });
@@ -107,24 +147,32 @@ describe("myproto.proto", async () => {
             name: "MessageWithEnums",
             fields: {
                 globalEnum: {
-                    type: "enum",
-                    name: "GlobalEnum",
-                    values: [
-                        { name: "A", value: 0 },
-                        { name: "B", value: 1 },
-                        { name: "C", value: 2 },
-                    ],
+                    id: 0,
+                    name: "globalEnum",
+                    type: {
+                        type: "enum",
+                        name: "GlobalEnum",
+                        values: [
+                            { name: "A", value: 0 },
+                            { name: "B", value: 1 },
+                            { name: "C", value: 2 },
+                        ],
+                    },
                 },
                 nestedEnum: {
-                    type: "optional",
-                    optionalType: {
-                        type: "enum",
-                        name: "NestedEnum",
-                        values: [
-                            { name: "X", value: 0 },
-                            { name: "Y", value: 1 },
-                            { name: "Z", value: 2 },
-                        ],
+                    id: 1,
+                    name: "nestedEnum",
+                    type: {
+                        type: "optional",
+                        optionalType: {
+                            type: "enum",
+                            name: "NestedEnum",
+                            values: [
+                                { name: "X", value: 0 },
+                                { name: "Y", value: 1 },
+                                { name: "Z", value: 2 },
+                            ],
+                        },
                     },
                 },
             },
@@ -150,10 +198,18 @@ describe("sibling1/nestedproto1.proto", async () => {
             name: "MessageUsingParent",
             fields: {
                 helloRequest: {
-                    type: "message",
-                    name: "HelloRequest",
-                    fields: {
-                        name: { type: "literal", literalType: "string" },
+                    id: 1,
+                    name: "helloRequest",
+                    type: {
+                        type: "message",
+                        name: "HelloRequest",
+                        fields: {
+                            name: {
+                                id: 1,
+                                name: "name",
+                                type: { type: "literal", literalType: "string" },
+                            },
+                        },
                     },
                 },
             },
@@ -163,17 +219,29 @@ describe("sibling1/nestedproto1.proto", async () => {
             name: "MessageUsingSibling",
             fields: {
                 sibling: {
-                    type: "message",
-                    name: "SiblingMessage",
-                    fields: {
-                        oneofthese: {
-                            type: "oneof",
-                            fields: {
-                                b: { type: "literal", literalType: "bool" },
-                                i: { type: "literal", literalType: "int32" },
+                    id: 1,
+                    name: "sibling",
+                    type: {
+                        type: "message",
+                        name: "SiblingMessage",
+                        fields: {
+                            oneofthese: {
+                                id: 0,
+                                name: "oneofthese",
+                                type: {
+                                    type: "oneof",
+                                    fields: {
+                                        b: { id: 1, name: "b", type: { type: "literal", literalType: "bool" } },
+                                        i: { id: 2, name: "i", type: { type: "literal", literalType: "int32" } },
+                                    },
+                                },
+                            },
+                            doubles: {
+                                id: 3,
+                                name: "doubles",
+                                type: { type: "repeated", repeatedType: { type: "literal", literalType: "double" } },
                             },
                         },
-                        doubles: { type: "repeated", repeatedType: { type: "literal", literalType: "double" } },
                     },
                 },
             },

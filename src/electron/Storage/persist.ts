@@ -111,24 +111,31 @@ function fixPersistedData(
             url: ri.url ?? "",
             kind: ri.kind,
 
+            useReflection: ri.useReflection ?? false,
             protoFile: ri.protoFile
                 ? {
                       protoPath: ri.protoFile?.protoPath ?? "",
                       rootDir: ri.protoFile?.rootDir ?? "",
                   }
                 : undefined,
-            rpc: ri.rpc
-                ? {
-                      service: ri.rpc?.service ?? "",
-                      method: ri.rpc?.method ?? "",
-                  }
-                : undefined,
+            rpc: ri.rpc ? fixGrpcRpc(ri.rpc) : undefined,
 
             body: ri.body ?? "{}",
 
             lastExecute: ri.lastExecute ?? Date.now(),
             isExecuting: false,
             history: [],
+        };
+    }
+
+    function fixGrpcRpc(m: DeepPartial<GrpcRequestData["rpc"]>): GrpcRequestData["rpc"] {
+        if (m?.service === undefined) return undefined;
+        if (m?.method === undefined) return undefined;
+        if (typeof m.method !== "string") return undefined;
+
+        return {
+            service: m.service,
+            method: m.method,
         };
     }
 
