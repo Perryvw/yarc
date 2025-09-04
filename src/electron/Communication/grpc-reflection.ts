@@ -1,4 +1,3 @@
-import * as path from "node:path";
 import type * as grpc from "@grpc/grpc-js";
 import * as proto from "@grpc/proto-loader";
 import * as protobufjs from "protobufjs";
@@ -9,18 +8,19 @@ import type { FileDescriptorResponse } from "@grpc/reflection/build/src/generate
 import type { ServiceResponse } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/ServiceResponse";
 import type { MethodInfo, ProtoService } from "../../common/grpc";
 
+import reflectionProtoPath from "../../../node_modules/@grpc/reflection/build/proto/grpc/reflection/v1/reflection.proto?asset";
+import descriptorProtoPath from "../../../node_modules/protobufjs/google/protobuf/descriptor.proto?asset";
+
 let ReflectionService: proto.ServiceDefinition = undefined!;
 let FileDescriptorProto: protobufjs.Type = undefined!;
 async function loadPrerequisites(): Promise<void> {
     if (!ReflectionService) {
         // Parse the reflection proto to call the service
-        const parsedProto = await proto.load("reflection.proto", {
-            includeDirs: ["node_modules/@grpc/reflection/build/proto/grpc/reflection/v1"],
-        });
+        const parsedProto = await proto.load(reflectionProtoPath);
         ReflectionService = parsedProto["grpc.reflection.v1.ServerReflection"] as proto.ServiceDefinition;
 
         // parse the descriptor proto to decode the reflection messages
-        const root = await protobufjs.load(path.join("node_modules/protobufjs", "google/protobuf/descriptor.proto"));
+        const root = await protobufjs.load(descriptorProtoPath);
         FileDescriptorProto = root.lookupType("google.protobuf.FileDescriptorProto");
     }
 }

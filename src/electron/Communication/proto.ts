@@ -1,5 +1,5 @@
 import * as path from "node:path";
-import * as protobufjs from "../../../node_modules/protobufjs";
+import * as protobufjs from "protobufjs";
 import type { ProtoContent, ProtoService } from "../../common/grpc";
 
 export async function parseProtoFile(protoPath: string, protoRootDir: string): Promise<Result<ProtoContent, string>> {

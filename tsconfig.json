@@ -7,7 +7,7 @@
         "jsx": "react-jsx",
         "strict": true,
         "module": "CommonJS",
-        "skipLibCheck": true
+        "skipLibCheck": true,
     },
     "include": ["src/**/*", "test/**/*"]
 }

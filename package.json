@@ -42,7 +42,7 @@
         "codemirror-json5": "^1.0.3",
         "electron": "^35.0.0",
         "electron-builder": "^25.1.8",
-        "electron-vite": "^v3.1.0-beta.0",
+        "electron-vite": "^3.1.0",
         "golden-fleece": "^1.0.9",
         "lucide-react": "^0.482.0",
         "mobx": "^6.13.5",
@@ -52,6 +52,6 @@
         "styled-components": "^6.1.13",
         "typescript": "^5.6.3",
         "uuid": "^11.0.3",
-        "vitest": "^3.0.0"
+        "vitest": "^3.2.4"
     }
 }
