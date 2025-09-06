@@ -1,23 +1,30 @@
 import type * as grpc from "@grpc/grpc-js";
+import { Status as GrpcStatus } from "@grpc/grpc-js/build/src/constants";
 import * as proto from "@grpc/proto-loader";
-import * as protobufjs from "protobufjs";
-import type * as protobuf_descriptor from "protobufjs/ext/descriptor";
+import type { FileDescriptorResponse } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/FileDescriptorResponse";
 import type { ServerReflectionRequest } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/ServerReflectionRequest";
 import type { ServerReflectionResponse } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/ServerReflectionResponse";
-import type { FileDescriptorResponse } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/FileDescriptorResponse";
 import type { ServiceResponse } from "@grpc/reflection/build/src/generated/grpc/reflection/v1/ServiceResponse";
+import * as protobufjs from "protobufjs";
+import type * as protobuf_descriptor from "protobufjs/ext/descriptor";
 import type { MethodInfo, ProtoService } from "../../common/grpc";
 
-import reflectionProtoPath from "../../../node_modules/@grpc/reflection/build/proto/grpc/reflection/v1/reflection.proto?asset";
+import reflectionV1ProtoPath from "../../../node_modules/@grpc/reflection/build/proto/grpc/reflection/v1/reflection.proto?asset";
+import reflectionV1AlphaProtoPath from "../../../node_modules/@grpc/reflection/build/proto/grpc/reflection/v1alpha/reflection.proto?asset";
 import descriptorProtoPath from "../../../node_modules/protobufjs/google/protobuf/descriptor.proto?asset";
 
-let ReflectionService: proto.ServiceDefinition = undefined!;
+let ReflectionServiceV1: proto.ServiceDefinition = undefined!;
+let ReflectionServiceV1Alpha: proto.ServiceDefinition = undefined!;
 let FileDescriptorProto: protobufjs.Type = undefined!;
 async function loadPrerequisites(): Promise<void> {
-    if (!ReflectionService) {
+    if (!ReflectionServiceV1) {
         // Parse the reflection proto to call the service
-        const parsedProto = await proto.load(reflectionProtoPath);
-        ReflectionService = parsedProto["grpc.reflection.v1.ServerReflection"] as proto.ServiceDefinition;
+        const parsedProtoV1 = await proto.load(reflectionV1ProtoPath);
+        ReflectionServiceV1 = parsedProtoV1["grpc.reflection.v1.ServerReflection"] as proto.ServiceDefinition;
+        const parsedProtoV1Alpha = await proto.load(reflectionV1AlphaProtoPath);
+        ReflectionServiceV1Alpha = parsedProtoV1Alpha[
+            "grpc.reflection.v1alpha.ServerReflection"
+        ] as proto.ServiceDefinition;
 
         // parse the descriptor proto to decode the reflection messages
         const root = await protobufjs.load(descriptorProtoPath);
@@ -42,7 +49,7 @@ export class GrpcReflectionHandler {
         const handler = new GrpcReflectionHandler(client);
         await loadPrerequisites();
         reflectionCache.clear();
-        return await handler.fetchServices();
+        return await handler.fetchServicesWithV1();
     }
 
     static async getMethodInfo(client: grpc.Client, service: string, method: string): Promise<MethodInfo> {
@@ -60,14 +67,62 @@ export class GrpcReflectionHandler {
         return methodInfo;
     }
 
-    async fetchServices(): Promise<Result<ProtoService[], string>> {
-        return new Promise((resolve) => {
-            const method = ReflectionService.ServerReflectionInfo;
+    async fetchServicesWithV1(): Promise<Result<ProtoService[], string>> {
+        return new Promise((resolve, reject) => {
+            const method = ReflectionServiceV1.ServerReflectionInfo;
             this.stream = this.client.makeBidiStreamRequest(
                 method.path,
                 method.requestSerialize,
                 method.responseDeserialize,
             );
+
+            // Request a list of all the services
+            this.requestServiceList();
+
+            this.stream.on("data", async (response: ServerReflectionResponse) => {
+                if (response?.listServicesResponse?.service) {
+                    this.handleListServicesResponse(response.listServicesResponse.service);
+                } else if (response?.fileDescriptorResponse) {
+                    this.handleFileDescriptorResponse(response.fileDescriptorResponse);
+                }
+
+                this.pendingRequests--;
+                if (this.pendingRequests === 0) {
+                    this.stream.end();
+                }
+            });
+
+            let fellBackToV1Alpha = false;
+
+            this.stream.on("error", (err) => {
+                if ("code" in err && err.code === GrpcStatus.UNIMPLEMENTED) {
+                    // Fall back on v1 alpha
+                    console.log("Falling back on v1alpha reflection protocol");
+                    this.fetchServicesWithV1Alpha().then(resolve).catch(reject);
+                    fellBackToV1Alpha = true;
+                } else {
+                    resolve({ success: false, error: err.message });
+                }
+            });
+
+            this.stream.on("end", () => {
+                if (!fellBackToV1Alpha) {
+                    // Map the reflection info to the info we need
+                    resolve({ success: true, value: this.mapServices() });
+                }
+            });
+        });
+    }
+
+    async fetchServicesWithV1Alpha(): Promise<Result<ProtoService[], string>> {
+        return new Promise((resolve) => {
+            const method = ReflectionServiceV1Alpha.ServerReflectionInfo;
+            this.stream = this.client.makeBidiStreamRequest(
+                method.path,
+                method.requestSerialize,
+                method.responseDeserialize,
+            );
+            this.pendingRequests = 0;
 
             // Request a list of all the services
             this.requestServiceList();

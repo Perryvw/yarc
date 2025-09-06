@@ -4,13 +4,13 @@ import { json5 } from "codemirror-json5";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
 import { useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import type { MethodInfo, ProtoContent, ProtoService } from "../../common/grpc";
 import { IpcCall } from "../../common/ipc";
 import { type GrpcRequestData, GrpcRequestKind } from "../../common/request-types";
 import type { AppContext, ProtoConfig } from "./AppContext";
 import { type SelectProtoModalResult, SelectProtosModal } from "./modals/select-protos";
-import { backgroundHoverColor, errorColor } from "./palette";
+import { backgroundHoverColor, backgroundHoverColorAlternate, errorColor } from "./palette";
 import { defaultProtoBody, lintProtoJson } from "./util/proto-lint";
 import { substituteVariables } from "./util/substitute-variables";
 import Toggle from "./common-components/toggle";
@@ -98,12 +98,29 @@ const ReflectedServicesText = styled.label`
     color: #ccc;
 `;
 
+const rotateKeyframes = keyframes`
+    0% {
+        transform: rotate(0);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+`;
+
 const ReflectionButton = styled.button`
     padding: 6px;
     cursor: pointer;
     border: none;
     border-radius: 5px;
     background-color: var(--color-background);
+
+    &.active, &:hover.active {
+        background-color: hsl(96, 46%, 57%);
+    }
+
+    &.active > * {
+        animation: ${rotateKeyframes} 1s ease-in-out infinite;
+    }
 
     &:hover {
         background-color: ${backgroundHoverColor};
@@ -149,6 +166,7 @@ export const GrpcRequestPanel = observer(
         );
 
         const [rpcs, setRpcs] = useState<MethodDescriptor[] | undefined>(undefined);
+        const [requestingReflection, setRequestingReflection] = useState(false);
         const [reflectedServices, setReflectedServices] = useState<ProtoService[] | undefined>(undefined);
         const [protoError, setError] = useState<string | undefined>(undefined);
 
@@ -262,11 +280,13 @@ export const GrpcRequestPanel = observer(
 
         const fetchReflectionMethods = useCallback(async () => {
             try {
+                setRequestingReflection(true);
                 const url = substituteVariables(activeRequest.url, context.substitutionVariables);
                 const result: Result<ProtoService[], string> = await window.electron.ipcRenderer.invoke(
                     IpcCall.GrpcReflection,
                     url,
                 );
+                setRequestingReflection(false);
                 if (result.success) {
                     setReflectedServices(result.value);
                     setError(undefined);
@@ -275,6 +295,7 @@ export const GrpcRequestPanel = observer(
                     setError(`Error fetching reflection methods: ${result.error}`);
                 }
             } catch (err) {
+                setRequestingReflection(false);
                 setRpcs([]);
                 setError(`Failed to fetch reflection methods: ${err}`);
             }
@@ -300,9 +321,12 @@ export const GrpcRequestPanel = observer(
                     {activeRequest.useReflection && (
                         <>
                             <ReflectedServicesText>
-                                {reflectedServices?.length ?? 0} services found
+                                {reflectedServices ? `${reflectedServices.length} services found` : "Request services:"}
                             </ReflectedServicesText>
-                            <ReflectionButton onClick={fetchReflectionMethods}>
+                            <ReflectionButton
+                                className={requestingReflection ? "active" : ""}
+                                onClick={fetchReflectionMethods}
+                            >
                                 <RefreshCcw size={16} />
                             </ReflectionButton>
                         </>

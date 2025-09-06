@@ -1,6 +1,6 @@
 import { join } from "node:path";
 import { BrowserWindow, app, ipcMain, nativeTheme } from "electron";
-import type { ProtoContent, ProtoRoot } from "../common/grpc";
+import type { ProtoContent, ProtoRoot, ProtoService } from "../common/grpc";
 import { type BrowseProtoResult, IpcCall, IpcEvent } from "../common/ipc";
 import type { PersistedState } from "../common/persist-state";
 import type { GrpcRequestData, GrpcResponse, HttpRequestData, RequestId, RequestList } from "../common/request-types";
@@ -65,12 +65,12 @@ app.whenReady().then(async () => {
             return { result: "error", code: "EXCEPTION", detail: err.toString(), time: 0 };
         }
     });
-    ipcMain.handle(IpcCall.GrpcReflection, async (_, url: string) => {
+    ipcMain.handle(IpcCall.GrpcReflection, async (_, url: string): Promise<Result<ProtoService[], string>> => {
         try {
             return await getMethodsViaReflection(url);
             // biome-ignore lint/suspicious/noExplicitAny:
         } catch (err: any) {
-            return { result: "error", code: "EXCEPTION", detail: err.toString(), time: 0 };
+            return { success: false, error: err.toString() };
         }
     });
 
