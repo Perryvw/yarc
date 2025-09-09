@@ -200,6 +200,7 @@ export class GrpcReflectionHandler {
             for (const msg of fileDesc.messageType) {
                 // Save both the local name and globally specified name
                 this.knownTypes.set(msg.name!, msg);
+                this.knownTypes.set(`${fileDesc.package}.${msg.name}`, msg);
                 this.knownTypes.set(`.${fileDesc.package}.${msg.name}`, msg);
                 if (msg.enumType) {
                     // Also save the nested enums
@@ -211,6 +212,14 @@ export class GrpcReflectionHandler {
                     // Also save nested messages
                     for (const nestedType of msg.nestedType) {
                         this.knownTypes.set(nestedType.name!, nestedType);
+                    }
+                }
+                for (const field of msg.field ?? []) {
+                    if (!field.typeName) continue;
+
+                    if (!this.knownTypes.has(field.typeName) && !this.knownEnums.has(field.typeName)) {
+                        // If type is not a known type or enum, request it
+                        this.requestType(field.typeName);
                     }
                 }
             }
