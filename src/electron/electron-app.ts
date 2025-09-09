@@ -67,14 +67,11 @@ app.whenReady().then(async () => {
     });
     ipcMain.handle(IpcCall.GrpcReflection, async (_, url: string): Promise<Result<ProtoService[], string>> => {
         try {
-            console.log("starting reflection call");
             const result = await getMethodsViaReflection(url);
-            console.log("finished reflection call");
             return result;
-            // biome-ignore lint/suspicious/noExplicitAny:
-        } catch (err: any) {
-            console.log("caught reflection error:", err);
-            return { success: false, error: err?.toString() };
+        } catch (err) {
+            console.log("error during IpcCall.GrpcReflection", err);
+            return { success: false, error: `${err}` };
         }
     });
 

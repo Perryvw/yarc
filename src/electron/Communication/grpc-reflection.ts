@@ -93,6 +93,7 @@ export class GrpcReflectionHandler {
                     }
                 } catch (err) {
                     console.log("error in v1 data handler", err);
+                    resolve({ success: false, error: `${err}` });
                 }
             });
 
@@ -110,6 +111,7 @@ export class GrpcReflectionHandler {
                     }
                 } catch (err) {
                     console.log("error in v1 error handler", err);
+                    resolve({ success: false, error: `${err}` });
                 }
             });
 
@@ -121,65 +123,56 @@ export class GrpcReflectionHandler {
                     }
                 } catch (err) {
                     console.log("error in v1 end handler", err);
+                    resolve({ success: false, error: `${err}` });
                 }
             });
         });
     }
 
     async fetchServicesWithV1Alpha(): Promise<Result<ProtoService[], string>> {
-        return new Promise((resolve, reject) => {
-            try {
-                const method = ReflectionServiceV1Alpha.ServerReflectionInfo;
-                console.log("v1alpha reflection method", method);
-                this.stream = this.client.makeBidiStreamRequest(
-                    method.path,
-                    method.requestSerialize,
-                    method.responseDeserialize,
-                );
-                this.pendingRequests = 0;
+        return new Promise((resolve) => {
+            const method = ReflectionServiceV1Alpha.ServerReflectionInfo;
+            this.stream = this.client.makeBidiStreamRequest(
+                method.path,
+                method.requestSerialize,
+                method.responseDeserialize,
+            );
+            this.pendingRequests = 0;
 
-                console.log("requesting service list");
+            // Request a list of all the services
+            this.requestServiceList();
 
-                // Request a list of all the services
-                this.requestServiceList();
-
-                this.stream.on("data", async (response: ServerReflectionResponse) => {
-                    try {
-                        console.log("v1alpha data");
-                        if (response?.listServicesResponse?.service) {
-                            this.handleListServicesResponse(response.listServicesResponse.service);
-                        } else if (response?.fileDescriptorResponse) {
-                            this.handleFileDescriptorResponse(response.fileDescriptorResponse);
-                        }
-
-                        this.pendingRequests--;
-                        if (this.pendingRequests === 0) {
-                            this.stream.end();
-                        }
-                        console.log("v1alpha data handled");
-                    } catch (err) {
-                        console.log("error in v1alpha data handler", err);
+            this.stream.on("data", async (response: ServerReflectionResponse) => {
+                try {
+                    if (response?.listServicesResponse?.service) {
+                        this.handleListServicesResponse(response.listServicesResponse.service);
+                    } else if (response?.fileDescriptorResponse) {
+                        this.handleFileDescriptorResponse(response.fileDescriptorResponse);
                     }
-                });
 
-                this.stream.on("error", (err) => {
-                    console.log("v1alpha stream error", err);
-                    resolve({ success: false, error: err.message });
-                });
-
-                this.stream.on("end", () => {
-                    console.log("v1alpha end");
-                    try {
-                        // Map the reflection info to the info we need
-                        resolve({ success: true, value: this.mapServices() });
-                    } catch (err) {
-                        console.log("error in v1alpha end handler", err);
+                    this.pendingRequests--;
+                    if (this.pendingRequests === 0) {
+                        this.stream.end();
                     }
-                });
-            } catch (err) {
-                console.log("error fetching with v1alpha", err);
-                reject(err);
-            }
+                } catch (err) {
+                    console.log("error in v1alpha data handler", err);
+                    resolve({ success: false, error: `${err}` });
+                }
+            });
+
+            this.stream.on("error", (err) => {
+                resolve({ success: false, error: err.message });
+            });
+
+            this.stream.on("end", () => {
+                try {
+                    // Map the reflection info to the info we need
+                    resolve({ success: true, value: this.mapServices() });
+                } catch (err) {
+                    console.log("error in v1alpha end handler", err);
+                    resolve({ success: false, error: `${err}` });
+                }
+            });
         });
     }
 
