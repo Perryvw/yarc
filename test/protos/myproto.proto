@@ -4,6 +4,8 @@ option csharp_namespace = "GrpcGreeter";
 
 package greet;
 
+import "a.b.c/otherproto.proto";
+
 // The greeting service definition.
 service Greeter {
   // Sends a greeting
@@ -27,6 +29,9 @@ service Greeter {
 
   // Test default bool values:
   rpc Bools(HelloRequest) returns (MessageWithBools);
+
+  // Test types from other proto and package
+  rpc TestImportedTypes(MessageWithExternalTypes) returns (MessageWithExternalTypes);
 }
 
 // The request message containing the user's name.
@@ -72,4 +77,8 @@ message MessageWithEnums {
 message MessageWithBools {
   bool mybool = 0;
   optional bool myoptionalbool = 1;
+}
+
+message MessageWithExternalTypes {
+  a.b.c.AbcMessage abcMessage = 0;
 }
