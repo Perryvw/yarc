@@ -80,74 +80,106 @@ export class GrpcReflectionHandler {
             this.requestServiceList();
 
             this.stream.on("data", async (response: ServerReflectionResponse) => {
-                if (response?.listServicesResponse?.service) {
-                    this.handleListServicesResponse(response.listServicesResponse.service);
-                } else if (response?.fileDescriptorResponse) {
-                    this.handleFileDescriptorResponse(response.fileDescriptorResponse);
-                }
+                try {
+                    if (response?.listServicesResponse?.service) {
+                        this.handleListServicesResponse(response.listServicesResponse.service);
+                    } else if (response?.fileDescriptorResponse) {
+                        this.handleFileDescriptorResponse(response.fileDescriptorResponse);
+                    }
 
-                this.pendingRequests--;
-                if (this.pendingRequests === 0) {
-                    this.stream.end();
+                    this.pendingRequests--;
+                    if (this.pendingRequests === 0) {
+                        this.stream.end();
+                    }
+                } catch (err) {
+                    console.log("error in v1 data handler", err);
                 }
             });
 
             let fellBackToV1Alpha = false;
 
             this.stream.on("error", (err) => {
-                if ("code" in err && err.code === GrpcStatus.UNIMPLEMENTED) {
-                    // Fall back on v1 alpha
-                    console.log("Falling back on v1alpha reflection protocol");
-                    this.fetchServicesWithV1Alpha().then(resolve).catch(reject);
-                    fellBackToV1Alpha = true;
-                } else {
-                    resolve({ success: false, error: err.message });
+                try {
+                    if ("code" in err && err.code === GrpcStatus.UNIMPLEMENTED) {
+                        // Fall back on v1 alpha
+                        console.log("Falling back on v1alpha reflection protocol");
+                        this.fetchServicesWithV1Alpha().then(resolve).catch(reject);
+                        fellBackToV1Alpha = true;
+                    } else {
+                        resolve({ success: false, error: err.message });
+                    }
+                } catch (err) {
+                    console.log("error in v1 error handler", err);
                 }
             });
 
             this.stream.on("end", () => {
-                if (!fellBackToV1Alpha) {
-                    // Map the reflection info to the info we need
-                    resolve({ success: true, value: this.mapServices() });
+                try {
+                    if (!fellBackToV1Alpha) {
+                        // Map the reflection info to the info we need
+                        resolve({ success: true, value: this.mapServices() });
+                    }
+                } catch (err) {
+                    console.log("error in v1 end handler", err);
                 }
             });
         });
     }
 
     async fetchServicesWithV1Alpha(): Promise<Result<ProtoService[], string>> {
-        return new Promise((resolve) => {
-            const method = ReflectionServiceV1Alpha.ServerReflectionInfo;
-            this.stream = this.client.makeBidiStreamRequest(
-                method.path,
-                method.requestSerialize,
-                method.responseDeserialize,
-            );
-            this.pendingRequests = 0;
+        return new Promise((resolve, reject) => {
+            try {
+                const method = ReflectionServiceV1Alpha.ServerReflectionInfo;
+                console.log("v1alpha reflection method", method);
+                this.stream = this.client.makeBidiStreamRequest(
+                    method.path,
+                    method.requestSerialize,
+                    method.responseDeserialize,
+                );
+                this.pendingRequests = 0;
 
-            // Request a list of all the services
-            this.requestServiceList();
+                console.log("requesting service list");
 
-            this.stream.on("data", async (response: ServerReflectionResponse) => {
-                if (response?.listServicesResponse?.service) {
-                    this.handleListServicesResponse(response.listServicesResponse.service);
-                } else if (response?.fileDescriptorResponse) {
-                    this.handleFileDescriptorResponse(response.fileDescriptorResponse);
-                }
+                // Request a list of all the services
+                this.requestServiceList();
 
-                this.pendingRequests--;
-                if (this.pendingRequests === 0) {
-                    this.stream.end();
-                }
-            });
+                this.stream.on("data", async (response: ServerReflectionResponse) => {
+                    try {
+                        console.log("v1alpha data");
+                        if (response?.listServicesResponse?.service) {
+                            this.handleListServicesResponse(response.listServicesResponse.service);
+                        } else if (response?.fileDescriptorResponse) {
+                            this.handleFileDescriptorResponse(response.fileDescriptorResponse);
+                        }
 
-            this.stream.on("error", (err) => {
-                resolve({ success: false, error: err.message });
-            });
+                        this.pendingRequests--;
+                        if (this.pendingRequests === 0) {
+                            this.stream.end();
+                        }
+                        console.log("v1alpha data handled");
+                    } catch (err) {
+                        console.log("error in v1alpha data handler", err);
+                    }
+                });
 
-            this.stream.on("end", () => {
-                // Map the reflection info to the info we need
-                resolve({ success: true, value: this.mapServices() });
-            });
+                this.stream.on("error", (err) => {
+                    console.log("v1alpha stream error", err);
+                    resolve({ success: false, error: err.message });
+                });
+
+                this.stream.on("end", () => {
+                    console.log("v1alpha end");
+                    try {
+                        // Map the reflection info to the info we need
+                        resolve({ success: true, value: this.mapServices() });
+                    } catch (err) {
+                        console.log("error in v1alpha end handler", err);
+                    }
+                });
+            } catch (err) {
+                console.log("error fetching with v1alpha", err);
+                reject(err);
+            }
         });
     }
 
