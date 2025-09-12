@@ -120,6 +120,9 @@ server.addService(greeterService.service, {
         console.log("handling unary request");
         callback(null, { mybool: false });
     },
+    TestImportedTypes: (call: grpc.ServerUnaryCall<unknown, unknown>, callback: grpc.sendUnaryData<unknown>) => {
+        callback(null, call.request);
+    },
 });
 
 const reflection = new grpc_reflection.ReflectionService(protoPackage);

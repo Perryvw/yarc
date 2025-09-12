@@ -3,6 +3,16 @@ syntax = "proto3";
 package a.b.c;
 
 message AbcMessage {
+    message AbcNestedMessage {
+        enum AbcNestedEnum {
+            x = 0;
+            y = 1;
+            z = 2;
+        }
+        AbcNestedEnum nestedEnum= 1;
+    }
+
     optional string a = 0;
     optional bool b = 1;
+    AbcNestedMessage nested = 2;
 }

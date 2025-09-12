@@ -38,6 +38,7 @@ export class GrpcReflectionHandler {
     private pendingRequests = 0;
     private stream: grpc.ClientDuplexStream<ServerReflectionRequest, ServerReflectionResponse> = undefined!;
     private services: protobuf_descriptor.IServiceDescriptorProto[] = [];
+    private knownFiles = new Set<string>();
     private knownTypes = new Map<string, protobuf_descriptor.IDescriptorProto>();
     private knownEnums = new Map<string, protobuf_descriptor.IEnumDescriptorProto>();
 
@@ -189,39 +190,54 @@ export class GrpcReflectionHandler {
             const fileDesc = FileDescriptorProto.decode(
                 fileDescBytes as Buffer,
             ) as protobuf_descriptor.IFileDescriptorProto;
+
+            if (this.knownFiles.has(fileDesc.name!)) continue;
+            this.knownFiles.add(fileDesc.name!);
+
             console.log(`Encountered file ${fileDesc.name} with package ${fileDesc.package}`);
+
+            const rememberEnum = (prefix: string, enumType: protobuf_descriptor.IEnumDescriptorProto) => {
+                // Save both the local name and globally specified name
+                this.knownEnums.set(enumType.name!, enumType);
+                this.knownEnums.set(`${prefix}.${enumType.name}`, enumType);
+                this.knownEnums.set(`.${prefix}.${enumType.name}`, enumType);
+            };
+            const rememberMessage = (prefix: string, messageType: protobuf_descriptor.IDescriptorProto) => {
+                // Save both the local name and globally specified name
+                this.knownTypes.set(messageType.name!, messageType);
+                this.knownTypes.set(`${prefix}.${messageType.name}`, messageType);
+                this.knownTypes.set(`.${prefix}.${messageType.name}`, messageType);
+
+                if (messageType.enumType) {
+                    // Also save the nested enums
+                    for (const enumType of messageType.enumType) {
+                        console.log(`    Encountered nested enum ${enumType.name}`);
+                        rememberEnum(`${prefix}.${messageType.name}`, enumType);
+                    }
+                }
+                if (messageType.nestedType) {
+                    // Also save nested messages
+                    for (const nestedType of messageType.nestedType) {
+                        console.log(`    Encountered nested type ${nestedType.name}`);
+                        rememberMessage(`${prefix}.${messageType.name}`, nestedType);
+                    }
+                }
+            };
 
             // First read all message and types from this file so we don't re-request them later
             if (fileDesc.enumType) {
                 for (const enumType of fileDesc.enumType) {
                     console.log(`  Encountered enum ${enumType.name}`);
                     // Save both the local and globally specified name
-                    this.knownEnums.set(enumType.name!, enumType);
-                    this.knownEnums.set(`${fileDesc.package}.${enumType.name}`, enumType);
-                    this.knownEnums.set(`.${fileDesc.package}.${enumType.name}`, enumType);
+                    rememberEnum(fileDesc.package!, enumType);
                 }
             }
             if (fileDesc.messageType) {
                 for (const msg of fileDesc.messageType) {
                     console.log(`  Encountered message ${msg.name} in package ${fileDesc.package}`);
-                    // Save both the local name and globally specified name
-                    this.knownTypes.set(msg.name!, msg);
-                    this.knownTypes.set(`${fileDesc.package}.${msg.name}`, msg);
-                    this.knownTypes.set(`.${fileDesc.package}.${msg.name}`, msg);
-                    if (msg.enumType) {
-                        // Also save the nested enums
-                        for (const enumType of msg.enumType) {
-                            console.log(`    Encountered nested enum ${enumType.name}`);
-                            this.knownEnums.set(enumType.name!, enumType);
-                        }
-                    }
-                    if (msg.nestedType) {
-                        // Also save nested messages
-                        for (const nestedType of msg.nestedType) {
-                            console.log(`    Encountered nested type ${nestedType.name}`);
-                            this.knownTypes.set(nestedType.name!, nestedType);
-                        }
-                    }
+                    rememberMessage(fileDesc.package!, msg);
+
+                    // Also look up the types of the message fields
                     for (const field of msg.field ?? []) {
                         if (!field.typeName) continue;
                         console.log(`    Encountered field ${field.name} with type ${field.typeName}`);
