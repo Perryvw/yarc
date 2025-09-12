@@ -254,9 +254,13 @@ export const GrpcRequestPanel = observer(
             [activeRequest, rpcs, reflectedServices],
         );
 
-        const activeRpc = rpcs?.find(
-            (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
-        );
+        const activeRpc = activeRequest.useReflection
+            ? reflectedServices
+                  ?.find((svc) => svc.name === activeRequest.rpc?.service)
+                  ?.methods.find((m) => m.name === activeRequest.rpc?.method)
+            : rpcs?.find(
+                  (rpc) => rpc.service === activeRequest.rpc?.service && rpc.method.name === activeRequest.rpc.method,
+              )?.method;
 
         const reflectedRpcs = () => {
             const reflectionMethods: MethodDescriptor[] = [];
@@ -272,10 +276,10 @@ export const GrpcRequestPanel = observer(
         };
 
         const linter = CodeMirrorLint.linter((view) => {
-            if (!activeRpc?.method.requestType) return [];
+            if (!activeRpc?.requestType) return [];
 
             const content = view.state.doc.toString();
-            return lintProtoJson(content, activeRpc.method.requestType);
+            return lintProtoJson(content, activeRpc.requestType);
         });
 
         const fetchReflectionMethods = useCallback(async () => {

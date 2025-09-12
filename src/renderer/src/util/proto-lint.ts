@@ -256,6 +256,9 @@ export function defaultProtoBody(protoDescriptor: ProtoObject, indent = ""): { v
         if (protoDescriptor.literalType === "string") {
             return { value: `""` };
         }
+        if (protoDescriptor.literalType === "bool") {
+            return { value: "false" };
+        }
         return { value: "0" };
     }
 
