@@ -184,59 +184,72 @@ export class GrpcReflectionHandler {
     }
 
     handleFileDescriptorResponse(response: FileDescriptorResponse): void {
-        const fileDescBytes = response.fileDescriptorProto?.[0] as Buffer;
-        // Use protobufjs to decode the descriptor bytes
-        const fileDesc = FileDescriptorProto.decode(fileDescBytes) as protobuf_descriptor.IFileDescriptorProto;
+        for (const fileDescBytes of response.fileDescriptorProto!) {
+            // Use protobufjs to decode the descriptor bytes
+            const fileDesc = FileDescriptorProto.decode(
+                fileDescBytes as Buffer,
+            ) as protobuf_descriptor.IFileDescriptorProto;
+            console.log(`Encountered file ${fileDesc.name} with package ${fileDesc.package}`);
 
-        // First read all message and types from this file so we don't re-request them later
-        if (fileDesc.enumType) {
-            for (const enumType of fileDesc.enumType) {
-                // Save both the local and globally specified name
-                this.knownEnums.set(enumType.name!, enumType);
-                this.knownEnums.set(`.${fileDesc.package}.${enumType.name}`, enumType);
-            }
-        }
-        if (fileDesc.messageType) {
-            for (const msg of fileDesc.messageType) {
-                // Save both the local name and globally specified name
-                this.knownTypes.set(msg.name!, msg);
-                this.knownTypes.set(`${fileDesc.package}.${msg.name}`, msg);
-                this.knownTypes.set(`.${fileDesc.package}.${msg.name}`, msg);
-                if (msg.enumType) {
-                    // Also save the nested enums
-                    for (const enumType of msg.enumType) {
-                        this.knownEnums.set(enumType.name!, enumType);
-                    }
-                }
-                if (msg.nestedType) {
-                    // Also save nested messages
-                    for (const nestedType of msg.nestedType) {
-                        this.knownTypes.set(nestedType.name!, nestedType);
-                    }
-                }
-                for (const field of msg.field ?? []) {
-                    if (!field.typeName) continue;
-
-                    if (!this.knownTypes.has(field.typeName) && !this.knownEnums.has(field.typeName)) {
-                        // If type is not a known type or enum, request it
-                        this.requestType(field.typeName);
-                    }
+            // First read all message and types from this file so we don't re-request them later
+            if (fileDesc.enumType) {
+                for (const enumType of fileDesc.enumType) {
+                    console.log(`  Encountered enum ${enumType.name}`);
+                    // Save both the local and globally specified name
+                    this.knownEnums.set(enumType.name!, enumType);
+                    this.knownEnums.set(`${fileDesc.package}.${enumType.name}`, enumType);
+                    this.knownEnums.set(`.${fileDesc.package}.${enumType.name}`, enumType);
                 }
             }
-        }
-        // Then read all the services and see which types we need to request as follow-up
-        if (fileDesc?.service) {
-            for (const svc of fileDesc.service) {
-                svc.name = `${fileDesc.package}.${svc.name}`;
-                this.services.push(svc);
-                for (const method of svc.method ?? []) {
-                    if (method.inputType && !this.knownTypes.has(method.inputType)) {
-                        // Request the file containing this unknown type
-                        this.requestType(method.inputType);
+            if (fileDesc.messageType) {
+                for (const msg of fileDesc.messageType) {
+                    console.log(`  Encountered message ${msg.name} in package ${fileDesc.package}`);
+                    // Save both the local name and globally specified name
+                    this.knownTypes.set(msg.name!, msg);
+                    this.knownTypes.set(`${fileDesc.package}.${msg.name}`, msg);
+                    this.knownTypes.set(`.${fileDesc.package}.${msg.name}`, msg);
+                    if (msg.enumType) {
+                        // Also save the nested enums
+                        for (const enumType of msg.enumType) {
+                            console.log(`    Encountered nested enum ${enumType.name}`);
+                            this.knownEnums.set(enumType.name!, enumType);
+                        }
                     }
-                    if (method.outputType && !this.knownTypes.has(method.outputType)) {
-                        // Request the file containing this unknown type
-                        this.requestType(method.outputType);
+                    if (msg.nestedType) {
+                        // Also save nested messages
+                        for (const nestedType of msg.nestedType) {
+                            console.log(`    Encountered nested type ${nestedType.name}`);
+                            this.knownTypes.set(nestedType.name!, nestedType);
+                        }
+                    }
+                    for (const field of msg.field ?? []) {
+                        if (!field.typeName) continue;
+                        console.log(`    Encountered field ${field.name} with type ${field.typeName}`);
+                        if (!this.knownTypes.has(field.typeName) && !this.knownEnums.has(field.typeName)) {
+                            // If type is not a known type or enum, request it
+                            this.requestType(field.typeName);
+                        }
+                    }
+                }
+            }
+            // Then read all the services and see which types we need to request as follow-up
+            if (fileDesc?.service) {
+                for (const svc of fileDesc.service) {
+                    console.log(`  Encountered service ${svc.name}`);
+                    svc.name = `${fileDesc.package}.${svc.name}`;
+                    this.services.push(svc);
+                    for (const method of svc.method ?? []) {
+                        console.log(
+                            `    Encountered rpc ${method.name} with input ${method.inputType} and output ${method.outputType}`,
+                        );
+                        if (method.inputType && !this.knownTypes.has(method.inputType)) {
+                            // Request the file containing this unknown type
+                            this.requestType(method.inputType);
+                        }
+                        if (method.outputType && !this.knownTypes.has(method.outputType)) {
+                            // Request the file containing this unknown type
+                            this.requestType(method.outputType);
+                        }
                     }
                 }
             }
@@ -251,6 +264,7 @@ export class GrpcReflectionHandler {
     }
 
     requestType(typeName: string): void {
+        console.log(`Requesting type: ${typeName}`);
         this.stream.write({
             fileContainingSymbol: typeName,
         });
