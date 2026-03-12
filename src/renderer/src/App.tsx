@@ -151,7 +151,7 @@ const AppContainer = observer(({ context }: { context: AppContext }) => {
             />
             {context.activeRequest === undefined ? (
                 <MainContent>
-                    <div>Hello!</div>
+                    <div style={{ padding: 15 }}>&lt;-- Start by adding a new request here</div>
                 </MainContent>
             ) : (
                 <MainContent>
