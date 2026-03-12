@@ -27,6 +27,9 @@ service Greeter {
   rpc RequestStream (stream HelloRequest) returns (HelloReply);
   rpc Bidi (stream HelloRequest) returns (stream HelloReply);
 
+  // Test message with map and oneof
+  rpc MapOfOneOf (HelloRequest) returns (MapOfOneOfReply);
+
   // Test default bool values:
   rpc Bools(HelloRequest) returns (MessageWithBools);
 
@@ -81,4 +84,17 @@ message MessageWithBools {
 
 message MessageWithExternalTypes {
   a.b.c.AbcMessage abcMessage = 0;
+}
+
+message OneOfMessage {
+  oneof value {
+    string string_value = 1;
+    int32 int_value = 2;
+    bool bool_value = 3;
+    GlobalEnum enum_value = 4;
+  }
+}
+
+message MapOfOneOfReply {
+  map<string, OneOfMessage> values = 1;
 }

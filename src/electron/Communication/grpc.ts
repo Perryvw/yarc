@@ -123,6 +123,10 @@ export async function makeGrpcRequest(request: GrpcRequestData, ipc: Electron.We
                     innerType = field.type.optionalType;
                 } else if (field.type.type === "repeated") {
                     innerType = field.type.repeatedType;
+                } else if (field.type.type === "literal") {
+                    innerType = field.type;
+                } else if (field.type.type === "enum") {
+                    innerType = field.type;
                 }
 
                 if (!innerType) {

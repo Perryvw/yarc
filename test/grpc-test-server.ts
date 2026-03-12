@@ -47,6 +47,23 @@ interface MessageWithEnums {
     nestedEnum: number;
 }
 
+enum GlobalEnum {
+    A = 0,
+    B = 1,
+    C = 2,
+}
+
+interface OneOfMessage {
+    stringValue?: string;
+    intValue?: number;
+    boolValue?: boolean;
+    enumValue?: GlobalEnum;
+}
+
+interface MapOfOneOfReply {
+    values: { [key: string]: OneOfMessage };
+}
+
 const server = new grpc.Server();
 server.addService(greeterService.service, {
     SayHello: (call: grpc.ServerUnaryCall<HelloRequest, HelloReply>, callback: grpc.sendUnaryData<HelloReply>) => {
@@ -122,6 +139,18 @@ server.addService(greeterService.service, {
     },
     TestImportedTypes: (call: grpc.ServerUnaryCall<unknown, unknown>, callback: grpc.sendUnaryData<unknown>) => {
         callback(null, call.request);
+    },
+    MapOfOneOf: (
+        call: grpc.ServerUnaryCall<HelloRequest, MapOfOneOfReply>,
+        callback: grpc.sendUnaryData<MapOfOneOfReply>,
+    ) => {
+        callback(null, {
+            values: {
+                item1: { stringValue: "bla" },
+                item2: { intValue: 42 },
+                enumItem: { enumValue: GlobalEnum.B },
+            },
+        });
     },
 });
 
